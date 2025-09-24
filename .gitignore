@@ -1,0 +1,46 @@
+*.pyc
+__pycache__/
+.DS_Store
+__pycache__/
+
+3-4o_mini_fine_tuning/evals/*
+3-4o_mini_fine_tuning/data/*
+
+11-recommendation/images
+
+.venv/
+ 
+# Node/Next app ignores
+node_modules/
+.next/
+.turbo/
+dist/
+build/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files (exclude examples)
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Hosting/provider
+.vercel/
+.netlify/
+
+# Caches
+.cache/
+.eslintcache
+
+# Media (optional large artifacts)
+*.wav
+*.mp3
+*.m4a
+*.webm
