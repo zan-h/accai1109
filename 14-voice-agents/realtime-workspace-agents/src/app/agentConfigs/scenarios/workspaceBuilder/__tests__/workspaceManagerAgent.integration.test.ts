@@ -8,9 +8,7 @@ dotenv.config({ path: '.env.test' });
 // Skip the suite if no API key is present
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 if (!OPENAI_API_KEY) {
-  // eslint-disable-next-line no-console
   console.warn('⚠️  OPENAI_API_KEY not found in environment. Skipping realtime integration tests.');
-  // eslint-disable-next-line jest/no-disabled-tests
   describe.skip('workspaceManagerAgent realtime integration', () => {
     it('skipped due to missing OPENAI_API_KEY', () => {
       expect(true).toBe(true);

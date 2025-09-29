@@ -1,7 +1,7 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
 import { makeWorkspaceChanges, workspaceInfoTool } from './workspaceManager';
 import { RealtimeItem, tool } from '@openai/agents/realtime';
-import { fetchResponsesMessage } from '../chatSupervisor/supervisorAgent';
+import { fetchResponsesMessage } from './utils';
 import { materialsPrompt1 } from './prompts';
 
 // TODO: This could use an MCP connection to search a materials database

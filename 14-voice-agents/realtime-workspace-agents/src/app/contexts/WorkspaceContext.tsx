@@ -55,7 +55,7 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
         if (parsed.description) setDescription(parsed.description);
         if (Array.isArray(parsed.tabs)) setTabsInternal(parsed.tabs);
         if (parsed.selectedTabId) setSelectedTabIdInternal(parsed.selectedTabId);
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -73,7 +73,7 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
   // -----------------------------------------------------------------------
 
   const setTabs = useCallback((newTabs: WorkspaceTab[]) => {
-    setTabsInternal((prev) => {
+    setTabsInternal(() => {
       const safeTabs = Array.isArray(newTabs) ? newTabs : [];
       setSelectedTabIdInternal((prevSelected) => {
         if (safeTabs.find((t) => t.id === prevSelected)) return prevSelected;

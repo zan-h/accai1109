@@ -1,5 +1,5 @@
 import { RealtimeAgent, tool, RealtimeItem } from '@openai/agents/realtime';
-import { fetchResponsesMessage } from '../chatSupervisor/supervisorAgent';
+import { fetchResponsesMessage } from './utils';
 import {
   addWorkspaceTab,
   renameWorkspaceTab,
@@ -8,7 +8,7 @@ import {
   getWorkspaceInfo,
   setSelectedTabId,
 } from '@/app/contexts/WorkspaceContext';
-import { workspaceManagerPrompt1, workspaceManagerPrompt2 } from './prompts';
+import { workspaceManagerPrompt2 } from './prompts';
 
 // ---------------------------------------------------------------------------
 // Workspace tools – these allow the agent to mutate the workspace state

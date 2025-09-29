@@ -1,9 +1,11 @@
 Background and Motivation
-The current repo contains a Next.js demo of multi-agent realtime voice interactions using the OpenAI Realtime SDK. Scenarios include real estate, customer service retail, a chat supervisor pattern, a workspace builder, and a simple handoff. The goal is to generalize this into “various agents that support a user to do great, embodied work,” shifting from vertical demos to a reusable multi-agent substrate (voice-first, tool-using, handoff-capable, guardrail-aware) that can be specialized per domain.
+The current repo contains a Next.js demo of multi-agent realtime voice interactions using the OpenAI Realtime SDK. Scenarios include real estate, customer service retail, a chat supervisor pattern, a workspace builder, and a simple handoff. The goal is to generalize this into "various agents that support a user to do great, embodied work," shifting from vertical demos to a reusable multi-agent substrate (voice-first, tool-using, handoff-capable, guardrail-aware) that can be specialized per domain.
+
+**Current Analysis Request:** Thorough breakdown of the `/src/app` directory structure, identifying deletable elements and consequences of deletion.
 
 Key Challenges and Analysis
-- Agent composition: Each scenario wires multiple `RealtimeAgent`s with explicit `handoffs`. We need a more generic “role” taxonomy and plug-in tools for embodied tasks.
-- Orchestration: Today, the client selects a scenario and connects to a session with a chosen root agent; handoffs are local in agent config. For generalization, we’ll need a supervisor or router that can resolve tasks to the right agent set dynamically.
+- Agent composition: Each scenario wires multiple `RealtimeAgent`s with explicit `handoffs`. We need a more generic "role" taxonomy and plug-in tools for embodied tasks.
+- Orchestration: Today, the client selects a scenario and connects to a session with a chosen root agent; handoffs are local in agent config. For generalization, we'll need a supervisor or router that can resolve tasks to the right agent set dynamically.
 - Guardrails: Moderation guardrails are scenario/company-specific. We need a modular guardrail registry with domain-aware policies and tripwire feedback into transcript UI.
 - Tooling: Tools are implemented as Realtime function tools or proxied via `/api/responses`. We need a common tool catalog for embodied work (e.g., sensor/controls, file ops, scheduling, spatial tasks) and a policy for what runs client vs server.
 - Realtime and audio: `useRealtimeSession` manages WebRTC, codec selection, VAD, push-to-talk. Generalization should keep this but allow agent set swapping and multi-modal inputs.
@@ -44,7 +46,150 @@ Current System Design (as implemented)
   - `api/session/route.ts` creates ephemeral realtime session tokens.
   - `api/responses/route.ts` proxies to OpenAI Responses API (structured or text), used by supervisor and guardrails.
 
-Gaps relative to “embodied work”
+App Directory Structure Analysis
+
+## Core Application Files (CRITICAL - DO NOT DELETE)
+1. **App.tsx** (18KB, 536 lines)
+   - Main application component and orchestration hub
+   - Manages session lifecycle, agent selection, UI state
+   - Handles codec selection, audio playback, WebRTC connections
+   - Contains workspace versioning logic and localStorage management
+   - **Deletion Impact**: Application would completely break
+
+2. **layout.tsx** (407B, 21 lines)
+   - Next.js root layout with metadata and basic HTML structure
+   - Imports global CSS and environment setup
+   - **Deletion Impact**: Next.js app would not render
+
+3. **page.tsx** (566B, 20 lines)
+   - Entry point wrapping App.tsx with context providers
+   - Provides TranscriptProvider, EventProvider, WorkspaceProvider
+   - **Deletion Impact**: Application would have no route and no context
+
+4. **types.ts** (3.9KB, 171 lines)
+   - Central type definitions for the entire application
+   - Defines interfaces for agents, tools, transcripts, guardrails, workspace tabs
+   - **Deletion Impact**: TypeScript compilation would fail
+
+5. **globals.css** (1.3KB, 41 lines)
+   - Tailwind CSS imports and global styles
+   - **Deletion Impact**: UI would lose all styling
+
+## Context Providers (CRITICAL - DO NOT DELETE)
+Located in `/contexts/`:
+- **TranscriptContext.tsx**: Manages conversation history and transcript items
+- **EventContext.tsx**: Handles client/server event logging and debugging
+- **WorkspaceContext.tsx**: Manages workspace state with tabs, localStorage persistence
+- **Deletion Impact**: Would break state management across the application
+
+## UI Components (MOSTLY CRITICAL)
+Located in `/components/`:
+
+### Essential Components:
+- **BottomToolbar.tsx**: Connection controls, PTT, settings - **CRITICAL**
+- **Transcript.tsx**: Conversation display with markdown/guardrail support - **CRITICAL**
+- **Events.tsx**: Debug panel for event logging - **USEFUL for debugging**
+- **GuardrailChip.tsx**: Displays moderation warnings - **CRITICAL for safety**
+
+### Workspace-Specific Components (CONDITIONALLY DELETABLE):
+- **Workspace.tsx**: Container for workspace builder scenario
+- **workspace/Sidebar.tsx**: Tab management for workspace
+- **workspace/TabContent.tsx**: Content renderer for markdown/CSV tabs
+- **Deletion Impact**: Only affects `workspaceBuilder` scenario; other scenarios would work fine
+
+## Custom Hooks (CRITICAL - DO NOT DELETE)
+Located in `/hooks/`:
+- **useRealtimeSession.ts**: Core WebRTC/OpenAI session management
+- **useAudioDownload.ts**: Audio recording and download functionality  
+- **useHandleSessionHistory.ts**: Session event processing and transcript management
+- **Deletion Impact**: Would break core voice interaction functionality
+
+## Agent Configurations (SCENARIO-DEPENDENT)
+Located in `/agentConfigs/`:
+
+### Core Infrastructure (CRITICAL):
+- **index.ts**: Exports all scenarios and main registry
+- **types.ts**: Agent configuration type definitions  
+- **guardrails/**: Moderation and safety systems
+
+### Individual Scenarios (CONDITIONALLY DELETABLE):
+- **scenarios/workspaceBuilder/**: Workspace building agents and tools
+- **scenarios/realEstateBroker/**: Real estate consultation agents
+- **scenarios/chatSupervisor/**: Supervisor pattern with tool routing
+- **scenarios/customerServiceRetail/**: Complex customer service flow
+- **scenarios/simpleHandoff/**: Minimal handoff example
+
+**Deletion Impact per Scenario**:
+- Deleting any scenario folder removes that option from the dropdown
+- App gracefully falls back to `defaultAgentSetKey = 'workspaceBuilder'`
+- Other scenarios continue to work normally
+
+## API Routes (CRITICAL - DO NOT DELETE)
+Located in `/api/`:
+- **session/route.ts**: Creates ephemeral OpenAI session tokens
+- **responses/route.ts**: Proxies to OpenAI Responses API for structured/text generation
+- **Deletion Impact**: Would break agent communication and session establishment
+
+## Utility Libraries (CRITICAL - DO NOT DELETE)
+Located in `/lib/`:
+- **audioUtils.ts**: WAV conversion and audio processing
+- **codecUtils.ts**: Audio codec handling (PCMU/PCMA/Opus)
+- **envSetup.ts**: Environment configuration
+- **Deletion Impact**: Would break audio functionality and codec selection
+
+## What Can Be Safely Deleted
+
+### Deletable with Minimal Impact:
+1. **Specific Scenario Folders**: Any individual scenario in `/agentConfigs/scenarios/` except the default
+   - Remove unwanted use cases (e.g., delete `realEstateBroker` if not needed)
+   - Update `index.ts` to remove references
+   - Change `defaultAgentSetKey` if deleting the current default
+
+2. **Workspace-Related Components** (if not using workspace scenario):
+   - `/components/Workspace.tsx`
+   - `/components/workspace/` entire folder
+   - `/contexts/WorkspaceContext.tsx`
+   - Note: Would break `workspaceBuilder` scenario
+
+3. **Debug/Development Components**:
+   - `/components/Events.tsx` (loses debugging capability)
+   - Audio download functionality in hooks (loses recording feature)
+
+### Deletion Strategy Examples:
+
+**Minimal Voice-Only App** (delete these):
+```
+/agentConfigs/scenarios/workspaceBuilder/
+/agentConfigs/scenarios/realEstateBroker/  
+/agentConfigs/scenarios/customerServiceRetail/
+/agentConfigs/scenarios/chatSupervisor/
+/components/Workspace.tsx
+/components/workspace/
+/contexts/WorkspaceContext.tsx
+/hooks/useAudioDownload.ts (and remove from App.tsx)
+```
+Keep only `simpleHandoff` scenario, results in ~70% size reduction.
+
+**Single-Purpose App** (e.g., real estate only):
+```
+# Keep only realEstateBroker scenario
+# Delete all other scenario folders
+# Update defaultAgentSetKey to 'realEstateBroker'
+# Remove workspace components
+```
+
+### NEVER DELETE:
+- Core files: App.tsx, layout.tsx, page.tsx, types.ts, globals.css
+- Context providers (except WorkspaceContext if removing workspace)
+- Essential components: BottomToolbar, Transcript, GuardrailChip
+- Core hooks: useRealtimeSession, useHandleSessionHistory  
+- API routes: session/, responses/
+- Core lib utilities: audioUtils, codecUtils, envSetup
+- Base agent configs: index.ts, guardrails/
+
+**Consequence Summary**: Deleting scenarios = loss of specific use cases. Deleting workspace = loss of document editing. Deleting core files = complete application failure.
+
+Gaps relative to "embodied work"
 - No generic task routing beyond static per-scenario handoffs.
 - Tools are domain-specific; no standard interfaces for embodied actions (devices, files, spatial memory, scheduling, procedure execution).
 - Limited memory: conversation history only; no persistent user/task state or episodic memory.
@@ -69,6 +214,7 @@ High-level Task Breakdown
 
 Project Status Board
 - [x] Repo scan and current system mapping
+- [x] App directory analysis and deletion impact assessment  
 - [ ] Introduce Agent Capability Model and Registry
 - [ ] Add Dynamic Router/Supervisor for Task Assignment
 - [ ] Create Common Embodied Tools Catalog
@@ -76,11 +222,20 @@ Project Status Board
 - [ ] Guardrail Policy Modularization
 - [ ] Scenario Abstraction and Runtime Switching
 - [ ] Testing & Validation
+- [x] Run Next.js app locally for verification (2025-09-29)
+- [ ] Investigate missing Tailwind styles causing unformatted UI (2025-09-29)
 
 Executor's Feedback or Assistance Requests
-- None yet. Next, we’ll finalize the capability schema and router design for your review before implementation.
+- App directory analysis complete. The structure is well-organized with clear separation between core functionality, scenarios, and UI components. The workspace builder scenario appears most complex and could be simplified or removed if not needed for the embodied work vision.
+- Next.js dev server restarted via `npm run dev`; confirmed listening on port 3000.
+- Need to diagnose why Tailwind styles are not applying in the running app.
+- Confirmed request serves Tailwind CSS bundle; suspect browser blocking due to mixed content or network issue, need further investigation.
+- Next.js dev server restarted via `npm run dev`; confirmed listening on port 3000.
 
 Lessons
 - Use `/api/responses` for structured moderation and supervisor iterations; keep tools non-parallel when tool outputs inform subsequent calls.
 - Guardrail trip events are surfaced to the UI; ensure any new guardrails attach rationale and offending text for debugging.
-
+- Include info useful for debugging in the program output.
+- Read the file before you try to edit it.
+- If there are vulnerabilities that appear in the terminal, run npm audit before proceeding
+- Always ask before using the -force git command

@@ -25,15 +25,12 @@ import { createModerationGuardrail } from "@/app/agentConfigs/guardrails";
 import {
   allAgentSets,
   defaultAgentSetKey,
-  realEstateBrokerScenario,
-  realEstateCompanyName,
   workspaceBuilderScenario,
 } from "@/app/agentConfigs";
 
 // Map used by connect logic for scenarios defined via the SDK
 const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
   workspaceBuilder: workspaceBuilderScenario,
-  realEstateBroker: realEstateBrokerScenario,
 };
 
 import useAudioDownload from "./hooks/useAudioDownload";
@@ -237,7 +234,7 @@ function App() {
           reorderedAgents.unshift(agent);
         }
 
-        const guardrails = [createModerationGuardrail(realEstateCompanyName)];
+        const guardrails = [createModerationGuardrail("Demo Company")];
 
         await connect({
           getEphemeralKey: async () => EPHEMERAL_KEY,
@@ -469,7 +466,7 @@ function App() {
             />
           </div>
           <div>
-            {realEstateCompanyName} <span className="text-gray-500">Agent</span>
+            Demo Company <span className="text-gray-500">Agent</span>
           </div>
         </div>
         <div className="flex items-center gap-3">

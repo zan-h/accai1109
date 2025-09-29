@@ -1,8 +1,8 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
 import { makeWorkspaceChanges, workspaceInfoTool } from './workspaceManager';
 import { RealtimeItem, tool } from '@openai/agents/realtime';
-import { fetchResponsesMessage } from '../chatSupervisor/supervisorAgent';
-import { designerPrompt1, designerPrompt2 } from './prompts';
+import { fetchResponsesMessage } from './utils';
+import { designerPrompt2 } from './prompts';
 
 const searchTheWeb = tool({
   name: 'searchTheWeb',
