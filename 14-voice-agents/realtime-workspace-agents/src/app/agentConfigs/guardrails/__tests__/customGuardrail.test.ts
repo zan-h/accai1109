@@ -1,4 +1,4 @@
-import { runCustomGuardrailClassifier, createCustomBusinessGuardrail } from '../customGuardrail';
+import { createCustomBusinessGuardrail } from '../customGuardrail';
 
 // Mock the fetch function for testing
 global.fetch = jest.fn();
