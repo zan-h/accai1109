@@ -2,7 +2,7 @@ import { RealtimeAgent } from '@openai/agents/realtime';
 import { makeWorkspaceChanges, workspaceInfoTool } from './workspaceManager';
 import { RealtimeItem, tool } from '@openai/agents/realtime';
 import { fetchResponsesMessage } from './utils';
-import { estimatorPrompt1 } from './prompts';
+import { bodyDoublingPrompt2 } from './prompts';
 
 const calculate = tool({
   name: 'calculate',
@@ -62,11 +62,10 @@ const calculate = tool({
   },
 });
 
-export const estimatorAgent = new RealtimeAgent({
-  name: 'estimator',
-
+export const bodyDoublingAgent = new RealtimeAgent({
+  name: 'bodyDoubling',
   voice: 'sage',
-  instructions: estimatorPrompt1,
-  tools: [calculate,workspaceInfoTool, makeWorkspaceChanges],
+  instructions: bodyDoublingPrompt2,
+  tools: [workspaceInfoTool, makeWorkspaceChanges],
   handoffs: [], // wired up in index.ts to avoid circular dependencies
 });

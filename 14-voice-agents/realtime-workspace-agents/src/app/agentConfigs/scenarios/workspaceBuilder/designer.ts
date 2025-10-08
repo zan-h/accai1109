@@ -2,7 +2,7 @@ import { RealtimeAgent } from '@openai/agents/realtime';
 import { makeWorkspaceChanges, workspaceInfoTool } from './workspaceManager';
 import { RealtimeItem, tool } from '@openai/agents/realtime';
 import { fetchResponsesMessage } from './utils';
-import { designerPrompt2 } from './prompts';
+import { taskStrategistPrompt2 } from './prompts';
 
 const searchTheWeb = tool({
   name: 'searchTheWeb',
@@ -60,11 +60,11 @@ const searchTheWeb = tool({
   },
 });
 
-export const designerAgent = new RealtimeAgent({
-  name: 'designer',
+export const taskStrategistAgent = new RealtimeAgent({
+  name: 'taskStrategist',
   voice: 'sage',
-  instructions: designerPrompt2,
-  tools: [searchTheWeb, workspaceInfoTool, makeWorkspaceChanges],
+  instructions: taskStrategistPrompt2,
+  tools: [workspaceInfoTool, makeWorkspaceChanges],
   handoffs: [], // wired up in index.ts to avoid circular dependencies
 });
 

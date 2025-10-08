@@ -1,14 +1,17 @@
-import { workspaceManagerAgent } from './workspaceManager';
-import { designerAgent } from './designer';
-import { estimatorAgent } from './estimator';
+import { energyCoachAgent } from './workspaceManager';
+import { taskStrategistAgent } from './designer';
+import { bodyDoublingAgent } from './estimator';
 
-// Wire up bidirectional hand-offs so that either agent can transfer control to
-(workspaceManagerAgent.handoffs as any).push(designerAgent);
-(designerAgent.handoffs as any).push(estimatorAgent);
-(estimatorAgent.handoffs as any).push(designerAgent);
+// Wire up intelligent handoffs for ADHD/embodied work support
+// Energy Coach can hand off to either Task Strategist or Body Doubling
+(energyCoachAgent.handoffs as any).push(taskStrategistAgent, bodyDoublingAgent);
+// Task Strategist can hand off to Body Doubling or back to Energy Coach
+(taskStrategistAgent.handoffs as any).push(bodyDoublingAgent, energyCoachAgent);
+// Body Doubling can hand off back to Energy Coach or Task Strategist
+(bodyDoublingAgent.handoffs as any).push(energyCoachAgent, taskStrategistAgent);
 
 export const workspaceBuilderScenario = [
-  workspaceManagerAgent,
-  designerAgent,
-  estimatorAgent,
+  energyCoachAgent,
+  taskStrategistAgent,
+  bodyDoublingAgent,
 ];

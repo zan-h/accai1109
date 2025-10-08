@@ -8,7 +8,7 @@ import {
   getWorkspaceInfo,
   setSelectedTabId,
 } from '@/app/contexts/WorkspaceContext';
-import { workspaceManagerPrompt2 } from './prompts';
+import { energyCoachPrompt2 } from './prompts';
 
 // ---------------------------------------------------------------------------
 // Workspace tools – these allow the agent to mutate the workspace state
@@ -156,10 +156,10 @@ export const workspaceTools = [
 // Workspace Manager (worker) agent definition
 // ---------------------------------------------------------------------------
 
-export const workspaceManagerAgent = new RealtimeAgent({
-  name: 'workspaceManager',
+export const energyCoachAgent = new RealtimeAgent({
+  name: 'energyCoach',
   voice: 'sage',
-  instructions: workspaceManagerPrompt2,
+  instructions: energyCoachPrompt2,
   tools: workspaceTools,
   handoffs: [], // wired up in index.ts to avoid circular dependencies
 });

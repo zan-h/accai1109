@@ -234,7 +234,7 @@ function App() {
           reorderedAgents.unshift(agent);
         }
 
-        const guardrails = [createModerationGuardrail("Demo Company")];
+        const guardrails = [createModerationGuardrail("accai")];
 
         await connect({
           getEphemeralKey: async () => EPHEMERAL_KEY,
@@ -466,7 +466,7 @@ function App() {
             />
           </div>
           <div>
-            Demo Company <span className="text-gray-500">Agent</span>
+            accai <span className="text-gray-500">Agent</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
