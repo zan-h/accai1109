@@ -1,7 +1,7 @@
 Background and Motivation
 The current repo contains a Next.js demo of multi-agent realtime voice interactions using the OpenAI Realtime SDK. Scenarios include real estate, customer service retail, a chat supervisor pattern, a workspace builder, and a simple handoff. The goal is to generalize this into "various agents that support a user to do great, embodied work," shifting from vertical demos to a reusable multi-agent substrate (voice-first, tool-using, handoff-capable, guardrail-aware) that can be specialized per domain.
 
-**Current Project:** Transform workspaceBuilder scenario into ADHD/Embodied Work Productivity System - a neurodivergent-friendly daily planning assistant that considers energy levels, emotional regulation needs, and body doubling support alongside traditional task management.
+**Current Analysis Request:** Thorough breakdown of the `/src/app` directory structure, identifying deletable elements and consequences of deletion.
 
 Key Challenges and Analysis
 - Agent composition: Each scenario wires multiple `RealtimeAgent`s with explicit `handoffs`. We need a more generic "role" taxonomy and plug-in tools for embodied tasks.
@@ -196,200 +196,57 @@ Gaps relative to "embodied work"
 - Single-tenant guardrail policy per scenario; not user- or org-scoped.
 - No explicit capability model (who can do what), nor competency ratings for routing.
 
-ADHD/Embodied Work Productivity System Transformation Plan
-
-## Core Philosophy & Principles
-Based on Joe Hudson's embodied work principles and ADHD-aware productivity:
-- **Energy-first scheduling**: Match tasks to current energy levels, not rigid time blocks
-- **Emotional awareness**: Recognize when regulation is needed before productivity crashes
-- **Body doubling support**: Virtual accountability and presence without judgment
-- **Adaptive planning**: Flexible systems that adjust to neurodivergent needs
-- **Shame-free approach**: No guilt for changing plans or needing support
-- **Whole-person integration**: Body, mind, emotions, and tasks as interconnected system
-
-## Agent Team Design
-
-### 1. Energy & Awareness Coach (formerly workspaceManager)
-**Role**: Check-in facilitator and energy assessment specialist
-**Personality**: Warm, intuitive, body-aware, non-judgmental
-**Core Functions**:
-- Current energy level assessment (physical, mental, emotional)
-- Body scan and somatic awareness check-ins
-- Emotional regulation needs identification
-- Energy type matching (creative, analytical, social, restorative)
-- Transition support between activities
-
-**Key Tools**:
-- `assess_current_energy`: Quick energy/mood/body check-in tool
-- `suggest_regulation_practice`: Breathing, movement, grounding techniques
-- `energy_timeline_tracker`: Track energy patterns over time
-- `transition_support`: Help with task switching and context changes
-
-### 2. Task & Priority Strategist (formerly designer)
-**Role**: ADHD-friendly task planning and prioritization expert
-**Personality**: Understanding, strategic, flexible, celebrates small wins
-**Core Functions**:
-- Break large tasks into micro-tasks and manageable chunks
-- Match tasks to current energy levels and time available
-- Identify dopamine-friendly task sequences and reward loops
-- Manage executive function challenges (working memory, planning)
-- Create accountability structures without pressure
-
-**Key Tools**:
-- `break_down_task`: Decompose overwhelming tasks into tiny steps
-- `energy_task_matching`: Match tasks to current energy state
-- `dopamine_sequencing`: Create motivating task order and rewards
-- `context_switching_prep`: Minimize transition costs between tasks
-- `progress_celebration`: Acknowledge and celebrate completed work
-
-### 3. Body Doubling Companion (formerly estimator)
-**Role**: Virtual presence and accountability partner
-**Personality**: Supportive, present, encouraging, consistent
-**Core Functions**:
-- Provide silent companionship during focused work
-- Gentle accountability check-ins without pressure
-- Encouragement and motivation during difficult tasks
-- Help with starting/stopping work sessions
-- Emotional support when things don't go as planned
-
-**Key Tools**:
-- `start_focus_session`: Begin accompanied work time with check-ins
-- `gentle_accountability`: Non-judgmental progress check-ins
-- `encouragement_boost`: Motivational support when struggling
-- `session_debrief`: Reflect on what worked/didn't work
-- `adaptive_planning`: Adjust plans based on real experience
-
-## Handoff Flow & Collaboration
-
-### Session Initiation Flow:
-1. **Energy Coach**: "How are you feeling right now? Let's check in with your body and energy."
-2. **Task Strategist**: "Based on your energy, what feels manageable today? Let's plan together."
-3. **Body Doubling Companion**: "I'm here to work alongside you. Want to start with something small?"
-
-### Intelligent Handoffs:
-- **Energy crashes** → Hand off to Energy Coach for regulation
-- **Task overwhelm** → Hand off to Task Strategist for breaking down
-- **Motivation/focus issues** → Hand off to Body Doubling Companion
-- **End of work session** → Hand off to Energy Coach for reflection
-
-### Continuous Collaboration:
-- All agents share workspace state and energy/task context
-- Cross-agent awareness of user's current needs and progress
-- Seamless transitions based on user's real-time state
-
-## Workspace Tab Structure
-
-### Core Tabs:
-1. **Daily Check-in**: Energy, mood, body awareness, intentions
-2. **Task Board**: Current tasks organized by energy level and priority
-3. **Energy Journal**: Pattern tracking over time
-4. **Regulation Toolkit**: Go-to practices for different states
-5. **Wins & Reflections**: Celebration and learning capture
-6. **Body Doubling Log**: Session notes and accountability tracking
-
-### Dynamic Content:
-- Energy levels visualized with simple indicators
-- Task status with gentle progress tracking
-- Emotional regulation suggestions based on current state
-- Body doubling session summaries and insights
-
-## Technical Implementation Plan
-
-### Phase 1: Agent Personality & Prompt Transformation
-- Rewrite all agent prompts with ADHD/embodied work focus
-- Develop conversation flows that prioritize energy and emotions
-- Create shame-free, flexible interaction patterns
-- Implement Joe Hudson-inspired somatic awareness techniques
-
-### Phase 2: Tool Development
-- Energy assessment and tracking tools
-- Task breakdown and prioritization algorithms
-- Body doubling session management
-- Emotional regulation suggestion engine
-- Progress celebration and reflection tools
-
-### Phase 3: Workspace Integration
-- Transform workspace tabs to support daily planning workflow
-- Add energy/mood visualizations
-- Implement flexible task board with energy-based organization
-- Create regulation toolkit with quick-access practices
-
-### Phase 4: Memory & Adaptation
-- User pattern recognition (energy cycles, effective practices)
-- Personalized suggestions based on past success
-- Adaptive scheduling based on historical data
-- Long-term habit and wellness tracking
-
-## Success Criteria
-
-### User Experience Goals:
-- Reduced overwhelm and planning anxiety
-- Increased self-awareness of energy and emotional patterns
-- Better task completion through energy-matching
-- Stronger sense of accomplishment and self-compassion
-- More sustainable work practices over time
-
-### Technical Goals:
-- Seamless agent handoffs based on user state
-- Effective energy and emotion tracking
-- Useful task breakdown and prioritization
-- Meaningful body doubling experience
-- Persistent learning and adaptation
-
-### Behavioral Outcomes:
-- Users report feeling more in tune with their bodies
-- Decreased shame around productivity challenges
-- Increased completion of meaningful tasks
-- Better energy management and sustainability
-- Stronger connection between body, emotions, and work effectiveness
-
 High-level Task Breakdown
-1) Transform Agent Personalities and Prompts
-   - Success: All three agents embody ADHD-friendly, embodied work principles with appropriate personalities and conversation flows
-2) Develop Energy Assessment and Regulation Tools
-   - Success: Tools for checking energy levels, suggesting regulation practices, and tracking patterns over time
-3) Create ADHD-Friendly Task Management Tools
-   - Success: Task breakdown, energy-matching, dopamine sequencing, and progress celebration tools
-4) Build Body Doubling and Accountability Features
-   - Success: Virtual presence tools, gentle check-ins, and session management for accountability
-5) Transform Workspace Structure for Daily Planning
-   - Success: Workspace tabs support energy-aware daily planning workflow with appropriate visualizations
-6) Implement Pattern Recognition and Adaptation
-   - Success: System learns user patterns and provides personalized suggestions based on past success
-7) Testing with ADHD/Neurodivergent Users
-   - Success: User testing validates effectiveness for target population with iterative improvements
+1) Introduce Agent Capability Model and Registry
+   - Success: Agents declare roles, capabilities, modalities, and tool access via a common schema; registry enumerates agents across domains.
+2) Add Dynamic Router/Supervisor for Task Assignment
+   - Success: A router agent/tool maps user intents to agents using capability tags and context; supports mid-conversation reassignment.
+3) Create Common Embodied Tools Catalog
+   - Success: Standard tool interfaces (e.g., `capture_sensor_data`, `control_device`, `schedule_block`, `open_file`, `annotate_image`, `spatial_plan_step`) with server implementations and auth.
+4) Memory and State Layer
+   - Success: Pluggable memory store (user profile, task board, artifacts); agents can read/write scoped state via tools with policy checks.
+5) Guardrail Policy Modularization
+   - Success: Guardrails load from policy registry keyed by org/user/domain; transcript annotates violations uniformly.
+6) Scenario Abstraction and Runtime Switching
+   - Success: Select root agent by intent; switch scenarios at runtime without reconnecting, preserving history and state.
+7) Testing & Validation
+   - Success: TDD: unit tests for router decisions; integration tests for handoffs and guardrail trip; e2e for audio session and tool calls.
 
-Project Status Board - ADHD/Embodied Work Transformation
-- [x] Extensive planning and agent team design (2025-09-29)
-- [ ] Transform Agent 1: Energy & Awareness Coach (workspaceManager)
-- [ ] Transform Agent 2: Task & Priority Strategist (designer)  
-- [ ] Transform Agent 3: Body Doubling Companion (estimator)
-- [ ] Develop energy assessment and regulation tools
-- [ ] Create ADHD-friendly task management tools
-- [ ] Build body doubling and accountability features
-- [ ] Transform workspace tabs for daily planning workflow
-- [ ] Implement pattern recognition and user adaptation
-- [ ] Create ADHD-specific guardrails and safety measures
-- [ ] Test with target user population
-- [ ] Iterative refinement based on user feedback
-
-Legacy Status (Completed):
+Project Status Board
 - [x] Repo scan and current system mapping
 - [x] App directory analysis and deletion impact assessment  
+- [ ] Introduce Agent Capability Model and Registry
+- [ ] Add Dynamic Router/Supervisor for Task Assignment
+- [ ] Create Common Embodied Tools Catalog
+- [ ] Memory and State Layer
+- [ ] Guardrail Policy Modularization
+- [ ] Scenario Abstraction and Runtime Switching
+- [ ] Testing & Validation
 - [x] Run Next.js app locally for verification (2025-09-29)
 - [x] Investigate missing Tailwind styles causing unformatted UI (2025-09-29)
 - [x] Commit and push refactored codebase (2025-09-29)
 
 Executor's Feedback or Assistance Requests
-- **Phase 1 Complete**: Successfully transformed all three agents in workspaceBuilder scenario:
-  - **Energy & Awareness Coach** (formerly workspaceManager): Body-aware check-ins, energy assessment, regulation support
-  - **Task & Priority Strategist** (formerly designer): ADHD-friendly task breakdown, energy-matching, dopamine sequencing
-  - **Body Doubling Companion** (formerly estimator): Virtual accountability, gentle presence, encouragement support
-- **Agent handoffs redesigned** for intelligent energy-aware transitions between all three agents
-- **Prompts completely rewritten** with neurodivergent-friendly language, somatic awareness, and shame-free approach
-- **Development server running** on ports 3000 and 3001 - ready for testing transformed agents
-- **Testing Phase**: Basic agent transformation complete, ready to test Energy Coach → Task Strategist → Body Doubling flow
-- **Next steps**: Validate agent personalities and handoffs, then develop specialized tools and workspace tabs
+- App directory analysis complete. The structure is well-organized with clear separation between core functionality, scenarios, and UI components. The workspace builder scenario appears most complex and could be simplified or removed if not needed for the embodied work vision.
+- Next.js dev server restarted via `npm run dev`; confirmed listening on port 3001.
+- Styling issue investigated - CSS bundle properly generated and served, likely browser caching or mixed content issue.
+- Successfully committed and pushed refactored codebase with cleaned up scenarios and enhanced workspace builder functionality.
+- Next.js dev server restarted via `npm run dev`; confirmed listening on port 3000.
+
+**NEW: Comprehensive Style Guide Created (2025-10-08)**
+- Created extensive style guide at `14-voice-agents/realtime-workspace-agents/STYLE_GUIDE.md`
+- Based on spy/command-center dashboard aesthetic from provided image
+- 2,696 lines covering: colors, typography, layout, 10+ components, effects, interactions, data viz, responsive design
+- Added 20 critical details after second image review: corner brackets, CRT effects, terminal syntax, agent ID format, special characters library, dense layouts, glow-only rule (no shadows)
+
+**Implementation Prompts Created (2025-10-08)**
+- Created `IMPLEMENTATION_PROMPT.md` - Comprehensive prompt (350+ lines) for Claude to implement the style guide
+  - Includes context, tech stack, 6-phase implementation plan, code samples, success criteria
+  - Details foundation setup, layout transformation, component migration, interactive elements, typography, polish
+  - Provides specific Tailwind config, component examples, testing approach, and file priorities
+- Created `IMPLEMENTATION_PROMPT_SHORT.md` - Concise version for quick implementation
+  - Streamlined 4-phase approach with essential rules and guidelines
+- Both prompts ready to be given to Claude 4.5 Sonnet for style implementation
 
 Lessons
 - Use `/api/responses` for structured moderation and supervisor iterations; keep tools non-parallel when tool outputs inform subsequent calls.
