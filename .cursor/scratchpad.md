@@ -706,6 +706,81 @@ User feedback indicated bottom toolbar and Edit button breaking immersion. Fixed
 - ✅ Interactive elements glow cyan on hover
 - ✅ Voice interactions still work
 
+**✅ DESIGN PHASE COMPLETE - Committed & Pushed (2025-10-09)**
+- Commit: b62f015 "Transform UI to spy/command-center aesthetic"
+- 15 files changed, 859 insertions(+), 89 deletions(-)
+- Successfully pushed to origin/main
+- User confirmed design looks excellent (Grade: A-)
+- Spy/command-center aesthetic fully implemented and production-ready
+
+---
+
+## NEW FEATURE PLANNING: Multi-Project Workspace System (2025-10-09)
+
+**User Request:**
+- Enable multiple projects (each with dedicated workspace/tabs)
+- Add project switcher without extra screens
+- Create persistent "Mission Brief" panel for notes (goals, values, schedule)
+- Notes can be global (all projects) or project-specific
+- Minimize panel to save workspace real estate
+
+**Proposed Solution:**
+1. **Command Palette Project Switcher** (Cmd+P)
+   - Terminal-style overlay with fuzzy search
+   - No permanent UI chrome
+   - Shows recent + all projects
+   - Quick project creation
+   
+2. **Mission Brief Side Rail** (Cmd+B)
+   - Collapsed: 40px left rail with icons
+   - Expanded: 300px panel with sections
+   - Sections: Goals, Values, Schedule, Custom
+   - Toggle global vs project-specific per section
+   - Drag to reorder, edit inline
+
+**Implementation Prompt Created:**
+- File: `WORKSPACE_FEATURE_PROMPT.md`
+- Comprehensive 500+ line prompt for Claude 4.5 Sonnet
+- Includes: UI specs, data structures, code examples, testing checklist
+- Estimated effort: 5 days (3 phases)
+
+**Status:** Ready for implementation (awaiting user go-ahead)
+
+---
+
+## BUGFIX: Table & Events Panel Contrast Issues (2025-10-09)
+
+**User Reported Issue:**
+- Table rows with light backgrounds had very poor contrast (light text on light bg)
+- Alternating rows were nearly unreadable
+- Events panel also had light theme styling
+
+**Root Cause:**
+- `CsvView` component in `TabContent.tsx` used hardcoded `neutral-*` colors
+- `Events` component used `gray-*` and `bg-white` classes
+- Both were not updated during initial design transformation
+
+**Fixes Applied:**
+
+✅ **CSV Table (TabContent.tsx)**:
+- Header: `bg-bg-tertiary` with `text-text-secondary`, uppercase monospace
+- Border: `border-border-primary` throughout
+- Alternating rows: `odd:bg-bg-secondary even:bg-bg-primary`
+- Hover effect: `hover:bg-bg-tertiary`
+- All text: `text-text-primary font-mono`
+- Proper contrast on all rows
+
+✅ **Events/Logs Panel (Events.tsx)**:
+- Container: `bg-bg-secondary` with `border-border-primary`
+- Header: Uppercase monospace "LOGS"
+- Direction arrows: Cyan (client ▲) and Green (server ▼)
+- Event names: `text-text-primary` or `text-status-error`
+- Timestamps: `text-text-tertiary`
+- JSON preview: Dark background with border
+- Hover effect on rows
+
+**Result:** Full contrast restoration, matches spy/command-center aesthetic perfectly
+
 ---
 
 **Previous Feedback**:

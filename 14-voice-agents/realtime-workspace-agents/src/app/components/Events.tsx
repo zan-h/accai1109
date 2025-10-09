@@ -15,9 +15,9 @@ function Events({ isExpanded }: EventsProps) {
   const { loggedEvents, toggleExpand } = useEvent();
 
   const getDirectionArrow = (direction: string) => {
-    if (direction === "client") return { symbol: "▲", color: "#7f5af0" };
-    if (direction === "server") return { symbol: "▼", color: "#2cb67d" };
-    return { symbol: "•", color: "#555" };
+    if (direction === "client") return { symbol: "▲", color: "#00d9ff" }; // cyan accent
+    if (direction === "server") return { symbol: "▼", color: "#00ff88" }; // success green
+    return { symbol: "•", color: "#8a8a8a" }; // text-secondary
   };
 
   useEffect(() => {
@@ -35,16 +35,16 @@ function Events({ isExpanded }: EventsProps) {
     <div
       className={
         (isExpanded ? "w-1/2 overflow-auto" : "w-0 overflow-hidden opacity-0") +
-        " transition-all rounded-xl duration-200 ease-in-out flex-col bg-white"
+        " transition-all duration-200 ease-in-out flex-col bg-bg-secondary border border-border-primary min-h-0 flex"
       }
       ref={eventLogsContainerRef}
     >
       {isExpanded && (
-        <div>
-          <div className="flex items-center justify-between px-6 py-3.5 sticky top-0 z-10 text-base border-b bg-white rounded-t-xl">
-            <span className="font-semibold">Logs</span>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b border-border-primary bg-bg-secondary">
+            <span className="font-semibold uppercase tracking-widest text-text-primary font-mono">Logs</span>
           </div>
-          <div>
+          <div className="flex-1 overflow-auto">
             {loggedEvents.map((log, idx) => {
               const arrowInfo = getDirectionArrow(log.direction);
               const isError =
@@ -54,7 +54,7 @@ function Events({ isExpanded }: EventsProps) {
               return (
                 <div
                   key={`${log.id}-${idx}`}
-                  className="border-t border-gray-200 py-2 px-6 font-mono"
+                  className="border-t border-border-primary py-2 px-6 font-mono hover:bg-bg-tertiary transition-colors"
                 >
                   <div
                     onClick={() => toggleExpand(log.id)}
@@ -63,27 +63,27 @@ function Events({ isExpanded }: EventsProps) {
                     <div className="flex items-center flex-1">
                       <span
                         style={{ color: arrowInfo.color }}
-                        className="ml-1 mr-2"
+                        className="ml-1 mr-2 font-bold"
                       >
                       {arrowInfo.symbol}
                       </span>
                       <span
                         className={
                           "flex-1 text-sm " +
-                          (isError ? "text-red-600" : "text-gray-800")
+                          (isError ? "text-status-error" : "text-text-primary")
                         }
                       >
                         {log.eventName}
                       </span>
                     </div>
-                    <div className="text-gray-500 ml-1 text-xs whitespace-nowrap">
+                    <div className="text-text-tertiary ml-1 text-xs whitespace-nowrap">
                       {log.timestamp}
                     </div>
                   </div>
 
                   {log.expanded && log.eventData && (
-                    <div className="text-gray-800 text-left">
-                      <pre className="border-l-2 ml-1 border-gray-200 whitespace-pre-wrap break-words font-mono text-xs mb-2 mt-2 pl-2">
+                    <div className="text-text-primary text-left">
+                      <pre className="border-l-2 ml-1 border-border-primary whitespace-pre-wrap break-words font-mono text-xs mb-2 mt-2 pl-2 bg-bg-tertiary p-2">
                         {JSON.stringify(log.eventData, null, 2)}
                       </pre>
                     </div>

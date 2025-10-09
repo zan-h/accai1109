@@ -137,21 +137,21 @@ function CsvView({ csv }: { csv: string }) {
 
   return (
     <div className="overflow-auto">
-      <table className="table-auto w-full text-sm border-collapse">
-        <thead className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
+      <table className="table-auto w-full text-sm border-collapse border border-border-primary">
+        <thead className="bg-bg-tertiary text-text-secondary border-b-2 border-border-primary">
           <tr>
             {header.map((h, idx) => (
-              <th key={idx} className="px-3 py-2 text-left font-semibold">
+              <th key={idx} className="px-3 py-2 text-left font-semibold uppercase tracking-wide text-xs font-mono">
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+        <tbody className="divide-y divide-border-primary">
           {dataRows.map((row, rIdx) => (
-            <tr key={rIdx} className="odd:bg-neutral-50 dark:odd:bg-neutral-900/40">
+            <tr key={rIdx} className="odd:bg-bg-secondary even:bg-bg-primary hover:bg-bg-tertiary transition-colors">
               {row.map((cell, cIdx) => (
-                <td key={cIdx} className="px-3 py-2 whitespace-pre-wrap align-top">
+                <td key={cIdx} className="px-3 py-2 whitespace-pre-wrap align-top text-text-primary font-mono text-sm">
                   {cell}
                 </td>
               ))}
