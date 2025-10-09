@@ -4,11 +4,15 @@ import React from "react";
 import Sidebar from "@/app/components/workspace/Sidebar";
 import TabContent from "@/app/components/workspace/TabContent";
 import { useWorkspaceContext, WorkspaceState } from "@/app/contexts/WorkspaceContext";
+import { useProject } from "@/app/contexts/ProjectContext";
 
 // Container panel rendered when the workspaceBuilder scenario is active.
 // Combines the Sidebar (tab list) and TabContent(renderer) components.
 
 function Workspace() {
+  const { getCurrentProject } = useProject();
+  const currentProject = getCurrentProject();
+  
   // Extract data + mutators from the Zustand store.
   // Stable selectors avoid triggering the subscription effect on every render
   // (because arrow functions create a new function each time).
@@ -51,7 +55,18 @@ function Workspace() {
     <div className="w-full flex flex-col bg-bg-secondary border border-border-primary overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b border-border-primary bg-bg-secondary">
-        <span className="font-semibold uppercase tracking-widest">Workspace</span>
+        <div className="flex items-center gap-3">
+          <span className="font-semibold uppercase tracking-widest">Workspace</span>
+          {currentProject && (
+            <>
+              <span className="text-text-tertiary">›</span>
+              <span className="text-accent-primary font-mono">{currentProject.name}</span>
+            </>
+          )}
+        </div>
+        <div className="text-xs text-text-tertiary font-mono">
+          <span className="text-accent-primary">Cmd+P</span> to switch projects
+        </div>
       </div>
 
       {/* Content area split between sidebar + tab content */}
