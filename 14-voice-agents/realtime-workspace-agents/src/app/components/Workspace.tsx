@@ -48,16 +48,16 @@ function Workspace() {
   );
 
   return (
-    <div className="w-full flex flex-col bg-white rounded-xl overflow-hidden">
+    <div className="w-full flex flex-col bg-bg-secondary border border-border-primary overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b bg-white rounded-t-xl">
-        <span className="font-semibold">Workspace</span>
+      <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b border-border-primary bg-bg-secondary">
+        <span className="font-semibold uppercase tracking-widest">Workspace</span>
       </div>
 
       {/* Content area split between sidebar + tab content */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Sidebar (tab list) */}
-        <div className="w-48 border-r border-gray-200 dark:border-neutral-800 overflow-y-auto">
+        <div className="w-48 border-r border-border-primary overflow-y-auto">
           <Sidebar
             tabs={tabs}
             selectedTabId={selectedTabId}

@@ -450,7 +450,7 @@ function App() {
   }, [isTranscriptVisible]);
 
   return (
-    <div className="text-base flex flex-col h-screen bg-gray-100 text-gray-800 relative">
+    <div className="text-base flex flex-col h-screen bg-bg-primary text-text-primary relative">
       <div className="p-5 text-lg font-semibold flex justify-between items-center">
         <div
           className="flex items-center cursor-pointer"
@@ -466,13 +466,13 @@ function App() {
             />
           </div>
           <div>
-            accai <span className="text-gray-500">Agent</span>
+            accai <span className="text-text-secondary">Agent</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <label className="text-sm text-gray-600">Scenario</label>
+          <label className="text-sm text-text-secondary uppercase tracking-wider">Scenario</label>
           <select
-            className="border border-gray-300 rounded-md px-2 py-1 focus:outline-none cursor-pointer text-sm"
+            className="border border-border-primary bg-bg-secondary text-text-primary px-2 py-1 focus:outline-none focus:border-accent-primary cursor-pointer text-sm font-mono transition-colors"
             value={(() => {
               const requested = searchParams.get('agentConfig');
               const keys = Object.keys(allAgentSets);

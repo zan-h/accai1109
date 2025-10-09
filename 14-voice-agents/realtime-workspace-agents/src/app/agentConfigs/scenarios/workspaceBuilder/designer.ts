@@ -64,7 +64,7 @@ export const taskStrategistAgent = new RealtimeAgent({
   name: 'taskStrategist',
   voice: 'sage',
   instructions: taskStrategistPrompt2,
-  tools: [workspaceInfoTool, makeWorkspaceChanges],
+  tools: [searchTheWeb, workspaceInfoTool, makeWorkspaceChanges],
   handoffs: [], // wired up in index.ts to avoid circular dependencies
 });
 

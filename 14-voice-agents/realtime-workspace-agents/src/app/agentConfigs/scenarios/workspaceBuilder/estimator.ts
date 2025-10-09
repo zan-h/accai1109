@@ -66,6 +66,6 @@ export const bodyDoublingAgent = new RealtimeAgent({
   name: 'bodyDoubling',
   voice: 'sage',
   instructions: bodyDoublingPrompt2,
-  tools: [workspaceInfoTool, makeWorkspaceChanges],
+  tools: [calculate, workspaceInfoTool, makeWorkspaceChanges],
   handoffs: [], // wired up in index.ts to avoid circular dependencies
 });

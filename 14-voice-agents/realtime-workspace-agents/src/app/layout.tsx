@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./lib/envSetup";
+import CornerBrackets from "./components/CornerBrackets";
 
 export const metadata: Metadata = {
-  title: "Realtime API Agents",
-  description: "A demo app from OpenAI.",
+  title: "Realtime API Agents - Command Center",
+  description: "Multi-agent voice interaction system",
 };
 
 export default function RootLayout({
@@ -14,7 +15,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`antialiased`}>{children}</body>
+      <body className="antialiased font-mono">
+        <CornerBrackets />
+        <div className="dashboard-container min-h-screen border-2 border-border-primary relative">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

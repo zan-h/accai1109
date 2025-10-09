@@ -40,15 +40,15 @@ export default function TabContent({ tab }: Props) {
   };
 
   const buttonClass =
-    "mb-1 py-2 px-4 rounded-md border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-400 hover:text-blue-500 hover:border-blue-300 dark:hover:border-blue-500 shadow-sm transition-all text-xs font-medium opacity-80 hover:opacity-100 z-10";
+    "mb-1 py-2 px-4 border border-border-primary bg-bg-tertiary text-text-secondary hover:text-accent-primary hover:border-accent-primary hover:shadow-glow-cyan transition-all text-xs font-medium font-mono uppercase tracking-wide z-10";
   const cancelClass =
-    "mb-1 py-2 px-4 rounded-md border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-400 hover:text-red-500 hover:border-red-300 dark:hover:border-red-500 shadow-sm transition-all text-xs font-medium opacity-80 hover:opacity-100 z-10 ml-2";
+    "mb-1 py-2 px-4 border border-border-primary bg-bg-tertiary text-text-secondary hover:text-status-error hover:border-status-error transition-all text-xs font-medium font-mono uppercase tracking-wide z-10 ml-2";
 
   const renderEditArea = () => {
     if (tab.type === "markdown" || tab.type === "csv") {
       return (
         <textarea
-          className="w-full h-full min-h-[300px] flex-1 p-2 border border-neutral-300 dark:border-neutral-700 rounded-md bg-neutral-50 dark:bg-neutral-900 text-sm font-mono mb-4 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-vertical"
+          className="w-full h-full min-h-[300px] flex-1 p-2 border border-border-primary bg-bg-primary text-text-primary text-sm font-mono mb-4 focus:outline-none focus:border-accent-primary resize-vertical"
           style={{ minHeight: "300px", height: "100%" }}
           value={draft}
           onChange={e => setDraft(e.target.value)}
@@ -57,7 +57,7 @@ export default function TabContent({ tab }: Props) {
     }
     return (
       <input
-        className="w-full p-2 border border-neutral-300 dark:border-neutral-700 rounded-md bg-neutral-50 dark:bg-neutral-900 text-sm font-mono mb-4 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        className="w-full p-2 border border-border-primary bg-bg-primary text-text-primary text-sm font-mono mb-4 focus:outline-none focus:border-accent-primary"
         value={draft}
         onChange={e => setDraft(e.target.value)}
       />

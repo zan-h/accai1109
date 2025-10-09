@@ -48,7 +48,7 @@ export default function Sidebar({
 
       <button
         onClick={handleAddDefaultTab}
-        className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+        className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-accent-primary transition-colors font-mono uppercase tracking-wide"
       >
         <FontAwesomeIcon icon={faPlus} className="h-4 w-4" /> Add tab
       </button>
@@ -60,7 +60,7 @@ export default function Sidebar({
           localStorage.removeItem('workspaceState');
           window.location.reload();
         }}
-        className="w-full mb-1 py-2 rounded-md border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-400 hover:text-red-500 hover:border-red-300 dark:hover:border-red-500 shadow-sm transition-all text-xs font-medium opacity-80 hover:opacity-100 z-10"
+        className="w-full mb-1 py-2 border border-border-primary bg-bg-tertiary text-text-secondary hover:text-status-error hover:border-status-error transition-all text-xs font-medium font-mono uppercase tracking-wide"
         style={{ position: 'sticky', bottom: 0 }}
         title="Reset workspace to default"
       >
@@ -102,12 +102,12 @@ function TabItem({ tab, isActive, onSelect, onRename, onDelete }: ItemProps) {
 
   return (
     <li
-      className={`group relative flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${isActive ? "bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-50" : "text-neutral-700 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-900/40 hover:text-neutral-900 dark:hover:text-neutral-100"}`}
+      className={`group relative flex items-center justify-between px-3 py-2 text-sm font-medium transition-all cursor-pointer border border-transparent font-mono ${isActive ? "bg-bg-tertiary border-accent-primary text-text-primary shadow-glow-cyan" : "text-text-secondary hover:bg-bg-tertiary/50 hover:border-border-primary hover:text-text-primary"}`}
       onClick={() => onSelect(tab.id)}
     >
       {editing ? (
         <input
-          className="w-full bg-transparent outline-none border-none text-sm"
+          className="w-full bg-transparent outline-none border-none text-sm text-text-primary font-mono"
           value={draftName}
           onChange={(e) => setDraftName(e.target.value)}
           onBlur={saveName}
@@ -131,7 +131,7 @@ function TabItem({ tab, isActive, onSelect, onRename, onDelete }: ItemProps) {
       {!editing && (
         <div className="absolute right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            className="group-hover:text-neutral-500 group-hover:dark:text-neutral-300"
+            className="text-text-tertiary hover:text-accent-primary transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setEditing(true);
@@ -140,7 +140,7 @@ function TabItem({ tab, isActive, onSelect, onRename, onDelete }: ItemProps) {
             <FontAwesomeIcon icon={faPen} className="h-3.5 w-3.5" />
           </button>
           <button
-            className="group-hover:text-neutral-500 group-hover:dark:text-neutral-300"
+            className="text-text-tertiary hover:text-status-error transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(tab.id);
