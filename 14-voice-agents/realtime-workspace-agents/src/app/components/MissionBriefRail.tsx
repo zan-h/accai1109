@@ -103,7 +103,7 @@ export default function MissionBriefRail() {
                     deleteSection(section.id);
                   }
                 }}
-                onToggleInProject={(isInProject) => {
+                onToggleInProject={() => {
                   if (!section.isGlobal) {
                     handleToggleSectionInProject(section.id, section.isGlobal);
                   }

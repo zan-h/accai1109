@@ -3,6 +3,7 @@
 import React from "react";
 import Sidebar from "@/app/components/workspace/Sidebar";
 import TabContent from "@/app/components/workspace/TabContent";
+import MissionBriefRail from "@/app/components/MissionBriefRail";
 import { useWorkspaceContext, WorkspaceState } from "@/app/contexts/WorkspaceContext";
 import { useProject } from "@/app/contexts/ProjectContext";
 
@@ -65,12 +66,15 @@ function Workspace() {
           )}
         </div>
         <div className="text-xs text-text-tertiary font-mono">
-          <span className="text-accent-primary">Cmd+P</span> to switch projects
+          <span className="text-accent-primary">Cmd+P</span> projects · <span className="text-accent-primary">Cmd+B</span> brief
         </div>
       </div>
 
-      {/* Content area split between sidebar + tab content */}
+      {/* Content area with Mission Brief Rail + Workspace */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Mission Brief Rail (left) */}
+        <MissionBriefRail />
+        
         {/* Sidebar (tab list) */}
         <div className="w-48 border-r border-border-primary overflow-y-auto">
           <Sidebar
