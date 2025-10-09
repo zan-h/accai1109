@@ -11,6 +11,7 @@ import React, {
   PropsWithChildren,
   FC,
   useEffect,
+  useRef,
 } from "react";
 
 import { nanoid } from "nanoid";
@@ -48,11 +49,16 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
   const [description, setDescription] = useState("");
   const [tabs, setTabsInternal] = useState<WorkspaceTab[]>([]);
   const [selectedTabId, setSelectedTabIdInternal] = useState<string>("");
+  
+  // Track if we're currently loading from a project to prevent save loop
+  const isLoadingRef = useRef(false);
 
   // Load tabs from current project whenever project changes
   useEffect(() => {
     const currentProject = getCurrentProject();
     if (currentProject) {
+      isLoadingRef.current = true;
+      
       setName(currentProject.name);
       setDescription(""); // Projects don't have descriptions yet
       setTabsInternal(currentProject.tabs || []);
@@ -64,12 +70,17 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
       } else if (!currentProject.tabs?.length) {
         setSelectedTabIdInternal("");
       }
+      
+      // Reset loading flag after state updates have settled
+      setTimeout(() => {
+        isLoadingRef.current = false;
+      }, 0);
     }
   }, [currentProjectId, getCurrentProject]);
 
-  // Save tabs back to current project whenever they change
+  // Save tabs back to current project whenever they change (but not during loading)
   useEffect(() => {
-    if (!currentProjectId) return;
+    if (!currentProjectId || isLoadingRef.current) return;
     updateProjectTabs(currentProjectId, tabs);
   }, [tabs, currentProjectId, updateProjectTabs]);
 
