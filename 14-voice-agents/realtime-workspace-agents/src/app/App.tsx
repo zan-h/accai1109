@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { v4 as uuidv4 } from "uuid";
+// import { v4 as uuidv4 } from "uuid"; // No longer needed - removed automatic "hi" message
 
 import Image from "next/image";
 
@@ -10,6 +10,7 @@ import Transcript from "./components/Transcript";
 import Events from "./components/Events";
 import BottomToolbar from "./components/BottomToolbar";
 import Workspace from "./components/Workspace";
+import ProjectSwitcher from "./components/ProjectSwitcher";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -18,6 +19,7 @@ import type { RealtimeAgent } from '@openai/agents/realtime';
 // Context providers & hooks
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
+import { useProjectContext } from "@/app/contexts/ProjectContext";
 import { useRealtimeSession } from "./hooks/useRealtimeSession";
 import { createModerationGuardrail } from "@/app/agentConfigs/guardrails";
 
@@ -76,10 +78,11 @@ function App() {
   // via global codecPatch at module load 
 
   const {
-    addTranscriptMessage,
+    // addTranscriptMessage, // No longer needed - removed automatic "hi" message
     addTranscriptBreadcrumb,
   } = useTranscript();
   const { logClientEvent, logServerEvent } = useEvent();
+  const { currentProjectId, getCurrentProject } = useProjectContext();
 
   const [selectedAgentName, setSelectedAgentName] = useState<string>("");
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] = useState<
@@ -89,6 +92,8 @@ function App() {
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   // Ref to identify whether the latest agent switch came from an automatic handoff
   const handoffTriggeredRef = useRef(false);
+  // Ref to track which project the agent is connected to (for auto-disconnect on project switch)
+  const connectedProjectIdRef = useRef<string | null>(null);
 
   const sdkAudioElement = React.useMemo(() => {
     if (typeof window === 'undefined') return undefined;
@@ -188,7 +193,7 @@ function App() {
         (a) => a.name === selectedAgentName
       );
       addTranscriptBreadcrumb(`Agent: ${selectedAgentName}`, currentAgent);
-      updateSession(!handoffTriggeredRef.current);
+      updateSession(); // No longer triggers automatic response
       // Reset flag after handling so subsequent effects behave normally
       handoffTriggeredRef.current = false;
     }
@@ -245,6 +250,15 @@ function App() {
             addTranscriptBreadcrumb,
           },
         });
+
+        // Track which project we connected to
+        connectedProjectIdRef.current = currentProjectId;
+        
+        // Add breadcrumb showing which project agent is connected to
+        const currentProject = getCurrentProject();
+        if (currentProject) {
+          addTranscriptBreadcrumb(`🗂️ Connected to project: ${currentProject.name}`);
+        }
       } catch (err) {
         console.error("Error connecting via SDK:", err);
         setSessionStatus("DISCONNECTED");
@@ -257,25 +271,27 @@ function App() {
     disconnect();
     setSessionStatus("DISCONNECTED");
     setIsPTTUserSpeaking(false);
+    // Clear connected project ref
+    connectedProjectIdRef.current = null;
   };
 
-  const sendSimulatedUserMessage = (text: string) => {
-    const id = uuidv4().slice(0, 32);
-    addTranscriptMessage(id, "user", text, true);
+  // Removed sendSimulatedUserMessage - no longer needed since we don't auto-send "hi"
+  // const sendSimulatedUserMessage = (text: string) => {
+  //   const id = uuidv4().slice(0, 32);
+  //   addTranscriptMessage(id, "user", text, true);
+  //   sendClientEvent({
+  //     type: 'conversation.item.create',
+  //     item: {
+  //       id,
+  //       type: 'message',
+  //       role: 'user',
+  //       content: [{ type: 'input_text', text }],
+  //     },
+  //   });
+  //   sendClientEvent({ type: 'response.create' }, '(simulated user text message)');
+  // };
 
-    sendClientEvent({
-      type: 'conversation.item.create',
-      item: {
-        id,
-        type: 'message',
-        role: 'user',
-        content: [{ type: 'input_text', text }],
-      },
-    });
-    sendClientEvent({ type: 'response.create' }, '(simulated user text message)');
-  };
-
-  const updateSession = (shouldTriggerResponse: boolean = false) => {
+  const updateSession = () => {
     // Reflect Push-to-Talk UI state by (de)activating server VAD on the
     // backend. The Realtime SDK supports live session updates via the
     // `session.update` event.
@@ -296,10 +312,11 @@ function App() {
       },
     });
 
-    // Send an initial 'hi' message to trigger the agent to greet the user
-    if (shouldTriggerResponse) {
-      sendSimulatedUserMessage('hi');
-    }
+    // Removed automatic "hi" message - let user initiate conversation
+    // This prevents wasteful get_workspace_info calls on every connection
+    // if (shouldTriggerResponse) {
+    //   sendSimulatedUserMessage('hi');
+    // }
   }
 
   const handleSendTextMessage = () => {
@@ -449,6 +466,44 @@ function App() {
     localStorage.setItem('transcriptVisible', isTranscriptVisible.toString());
   }, [isTranscriptVisible]);
 
+  // Project Switcher state
+  const [isProjectSwitcherOpen, setIsProjectSwitcherOpen] = useState(false);
+
+  // Keyboard shortcut for project switcher (Cmd+P / Ctrl+P)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+        e.preventDefault();
+        setIsProjectSwitcherOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Auto-disconnect agent when switching projects (CRITICAL for context sync)
+  useEffect(() => {
+    // Only run if agent is connected
+    if (sessionStatus === "DISCONNECTED") return;
+    
+    // If we're connected to a different project than the current one, disconnect
+    if (connectedProjectIdRef.current && 
+        connectedProjectIdRef.current !== currentProjectId) {
+      
+      console.log('🔄 Project switched while agent connected - auto-disconnecting');
+      disconnectFromRealtime();
+      
+      // Show clear notification to user
+      const currentProject = getCurrentProject();
+      if (currentProject) {
+        addTranscriptBreadcrumb(
+          `🔄 Switched to project: ${currentProject.name}. Connect to start a new conversation.`
+        );
+      }
+    }
+  }, [currentProjectId, sessionStatus, disconnectFromRealtime, getCurrentProject, addTranscriptBreadcrumb]);
+
   return (
     <div className="text-base flex flex-col h-screen bg-bg-primary text-text-primary relative">
       <div className="p-5 text-lg font-semibold flex justify-between items-center">
@@ -495,7 +550,10 @@ function App() {
 
       <div className="flex flex-1 gap-2 px-2 overflow-hidden relative">
         {typeof window !== 'undefined' && (new URL(window.location.href).searchParams.get('agentConfig') === 'workspaceBuilder') && (
-          <Workspace />
+          <Workspace 
+            sessionStatus={sessionStatus}
+            onOpenProjectSwitcher={() => setIsProjectSwitcherOpen(true)}
+          />
         )}
         <Transcript
           userText={userText}
@@ -524,6 +582,14 @@ function App() {
         onCodecChange={handleCodecChange}
         isTranscriptVisible={isTranscriptVisible}
         setIsTranscriptVisible={setIsTranscriptVisible}
+        currentProjectName={getCurrentProject()?.name}
+      />
+
+      {/* Project Switcher Modal */}
+      <ProjectSwitcher
+        isOpen={isProjectSwitcherOpen}
+        onClose={() => setIsProjectSwitcherOpen(false)}
+        sessionStatus={sessionStatus}
       />
     </div>
   );

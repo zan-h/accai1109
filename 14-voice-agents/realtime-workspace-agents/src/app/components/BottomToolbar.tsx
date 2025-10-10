@@ -17,6 +17,7 @@ interface BottomToolbarProps {
   onCodecChange: (newCodec: string) => void;
   isTranscriptVisible: boolean;
   setIsTranscriptVisible: (val: boolean) => void;
+  currentProjectName?: string;
 }
 
 function BottomToolbar({
@@ -35,6 +36,7 @@ function BottomToolbar({
   onCodecChange,
   isTranscriptVisible,
   setIsTranscriptVisible,
+  currentProjectName,
 }: BottomToolbarProps) {
   const isConnected = sessionStatus === "CONNECTED";
   const isConnecting = sessionStatus === "CONNECTING";
@@ -47,6 +49,7 @@ function BottomToolbar({
   function getConnectionButtonLabel() {
     if (isConnected) return "Disconnect";
     if (isConnecting) return "Connecting...";
+    if (currentProjectName) return `Connect to ${currentProjectName}`;
     return "Connect";
   }
 

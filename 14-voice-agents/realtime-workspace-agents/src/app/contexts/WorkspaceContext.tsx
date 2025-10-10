@@ -1,6 +1,7 @@
 "use client";
 
 // A standard React context/provider implementation for workspace state.
+// Now integrated with ProjectContext for multi-project support.
 
 import React, {
   createContext,
@@ -10,10 +11,12 @@ import React, {
   PropsWithChildren,
   FC,
   useEffect,
+  useRef,
 } from "react";
 
 import { nanoid } from "nanoid";
 import type { WorkspaceTab } from "@/app/types";
+import { useProjectContext } from "@/app/contexts/ProjectContext";
 
 export interface WorkspaceState {
   // Data
@@ -35,6 +38,8 @@ export interface WorkspaceState {
 const WorkspaceContext = createContext<WorkspaceState | undefined>(undefined);
 
 export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
+  const { currentProjectId, getCurrentProject, updateProjectTabs } = useProjectContext();
+  
   // -----------------------------------------------------------------------
   // Raw state values
   // -----------------------------------------------------------------------
@@ -43,30 +48,55 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
   const [description, setDescription] = useState("");
   const [tabs, setTabsInternal] = useState<WorkspaceTab[]>([]);
   const [selectedTabId, setSelectedTabIdInternal] = useState<string>("");
+  
+  // Performance optimization: track last load time to prevent circular updates
+  const lastLoadTimeRef = useRef<number>(0);
 
-  // Load from localStorage on mount
+  // Load tabs from current project when it changes
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const saved = localStorage.getItem('workspaceState');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.name) setName(parsed.name);
-        if (parsed.description) setDescription(parsed.description);
-        if (Array.isArray(parsed.tabs)) setTabsInternal(parsed.tabs);
-        if (parsed.selectedTabId) setSelectedTabIdInternal(parsed.selectedTabId);
-      } catch {
-        // ignore
-      }
+    if (!currentProjectId) return;
+    
+    const currentProject = getCurrentProject();
+    if (!currentProject) return;
+    
+    // Load tabs from project
+    setTabsInternal(currentProject.tabs || []);
+    
+    // Select first tab if none selected or selected tab doesn't exist
+    if (!currentProject.tabs.find((t) => t.id === selectedTabId)) {
+      setSelectedTabIdInternal(currentProject.tabs[0]?.id || "");
     }
-  }, []);
+    
+    // Update project name/description
+    setName(currentProject.name);
+    setDescription("");
+    
+    // Track when we loaded
+    lastLoadTimeRef.current = Date.now();
+    
+    console.log('📂 Loaded tabs for project:', currentProject.name, '→', currentProject.tabs.length, 'tabs');
+  }, [currentProjectId]); // Only depend on currentProjectId, not getCurrentProject
 
-  // Save to localStorage on any change
+  // Save tabs back to project (debounced)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const state = { name, description, tabs, selectedTabId };
-    localStorage.setItem('workspaceState', JSON.stringify(state));
-  }, [name, description, tabs, selectedTabId]);
+    if (!currentProjectId) return;
+    if (tabs.length === 0 && !getCurrentProject()) return; // Don't save empty state on initial load
+    
+    // Grace period: don't save immediately after loading to prevent circular updates
+    const timeSinceLoad = Date.now() - lastLoadTimeRef.current;
+    if (timeSinceLoad < 300) {
+      console.log('⏸️  Skipping save (within grace period)');
+      return;
+    }
+    
+    // Debounce: wait 200ms before saving
+    const timeout = setTimeout(() => {
+      updateProjectTabs(currentProjectId, tabs);
+      console.log('💾 Saved tabs to project:', tabs.length, 'tabs');
+    }, 200);
+    
+    return () => clearTimeout(timeout);
+  }, [tabs, currentProjectId, updateProjectTabs, getCurrentProject]);
 
   // -----------------------------------------------------------------------
   // Helper setters that also maintain invariants
