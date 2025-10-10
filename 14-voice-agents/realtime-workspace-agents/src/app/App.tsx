@@ -10,8 +10,6 @@ import Transcript from "./components/Transcript";
 import Events from "./components/Events";
 import BottomToolbar from "./components/BottomToolbar";
 import Workspace from "./components/Workspace";
-import ProjectSwitcher from "./components/ProjectSwitcher";
-import { useBrief } from "./contexts/BriefContext";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -82,10 +80,6 @@ function App() {
     addTranscriptBreadcrumb,
   } = useTranscript();
   const { logClientEvent, logServerEvent } = useEvent();
-  const { toggleExpanded } = useBrief();
-
-  // Project switcher state
-  const [isProjectSwitcherOpen, setIsProjectSwitcherOpen] = useState(false);
 
   const [selectedAgentName, setSelectedAgentName] = useState<string>("");
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] = useState<
@@ -455,39 +449,8 @@ function App() {
     localStorage.setItem('transcriptVisible', isTranscriptVisible.toString());
   }, [isTranscriptVisible]);
 
-  // Global keyboard shortcuts (Cmd+P for projects, Cmd+B for brief)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd+P or Ctrl+P - open project switcher
-      if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
-        e.preventDefault();
-        setIsProjectSwitcherOpen(true);
-      }
-      
-      // Cmd+B or Ctrl+B - toggle mission brief rail
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-        e.preventDefault();
-        toggleExpanded();
-      }
-      
-      // Esc - close project switcher
-      if (e.key === 'Escape' && isProjectSwitcherOpen) {
-        setIsProjectSwitcherOpen(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isProjectSwitcherOpen, toggleExpanded]);
-
   return (
     <div className="text-base flex flex-col h-screen bg-bg-primary text-text-primary relative">
-      {/* Project Switcher Modal */}
-      <ProjectSwitcher 
-        isOpen={isProjectSwitcherOpen} 
-        onClose={() => setIsProjectSwitcherOpen(false)} 
-      />
-      
       <div className="p-5 text-lg font-semibold flex justify-between items-center">
         <div
           className="flex items-center cursor-pointer"
