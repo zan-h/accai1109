@@ -790,6 +790,169 @@ User feedback indicated bottom toolbar and Edit button breaking immersion. Fixed
 - Collapsed state shows icon buttons for quick access
 - Expanded state shows full section content
 
+**✅ WORKSPACE FEATURES IMPLEMENTATION COMPLETE (2025-10-09)**
+
+Both major features from `WORKSPACE_FEATURE_PROMPT.md` have been successfully implemented:
+
+1. **Multi-Project System** (Phase 1)
+   - Command palette project switcher (Cmd+P)
+   - Fuzzy search filtering
+   - Recent projects tracking
+   - Project-specific tab management
+   - Automatic migration from old workspace state
+   - Fixed circular dependency glitch
+
+2. **Mission Brief Side Rail** (Phase 2)
+   - Collapsible left panel (40px collapsed, 300px expanded)
+   - Four templates: Goals, Values, Schedule, Custom
+   - Global and project-specific sections
+   - Inline editing with markdown support
+   - Cmd+B keyboard shortcut
+   - Auto-collapse timer option
+
+**Next Steps for User:**
+- Test Cmd+P to switch/create projects
+- Test Cmd+B to toggle mission brief  
+- Verify tabs are project-specific
+- Create some brief sections
+- Test global vs project-specific sections
+
+All commits pushed to `origin/main`
+
+---
+
+## PERFORMANCE OPTIMIZATION: Fix Slowness & Context Issues (2025-10-09)
+
+**User Reported Issues:**
+1. When switching projects, voice agents don't see the new project context
+2. App became really slow after implementing project system
+
+**Root Causes Identified:**
+1. **Excessive Re-renders**: Effects were firing on every render due to unstable function dependencies
+2. **No Debouncing**: Every tab change immediately saved to ProjectContext, triggering cascading updates
+3. **Circular Dependencies**: Load effect depended on `getCurrentProject()` function which was recreated every render
+
+**Optimizations Applied:**
+
+✅ **WorkspaceContext Optimizations**:
+- **Removed unstable dependencies**: Load effect only depends on `currentProjectId`, not getter functions
+- **Added debouncing**: Save operations debounced by 200ms to batch multiple changes
+- **Smart load detection**: Only loads tabs when actually switching to a different project
+- **Post-load grace period**: Skips saves for 300ms after loading to prevent immediate re-save
+- **Timestamp tracking**: Uses refs to track load times, preventing circular updates
+
+**How It Works Now:**
+1. User switches project → `currentProjectId` changes
+2. Load effect fires ONCE, sets `lastLoadTimeRef`
+3. Tabs load, triggering save effect
+4. Save effect sees we're within 300ms grace period → skips
+5. User makes actual changes → save effect waits 200ms → batches save
+
+**Voice Agent Context:**
+- Agents use `useWorkspaceContext.getState()` which reads from `WorkspaceProviderState.current`
+- This ref is updated every render, so agents always see current state
+- The optimization doesn't affect this - agents still get real-time state
+
+**Testing Needed:**
+- [ ] Switch between projects - should be instant, no flash
+- [ ] Modify tabs - should save after 200ms (check localStorage in devtools)
+- [ ] Voice agents - should see updated workspace when you switch projects
+- [ ] Performance - should feel snappy now
+
+**Status:** Ready for testing (NOT committed yet per user request)
+
+---
+
+## UX ENHANCEMENT: Auto-Disconnect on Project Switch (2025-10-09)
+
+**User Reported Issue:**
+"When I switch projects, the realtime agent doesn't capture that. When I ask it questions about the workspace it's still captures the context of the previous one."
+
+**Root Cause:**
+- Voice agent establishes connection with workspace state at connection time
+- When user switches projects, workspace updates but agent's LLM conversation history still contains old project context
+- Agent continues referencing old tabs because they're in the message history
+
+**UX Solution Implemented: "One Conversation Per Project"**
+
+Design principle: Clear mental model where each project has its own conversation thread.
+
+**Implementation:**
+1. **Track Connected Project**: `connectedProjectIdRef` stores which project the agent was connected with
+2. **Auto-Disconnect on Switch**: Effect watches `currentProjectId` and disconnects if it changes while connected
+3. **Clear Visual Feedback**: 
+   - On connect: "🗂️ Connected to project: [Name]" breadcrumb
+   - On switch: "🔄 Switched to project: [Name]. Connect to start a new conversation." breadcrumb
+4. **Clean State**: Ref is cleared on disconnect
+
+**User Flow:**
+```
+User connects to Project A
+  → Breadcrumb: "🗂️ Connected to project: Project A"
+  → Agent sees Project A tabs
+  
+User presses Cmd+P and switches to Project B
+  → Auto-disconnect triggered
+  → Breadcrumb: "🔄 Switched to project: Project B. Connect to start a new conversation."
+  → Agent is disconnected
+  
+User clicks Connect
+  → New session with clean context
+  → Breadcrumb: "🗂️ Connected to project: Project B"
+  → Agent sees Project B tabs
+```
+
+**Why This is Good UX:**
+- ✅ **Clear mental model**: One conversation = one project
+- ✅ **No confusion**: Agent can't mix contexts from different projects
+- ✅ **User control**: User initiates connection when ready
+- ✅ **Visual clarity**: Breadcrumbs show exactly what's happening
+- ✅ **No data leakage**: Previous project data doesn't pollute new conversation
+
+**Alternative Approaches Considered:**
+1. ❌ **Auto-reconnect**: Too jarring, interrupts ongoing conversation
+2. ❌ **Send update message**: Agent might still reference old context
+3. ❌ **Manual reset only**: User has to remember, easy to forget
+
+**Status:** Ready for testing (NOT committed yet per user request)
+
+---
+
+## 📋 COMPREHENSIVE IMPLEMENTATION GUIDE CREATED (2025-10-09)
+
+**File:** `AGENT_PROJECT_SYNC_IMPLEMENTATION.md` (400+ lines)
+
+Created extensive documentation for next model/session covering:
+
+**Architecture Analysis:**
+- Deep dive into current agent system (RealtimeSession, WorkspaceContext, ProjectContext)
+- How agent tools access workspace state
+- OpenAI Realtime API session model limitations
+- Why agent keeps stale context (conversation history is server-side)
+
+**Solution Options Analyzed (5 approaches):**
+1. ⭐ **Auto-Disconnect on Project Switch** (RECOMMENDED - already implemented)
+2. Send "Context Update" Message (unreliable)
+3. Inject Tool Call Response (hacky, violates API)
+4. Auto-Disconnect + Auto-Reconnect (poor UX)
+5. Manual "Refresh Context" Button (easy to forget)
+
+**Implementation Details:**
+- Step-by-step implementation guide
+- Code already written in App.tsx & WorkspaceContext.tsx (uncommitted)
+- 15+ edge cases documented and solutions provided
+- Testing checklist (18 functional + edge case + performance tests)
+- UX enhancement options (project name in button, per-project transcripts)
+- Fallback plans if auto-disconnect doesn't work
+
+**Quick Start for Next Model:**
+1. Read AGENT_PROJECT_SYNC_IMPLEMENTATION.md
+2. Test auto-disconnect feature (instructions provided)
+3. Run critical test: Does agent reference old project tabs? (Should be NO)
+4. Commit if working, debug using guide if not
+
+**Purpose:** Complete architectural understanding and implementation roadmap for context refresh scenarios.
+
 ---
 
 ## BUGFIX: Table & Events Panel Contrast Issues (2025-10-09)
