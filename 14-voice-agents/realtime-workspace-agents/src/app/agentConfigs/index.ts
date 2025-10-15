@@ -1,1 +1,66 @@
+// ============================================
+// SUITE REGISTRY
+// ============================================
+
+import { AgentSuite, SuiteRegistry } from './types';
+import { 
+  getAllSuites,
+  getSuiteById,
+  getSuitesByCategory,
+  getSuitesByTag,
+  searchSuites,
+} from './utils/suiteDiscovery';
+import { registerSuiteManually } from './utils/manualRegistration';
+
+// Import suites
+import energyFocusSuite from './suites/energy-focus';
+import babyCareSuite from './suites/baby-care';
+
+// For now, manually register suites
+// In Phase 4, this will be populated with actual suites
+const suiteRegistry: SuiteRegistry = {};
+
+// Register suites
+registerSuiteManually(suiteRegistry, energyFocusSuite);
+registerSuiteManually(suiteRegistry, babyCareSuite);
+
+console.log('📦 Registered suites:', Object.keys(suiteRegistry));
+
+// Export registry and helper functions
+export {
+  suiteRegistry,
+};
+
+export function getRegistry(): SuiteRegistry {
+  return suiteRegistry;
+}
+
+export function getAllAvailableSuites(): AgentSuite[] {
+  return getAllSuites(suiteRegistry);
+}
+
+export function findSuiteById(id: string): AgentSuite | undefined {
+  return getSuiteById(suiteRegistry, id);
+}
+
+export function findSuitesByCategory(category: string): AgentSuite[] {
+  return getSuitesByCategory(suiteRegistry, category);
+}
+
+export function findSuitesByTag(tag: string): AgentSuite[] {
+  return getSuitesByTag(suiteRegistry, tag);
+}
+
+export function searchAllSuites(query: string): AgentSuite[] {
+  return searchSuites(suiteRegistry, query);
+}
+
+// Default suite ID (will be configurable)
+export const defaultSuiteId = 'energy-focus';
+
+// ============================================
+// BACKWARDS COMPATIBILITY
+// ============================================
+
+// Keep existing exports for backwards compatibility
 export * from './scenarios';

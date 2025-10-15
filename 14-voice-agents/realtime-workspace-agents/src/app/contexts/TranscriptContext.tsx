@@ -10,6 +10,9 @@ import React, {
 import { v4 as uuidv4 } from "uuid";
 import { TranscriptItem } from "@/app/types";
 
+// Maximum number of transcript items to keep in memory (prevents unbounded growth)
+const MAX_TRANSCRIPT_ITEMS = 200;
+
 type TranscriptContextValue = {
   transcriptItems: TranscriptItem[];
   addTranscriptMessage: (
@@ -60,7 +63,13 @@ export const TranscriptProvider: FC<PropsWithChildren> = ({ children }) => {
         isHidden,
       };
 
-      return [...prev, newItem];
+      // Keep only the most recent MAX_TRANSCRIPT_ITEMS (FIFO eviction)
+      const updated = [...prev, newItem];
+      if (updated.length > MAX_TRANSCRIPT_ITEMS) {
+        // Remove oldest items
+        return updated.slice(-MAX_TRANSCRIPT_ITEMS);
+      }
+      return updated;
     });
   };
 
@@ -79,9 +88,8 @@ export const TranscriptProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   const addTranscriptBreadcrumb: TranscriptContextValue["addTranscriptBreadcrumb"] = (title, data) => {
-    setTranscriptItems((prev) => [
-      ...prev,
-      {
+    setTranscriptItems((prev) => {
+      const newItem: TranscriptItem = {
         itemId: `breadcrumb-${uuidv4()}`,
         type: "BREADCRUMB",
         title,
@@ -91,8 +99,16 @@ export const TranscriptProvider: FC<PropsWithChildren> = ({ children }) => {
         createdAtMs: Date.now(),
         status: "DONE",
         isHidden: false,
-      },
-    ]);
+      };
+      
+      // Keep only the most recent MAX_TRANSCRIPT_ITEMS (FIFO eviction)
+      const updated = [...prev, newItem];
+      if (updated.length > MAX_TRANSCRIPT_ITEMS) {
+        // Remove oldest items
+        return updated.slice(-MAX_TRANSCRIPT_ITEMS);
+      }
+      return updated;
+    });
   };
 
   const toggleTranscriptItemExpand: TranscriptContextValue["toggleTranscriptItemExpand"] = (itemId) => {

@@ -1,7 +1,7 @@
 Background and Motivation
 The current repo contains a Next.js demo of multi-agent realtime voice interactions using the OpenAI Realtime SDK. Scenarios include real estate, customer service retail, a chat supervisor pattern, a workspace builder, and a simple handoff. The goal is to generalize this into "various agents that support a user to do great, embodied work," shifting from vertical demos to a reusable multi-agent substrate (voice-first, tool-using, handoff-capable, guardrail-aware) that can be specialized per domain.
 
-**Current Analysis Request:** Thorough breakdown of the `/src/app` directory structure, identifying deletable elements and consequences of deletion.
+**Latest Activity:** Comprehensive code review and debugging analysis of multi-suite system implementation (completed Oct 13, 2025)
 
 Key Challenges and Analysis
 
@@ -911,6 +911,86 @@ Created extensive documentation for next model/session covering:
 
 ---
 
+## 🐛 CRITICAL PERFORMANCE BUG: Memory Leaks Causing Laptop Slowdown (2025-10-13)
+
+**User Report:** "When I run this app, especially when it's ran for a while it makes my whole laptop slow."
+
+**Root Causes Identified:**
+
+1. **EventContext Unbounded Growth** (CRITICAL)
+   - File: `contexts/EventContext.tsx` line 22
+   - Every WebRTC event stored forever in `loggedEvents` array
+   - No limit, no cleanup - grows to tens of thousands of events
+   - Impact: Massive memory leak, slows entire system
+
+2. **TranscriptContext Unbounded Growth** (CRITICAL)  
+   - File: `contexts/TranscriptContext.tsx` lines 45, 82
+   - All messages and breadcrumbs stored forever in `transcriptItems` array
+   - Long conversations accumulate thousands of items
+   - Impact: Major memory leak
+
+3. **Audio Element DOM Leak** (HIGH)
+   - File: `App.tsx` lines 116-123
+   - Creates audio element and appends to document.body
+   - Never removed from DOM
+   - Impact: Orphaned DOM nodes accumulate
+
+4. **Session Event Handler Leaks** (MEDIUM)
+   - File: `hooks/useRealtimeSession.ts` lines 88-109
+   - Event handlers attached but cleanup may not fire properly
+   - Impact: Event listener accumulation
+
+**Solutions Implemented:**
+
+1. ✅ **EventContext Memory Limit** (COMPLETE)
+   - Added MAX_EVENTS = 500 constant
+   - Modified `addLoggedEvent` to use FIFO eviction (slice oldest when > 500)
+   - Now keeps only most recent 500 events instead of unlimited growth
+
+2. ✅ **TranscriptContext Memory Limit** (COMPLETE)
+   - Added MAX_TRANSCRIPT_ITEMS = 200 constant  
+   - Modified `addTranscriptMessage` to use FIFO eviction
+   - Modified `addTranscriptBreadcrumb` to use FIFO eviction
+   - Now keeps only most recent 200 items instead of unlimited growth
+
+3. ✅ **Audio Element Cleanup** (COMPLETE)
+   - Added cleanup effect in App.tsx that removes audio element from DOM
+   - Runs on component unmount to prevent orphaned DOM nodes
+   - Logs cleanup action for debugging
+
+4. ✅ **Session Event Handler Cleanup** (COMPLETE)
+   - Refactored useRealtimeSession effect to store session in const
+   - Added return cleanup function that calls `.off()` on all 8 event handlers
+   - Prevents event listener accumulation on reconnects
+   - Logs cleanup action for debugging
+
+5. ✅ **Memory Monitoring System** (COMPLETE)
+   - Created new `lib/memoryMonitor.ts` utility class
+   - Monitors heap usage every 30 seconds (configurable)
+   - Warns when memory > 80% of limit
+   - Detects rapid growth (potential leaks)
+   - Integrated into App.tsx, auto-starts in development mode
+   - Console logs: "📊 Memory: XXmb / XXXmb (XX%)"
+
+**Files Modified:**
+- `contexts/EventContext.tsx` - Added size limit
+- `contexts/TranscriptContext.tsx` - Added size limit  
+- `App.tsx` - Added audio cleanup + memory monitoring
+- `hooks/useRealtimeSession.ts` - Added event handler cleanup
+- `lib/memoryMonitor.ts` - NEW FILE - Memory monitoring utility
+
+**Status:** ✅ **FIXES COMPLETE** - Ready for testing
+**No linter errors**
+
+**Testing Instructions:**
+1. Run app in dev mode - should see "🔍 Memory monitoring enabled"
+2. Use app for 5+ minutes - check console for memory stats every 30s
+3. Connect/disconnect multiple times - memory should NOT grow unboundedly
+4. Check browser DevTools Memory tab - heap size should stabilize
+5. Leave app running for 30+ minutes - laptop should NOT slow down
+
+---
+
 ## BUGFIX: Table & Events Panel Contrast Issues (2025-10-09)
 
 **User Reported Issue:**
@@ -968,6 +1048,309 @@ Created extensive documentation for next model/session covering:
   - Streamlined 4-phase approach with essential rules and guidelines
 - Both prompts ready to be given to Claude 4.5 Sonnet for style implementation
 
+---
+
+## 🎉 MULTI-SUITE SYSTEM IMPLEMENTATION COMPLETE (2025-10-11)
+
+**Status:** ✅ **FUNCTIONAL** - Ready for testing
+
+### What Was Built:
+
+**✅ Phase 1-2: Foundation & Registry (Complete)**
+- Comprehensive suite type definitions with Zod validation
+- Shared tools directory (workspace tools, guardrails)
+- Suite registry with search, filter, category functions
+- Manual suite registration helpers
+
+**✅ Phase 3: UI Components (Complete)**
+- `SuiteIndicator.tsx` - Shows current suite with click to change
+- `SuiteCard.tsx` - Expandable suite display with metadata
+- `SuiteSelector.tsx` - Full modal with search, category filters, empty states
+- `workspaceInitializer.ts` - Template loading system
+
+**✅ Phase 4: Energy-Focus Suite Migration (Complete)**
+- Suite config with 3 workspace templates
+- 3 agents migrated: energyCoach, taskStrategist, bodyDoubling
+- Handoffs wired between all agents
+- **Successfully registered** in suite registry
+
+**✅ Phase 6: App.tsx Integration (Complete)**
+- Suite selection state management
+- Suite selector shows on first load
+- Connection logic updated to use suite agents
+- Workspace initializes with suite templates
+- Suite switching with disconnect confirmation
+- SuiteIndicator in header
+- Backwards compatible with old scenario system
+
+### System Architecture:
+
+```
+src/app/agentConfigs/
+├── types.ts                    # Suite type definitions
+├── index.ts                    # Suite registry + exports
+├── shared/                     # Shared infrastructure
+│   ├── tools/workspace/        # Workspace tools
+│   ├── guardrails/             # Moderation guardrails
+│   └── prompts/                # (empty, for future)
+├── utils/                      # Discovery & validation
+│   ├── suiteDiscovery.ts
+│   ├── suiteValidator.ts
+│   └── manualRegistration.ts
+└── suites/
+    ├── _suite-template/        # Template for new suites
+    └── energy-focus/           # ✅ ACTIVE SUITE
+        ├── suite.config.ts
+        ├── agents/
+        │   ├── energyCoach.ts
+        │   ├── taskStrategist.ts
+        │   └── bodyDoubling.ts
+        └── index.ts
+
+src/app/components/
+├── SuiteSelector.tsx           # Suite selection modal
+├── SuiteCard.tsx               # Individual suite cards
+└── SuiteIndicator.tsx          # Current suite display
+
+src/app/lib/
+└── workspaceInitializer.ts     # Template loading
+```
+
+### How It Works:
+
+1. **First Load**: User sees suite selector modal
+2. **Suite Selection**: User picks "Energy & Focus"
+3. **Workspace Init**: 3 tabs created from templates
+4. **Connection**: Connects to energyCoach (root agent)
+5. **Handoffs**: Agent can transfer to taskStrategist or bodyDoubling
+6. **Suite Switching**: Click suite indicator → disconnect → choose new suite
+
+### Testing Checklist:
+
+**Critical Tests:**
+- [ ] App loads and shows suite selector
+- [ ] Can select Energy & Focus suite
+- [ ] Workspace initializes with 3 tabs
+- [ ] Can connect to energyCoach
+- [ ] Can hear agent voice
+- [ ] Agent can create/edit workspace tabs
+- [ ] Agent can handoff to other agents
+- [ ] Can switch suites (with disconnect)
+- [ ] Suite persists across page refresh
+
+**Edge Cases:**
+- [ ] No suite selected (forces selector)
+- [ ] Invalid suite ID in localStorage
+- [ ] Connection fails gracefully
+- [ ] Guardrails trigger correctly
+
+### Known Status:
+
+- ✅ Build compiles successfully
+- ✅ Suite registered: "Energy & Focus (energy-focus)"
+- ✅ 3 agents: energyCoach, taskStrategist, bodyDoubling
+- ✅ Dev server running
+- ⚠️  **Needs user testing** - Not yet verified in browser
+
+### Next Steps:
+
+**For Immediate Testing:**
+1. Open http://localhost:3000
+2. Should see suite selector modal
+3. Select "Energy & Focus"
+4. Verify 3 workspace tabs appear
+5. Click "Connect" and test voice interaction
+
+**For Future Development (Optional):**
+- Add Agency Suite (3 agents)
+- Add Strategic Planning Suite (3 agents)
+- Auto-discovery (replace manual registration)
+- Additional suite templates
+
+### Files Changed:
+
+- Created: 15+ new files (types, utils, components, suite)
+- Modified: App.tsx, agentConfigs/index.ts
+- No breaking changes to existing functionality
+
+---
+
+## 👶 BABY CARE SUITE IMPLEMENTATION COMPLETE (2025-10-15)
+
+**Status:** ✅ **COMPLETE** - Ready for testing
+
+### What Was Built:
+
+**✅ Suite Configuration (Complete)**
+- Suite ID: `baby-care`
+- Name: Baby Care Companion
+- Icon: 👶
+- Category: mental-health (caregiving support)
+- 8 tags: baby, infant-care, parenting, feeding, sleep, development, health, newborn
+- 5 suggested use cases
+- User level: beginner
+- Session length: 30 minutes
+
+**✅ 6 Workspace Templates (Complete)**
+1. **Feeding Log** (CSV) - Track feeding times, types, amounts, notes
+2. **Sleep Schedule** (CSV) - Monitor sleep patterns, duration, quality
+3. **Daily Care Log** (CSV) - Track diapers, baths, activities
+4. **Health Journal** (Markdown) - Vitals, symptoms, medications
+5. **Milestones** (Markdown) - Developmental tracking with checklists
+6. **Emergency Info** (Markdown) - Critical contacts and medical info
+
+**✅ 5 Specialized Voice Agents (Complete)**
+1. **feedingCoach** - Voice: sage (warm, nurturing)
+   - Tracks feeding schedules and nutrition
+   - Handles bottle/formula questions
+   - Root agent (starting point)
+   
+2. **sleepSpecialist** - Voice: alloy (calm, soothing)
+   - Monitors sleep patterns
+   - Suggests age-appropriate nap schedules
+   - Sleep training support
+   
+3. **developmentTracker** - Voice: shimmer (encouraging, upbeat)
+   - Tracks milestones (rolling, sitting, crawling, etc.)
+   - Suggests age-appropriate activities
+   - Celebrates achievements
+   
+4. **healthMonitor** - Voice: echo (professional, calm)
+   - Monitors temperature and symptoms
+   - Tracks medications
+   - Knows when to escalate to doctor
+   
+5. **calmingCoach** - Voice: verse (gentle, reassuring)
+   - Teaches soothing techniques (5 S's, white noise, etc.)
+   - Supports stressed caregivers
+   - Helps read baby's cues
+
+**✅ Handoff System (Complete)**
+- All agents can handoff to any other agent
+- Mutual connections wired in index.ts
+- Handoff triggers documented in prompts
+
+**✅ Registration (Complete)**
+- Imported in `agentConfigs/index.ts`
+- Registered in suite registry
+- Console confirms: "✅ Registered suite: Baby Care Companion (baby-care)"
+
+### Files Created:
+```
+src/app/agentConfigs/suites/baby-care/
+├── suite.config.ts              (152 lines - suite metadata + 6 templates)
+├── prompts.ts                   (248 lines - 5 agent system prompts)
+├── index.ts                     (33 lines - wiring + export)
+└── agents/
+    ├── feedingCoach.ts          (11 lines)
+    ├── sleepSpecialist.ts       (10 lines)
+    ├── developmentTracker.ts    (10 lines)
+    ├── healthMonitor.ts         (10 lines)
+    └── calmingCoach.ts          (10 lines)
+```
+
+### Files Modified:
+- `src/app/agentConfigs/index.ts` - Added baby-care import and registration
+
+### Build Status:
+```
+✅ Registered suite: Energy & Focus (energy-focus)
+   - 3 agents
+✅ Registered suite: Baby Care Companion (baby-care)
+   - 5 agents
+📦 Registered suites: [ 'energy-focus', 'baby-care' ]
+ ✓ Compiled successfully
+```
+
+### Testing Checklist (For User):
+
+**Critical Tests:**
+- [ ] Open http://localhost:3000
+- [ ] Suite selector shows 2 suites (Energy & Focus, Baby Care Companion)
+- [ ] Baby Care suite displays with 👶 icon
+- [ ] Description shows correctly
+- [ ] Shows "5 agents" count
+- [ ] Can expand to see all 5 agent names
+- [ ] Selecting suite creates 6 workspace tabs
+- [ ] Tab names: Feeding Log, Sleep Schedule, Daily Care Log, Health Journal, Milestones, Emergency Info
+- [ ] CSV tabs have pipe-delimited format with sample data
+- [ ] Markdown tabs have proper headers and checklists
+- [ ] Can connect to feedingCoach (root agent)
+- [ ] Agent responds to voice
+- [ ] Asking about sleep triggers handoff to sleepSpecialist
+- [ ] Asking about milestones triggers handoff to developmentTracker
+- [ ] Asking about health triggers handoff to healthMonitor
+- [ ] Asking about crying triggers handoff to calmingCoach
+- [ ] All handoffs work smoothly
+- [ ] Agent can update workspace tabs
+- [ ] Refresh persists suite selection
+
+**Edge Cases:**
+- [ ] Switch between suites (disconnects properly)
+- [ ] Project switching works with suite
+- [ ] Cmd+P project switcher still functional
+
+### Success Criteria: ✅ MET
+
+1. ✅ Build compiles without errors
+2. ✅ No linter errors
+3. ✅ Suite registered in console output
+4. ✅ All 5 agents created with correct voices
+5. ✅ All 6 workspace templates defined
+6. ✅ Handoffs wired between all agents
+7. ✅ Follows existing pattern from energy-focus suite
+8. ✅ Code copied accurately from CREATING_NEW_SUITES.md guide
+
+### Implementation Time:
+- Directory structure: 1 min
+- suite.config.ts: 3 min
+- prompts.ts: 3 min
+- 5 agent files: 2 min
+- index.ts: 2 min
+- Registration: 1 min
+- Build & verify: 2 min
+- **Total: ~15 minutes**
+
+### Next Steps:
+**User should now:**
+1. Start dev server: `npm run dev`
+2. Open http://localhost:3000
+3. Test suite selector UI
+4. Select Baby Care Companion
+5. Verify 6 tabs appear
+6. Connect and test voice interaction
+7. Test agent handoffs
+8. Verify workspace tab updates work
+
+**If all tests pass, ready to commit!**
+
+### ⚠️ Known Limitation Discovered (2025-10-15)
+
+**Voice Cannot Change During Handoffs**
+
+Per OpenAI SDK documentation:
+```
+voice can be configured on an Agent level however it cannot be 
+changed after the first agent within a RealtimeSession spoke
+```
+
+**Impact:**
+- All 5 baby care agents will use the same voice (sage)
+- First agent to speak locks the voice for entire session
+- Subsequent handoffs keep the same voice
+
+**Solution Applied:**
+- Added distinct SPEAKING STYLE instructions to each agent prompt:
+  - feedingCoach: Warm grandmother
+  - sleepSpecialistAgent: Calm meditation teacher
+  - developmentTracker: Upbeat excited friend
+  - healthMonitor: Professional nurse
+  - calmingCoach: Gentle therapist
+
+**Lesson:** OpenAI Realtime API does not support voice changes during agent handoffs within a single session. Use prompt engineering to create distinct personalities instead.
+
+---
+
 Lessons
 - Use `/api/responses` for structured moderation and supervisor iterations; keep tools non-parallel when tool outputs inform subsequent calls.
 - Guardrail trip events are surfaced to the UI; ensure any new guardrails attach rationale and offending text for debugging.
@@ -975,3 +1358,5 @@ Lessons
 - Read the file before you try to edit it.
 - If there are vulnerabilities that appear in the terminal, run npm audit before proceeding
 - Always ask before using the -force git command
+- **Multi-suite implementation**: Suite system allows easy addition of new agent collections by creating a folder structure and registering in index.ts
+- **OpenAI Realtime voice limitation**: Voice parameter cannot change after first agent speaks in a RealtimeSession - use prompt engineering for distinct personalities instead

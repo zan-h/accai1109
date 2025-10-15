@@ -14,22 +14,32 @@ type EventContextValue = {
 
 const EventContext = createContext<EventContextValue | undefined>(undefined);
 
+// Maximum number of events to keep in memory (prevents unbounded growth)
+const MAX_EVENTS = 500;
+
 export const EventProvider: FC<PropsWithChildren> = ({ children }) => {
   const [loggedEvents, setLoggedEvents] = useState<LoggedEvent[]>([]);
 
   function addLoggedEvent(direction: "client" | "server", eventName: string, eventData: Record<string, any>) {
     const id = eventData.event_id || uuidv4();
-    setLoggedEvents((prev) => [
-      ...prev,
-      {
+    setLoggedEvents((prev) => {
+      const newEvent = {
         id,
         direction,
         eventName,
         eventData,
         timestamp: new Date().toLocaleTimeString(),
         expanded: false,
-      },
-    ]);
+      };
+      
+      // Keep only the most recent MAX_EVENTS (FIFO eviction)
+      const updated = [...prev, newEvent];
+      if (updated.length > MAX_EVENTS) {
+        // Remove oldest events
+        return updated.slice(-MAX_EVENTS);
+      }
+      return updated;
+    });
   }
 
   const logClientEvent: EventContextValue["logClientEvent"] = (eventObj, eventNameSuffix = "") => {

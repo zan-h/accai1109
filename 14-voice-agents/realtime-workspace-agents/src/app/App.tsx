@@ -11,6 +11,8 @@ import Events from "./components/Events";
 import BottomToolbar from "./components/BottomToolbar";
 import Workspace from "./components/Workspace";
 import ProjectSwitcher from "./components/ProjectSwitcher";
+import SuiteSelector from "./components/SuiteSelector";
+import SuiteIndicator from "./components/SuiteIndicator";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -30,6 +32,11 @@ import {
   workspaceBuilderScenario,
 } from "@/app/agentConfigs";
 
+// Suite system
+import { AgentSuite } from '@/app/agentConfigs/types';
+import { findSuiteById } from '@/app/agentConfigs';
+import { initializeWorkspaceWithTemplates, getWorkspaceInfoForContext } from './lib/workspaceInitializer';
+
 // Map used by connect logic for scenarios defined via the SDK
 const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
   workspaceBuilder: workspaceBuilderScenario,
@@ -39,6 +46,9 @@ import useAudioDownload from "./hooks/useAudioDownload";
 import { useHandleSessionHistory } from "./hooks/useHandleSessionHistory";
 // Removed unused import from 'domain' and legacy design guardrail; see guardrails.ts for createResearchGuardrail if needed.
 // import { createResearchGuardrail } from "@/app/agentConfigs/scenarios/workspaceBuilder/guardrails";
+
+// Memory monitoring for detecting leaks in development
+import { enableMemoryMonitoring } from './lib/memoryMonitor';
 
 // Versioning for workspace localStorage. If user has an older (e.g., interior remodel) workspaceState, reset when entering the investment research scenario.
 const WORKSPACE_VERSION_KEY = 'workspace_version';
@@ -88,6 +98,17 @@ function App() {
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] = useState<
     RealtimeAgent[] | null
   >(null);
+  
+  // Suite state
+  const [selectedSuiteId, setSelectedSuiteId] = useState<string | null>(() => {
+    // Initialize from localStorage on client side only
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectedSuiteId');
+    }
+    return null;
+  });
+  const [showSuiteSelector, setShowSuiteSelector] = useState(false);
+  const currentSuite = selectedSuiteId ? findSuiteById(selectedSuiteId) : null;
 
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   // Ref to identify whether the latest agent switch came from an automatic handoff
@@ -109,6 +130,16 @@ function App() {
     if (sdkAudioElement && !audioElementRef.current) {
       audioElementRef.current = sdkAudioElement;
     }
+  }, [sdkAudioElement]);
+
+  // Cleanup: Remove audio element from DOM when component unmounts
+  useEffect(() => {
+    return () => {
+      if (sdkAudioElement && document.body.contains(sdkAudioElement)) {
+        document.body.removeChild(sdkAudioElement);
+        console.log('🧹 Cleaned up audio element from DOM');
+      }
+    };
   }, [sdkAudioElement]);
 
   const {
@@ -222,48 +253,84 @@ function App() {
   };
 
   const connectToRealtime = async () => {
-    const agentSetKey = searchParams.get("agentConfig") || "default";
-    if (sdkScenarioMap[agentSetKey]) {
-      if (sessionStatus !== "DISCONNECTED") return;
-      setSessionStatus("CONNECTING");
+    if (sessionStatus !== "DISCONNECTED") return;
+    setSessionStatus("CONNECTING");
 
-      try {
-        const EPHEMERAL_KEY = await fetchEphemeralKey();
-        if (!EPHEMERAL_KEY) return;
+    try {
+      const EPHEMERAL_KEY = await fetchEphemeralKey();
+      if (!EPHEMERAL_KEY) return;
 
-        // Ensure the selectedAgentName is first so that it becomes the root
-        const reorderedAgents = [...sdkScenarioMap[agentSetKey]];
-        const idx = reorderedAgents.findIndex((a) => a.name === selectedAgentName);
-        if (idx > 0) {
-          const [agent] = reorderedAgents.splice(idx, 1);
-          reorderedAgents.unshift(agent);
-        }
+      let agents: RealtimeAgent[];
+      let guardrails: any[];
+      let suiteContext = {};
 
-        const guardrails = [createModerationGuardrail("accai")];
-
-        await connect({
-          getEphemeralKey: async () => EPHEMERAL_KEY,
-          initialAgents: reorderedAgents,
-          audioElement: sdkAudioElement,
-          outputGuardrails: guardrails,
-          extraContext: {
-            addTranscriptBreadcrumb,
-          },
-        });
-
-        // Track which project we connected to
-        connectedProjectIdRef.current = currentProjectId;
+      // Try suite system first
+      if (currentSuite) {
+        console.log('🔌 Connecting to suite:', currentSuite.name);
         
-        // Add breadcrumb showing which project agent is connected to
-        const currentProject = getCurrentProject();
-        if (currentProject) {
-          addTranscriptBreadcrumb(`🗂️ Connected to project: ${currentProject.name}`);
+        // Use suite agents
+        agents = [...currentSuite.agents];
+        
+        // Ensure the selectedAgentName (root agent) is first
+        const idx = agents.findIndex((a) => a.name === selectedAgentName);
+        if (idx > 0) {
+          const [agent] = agents.splice(idx, 1);
+          agents.unshift(agent);
         }
-      } catch (err) {
-        console.error("Error connecting via SDK:", err);
-        setSessionStatus("DISCONNECTED");
+        
+        // Use suite guardrails
+        guardrails = currentSuite.guardrails || [createModerationGuardrail(currentSuite.name)];
+        
+        // Include suite context
+        suiteContext = {
+          suiteId: currentSuite.id,
+          suiteName: currentSuite.name,
+          ...currentSuite.initialContext,
+        };
+      } else {
+        // Fallback to old scenario system
+        const agentSetKey = searchParams.get("agentConfig") || "default";
+        if (sdkScenarioMap[agentSetKey]) {
+          agents = [...sdkScenarioMap[agentSetKey]];
+          const idx = agents.findIndex((a) => a.name === selectedAgentName);
+          if (idx > 0) {
+            const [agent] = agents.splice(idx, 1);
+            agents.unshift(agent);
+          }
+          guardrails = [createModerationGuardrail("accai")];
+        } else {
+          throw new Error('No suite or scenario selected');
+        }
       }
-      return;
+
+      await connect({
+        getEphemeralKey: async () => EPHEMERAL_KEY,
+        initialAgents: agents,
+        audioElement: sdkAudioElement,
+        outputGuardrails: guardrails,
+        extraContext: {
+          ...suiteContext,
+          workspaceState: getWorkspaceInfoForContext(),
+          addTranscriptBreadcrumb,
+        },
+      });
+
+      // Track which project we connected to
+      connectedProjectIdRef.current = currentProjectId;
+      
+      // Add breadcrumb showing which project agent is connected to
+      const currentProject = getCurrentProject();
+      if (currentProject) {
+        addTranscriptBreadcrumb(`🗂️ Connected to project: ${currentProject.name}`);
+      }
+      
+      if (currentSuite) {
+        addTranscriptBreadcrumb(`✅ Connected to ${currentSuite.name}`);
+      }
+    } catch (err) {
+      console.error("Error connecting via SDK:", err);
+      setSessionStatus("DISCONNECTED");
+      addTranscriptBreadcrumb('❌ Connection failed', { error: String(err) });
     }
   };
 
@@ -469,6 +536,71 @@ function App() {
   // Project Switcher state
   const [isProjectSwitcherOpen, setIsProjectSwitcherOpen] = useState(false);
 
+  // Initialize suite on mount
+  useEffect(() => {
+    // Only run on client
+    if (typeof window === 'undefined') return;
+    
+    // Check if we're using old URL-based scenario system
+    const urlScenario = searchParams.get('agentConfig');
+    
+    if (urlScenario) {
+      // Clear old URL parameter
+      const newUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
+    }
+    
+    // Check for stored suite
+    const storedSuiteId = localStorage.getItem('selectedSuiteId');
+    if (storedSuiteId && findSuiteById(storedSuiteId)) {
+      const suite = findSuiteById(storedSuiteId);
+      if (suite) {
+        setSelectedAgentName(suite.rootAgent.name);
+      }
+    } else {
+      // No stored suite - show selector
+      setShowSuiteSelector(true);
+    }
+  }, []); // Only run once on mount
+
+  // Handle suite selection
+  const handleSelectSuite = async (suite: AgentSuite) => {
+    console.log('📦 Selected suite:', suite.name);
+    
+    // Save preference
+    setSelectedSuiteId(suite.id);
+    localStorage.setItem('selectedSuiteId', suite.id);
+    
+    // Set root agent
+    setSelectedAgentName(suite.rootAgent.name);
+    
+    // Close selector
+    setShowSuiteSelector(false);
+    
+    // Initialize workspace with templates
+    if (suite.workspaceTemplates && suite.workspaceTemplates.length > 0) {
+      try {
+        await initializeWorkspaceWithTemplates(suite.workspaceTemplates);
+      } catch (err) {
+        console.error('Failed to initialize workspace templates:', err);
+      }
+    }
+    
+    addTranscriptBreadcrumb(`📦 Suite selected: ${suite.name}`);
+  };
+
+  // Handle suite change (disconnect first)
+  const handleChangeSuite = () => {
+    if (sessionStatus === "CONNECTED" || sessionStatus === "CONNECTING") {
+      // Confirm before switching
+      if (!window.confirm('This will end your current session. Continue?')) {
+        return;
+      }
+      disconnectFromRealtime();
+    }
+    setShowSuiteSelector(true);
+  };
+
   // Keyboard shortcut for project switcher (Cmd+P / Ctrl+P)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -504,8 +636,28 @@ function App() {
     }
   }, [currentProjectId, sessionStatus, disconnectFromRealtime, getCurrentProject, addTranscriptBreadcrumb]);
 
+  // Enable memory monitoring in development mode
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      enableMemoryMonitoring(30000); // Check every 30 seconds
+      console.log('🔍 Memory monitoring enabled - check console for periodic stats');
+    }
+  }, []);
+
   return (
     <div className="text-base flex flex-col h-screen bg-bg-primary text-text-primary relative">
+      {/* Suite Selector Modal */}
+      <SuiteSelector
+        isOpen={showSuiteSelector}
+        onSelectSuite={handleSelectSuite}
+        onClose={() => {
+          // Only allow closing if a suite is already selected
+          if (selectedSuiteId) {
+            setShowSuiteSelector(false);
+          }
+        }}
+      />
+
       <div className="p-5 text-lg font-semibold flex justify-between items-center">
         <div
           className="flex items-center cursor-pointer"
@@ -525,31 +677,45 @@ function App() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <label className="text-sm text-text-secondary uppercase tracking-wider">Scenario</label>
-          <select
-            className="border border-border-primary bg-bg-secondary text-text-primary px-2 py-1 focus:outline-none focus:border-accent-primary cursor-pointer text-sm font-mono transition-colors"
-            value={(() => {
-              const requested = searchParams.get('agentConfig');
-              const keys = Object.keys(allAgentSets);
-              return keys.includes(requested || '') ? (requested as string) : defaultAgentSetKey;
-            })()}
-            onChange={(e) => {
-              // Disconnect then navigate to the selected scenario
-              try { disconnectFromRealtime(); } catch {}
-              const url = new URL(window.location.toString());
-              url.searchParams.set('agentConfig', e.target.value);
-              window.location.replace(url.toString());
-            }}
-          >
-            {Object.keys(allAgentSets).map((key) => (
-              <option key={key} value={key}>{key}</option>
-            ))}
-          </select>
+          {/* Suite Indicator */}
+          {currentSuite && (
+            <SuiteIndicator
+              currentSuite={currentSuite}
+              onChangeSuite={handleChangeSuite}
+            />
+          )}
+          
+          {/* Fallback: Old scenario selector (for backwards compatibility) */}
+          {!currentSuite && (
+            <>
+              <label className="text-sm text-text-secondary uppercase tracking-wider">Scenario</label>
+              <select
+                className="border border-border-primary bg-bg-secondary text-text-primary px-2 py-1 focus:outline-none focus:border-accent-primary cursor-pointer text-sm font-mono transition-colors"
+                value={(() => {
+                  const requested = searchParams.get('agentConfig');
+                  const keys = Object.keys(allAgentSets);
+                  return keys.includes(requested || '') ? (requested as string) : defaultAgentSetKey;
+                })()}
+                onChange={(e) => {
+                  // Disconnect then navigate to the selected scenario
+                  try { disconnectFromRealtime(); } catch {}
+                  const url = new URL(window.location.toString());
+                  url.searchParams.set('agentConfig', e.target.value);
+                  window.location.replace(url.toString());
+                }}
+              >
+                {Object.keys(allAgentSets).map((key) => (
+                  <option key={key} value={key}>{key}</option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
       </div>
 
       <div className="flex flex-1 gap-2 px-2 overflow-hidden relative">
-        {typeof window !== 'undefined' && (new URL(window.location.href).searchParams.get('agentConfig') === 'workspaceBuilder') && (
+        {/* Show workspace if suite is selected OR if using old workspaceBuilder scenario */}
+        {(currentSuite || (typeof window !== 'undefined' && new URL(window.location.href).searchParams.get('agentConfig') === 'workspaceBuilder')) && (
           <Workspace 
             sessionStatus={sessionStatus}
             onOpenProjectSwitcher={() => setIsProjectSwitcherOpen(true)}

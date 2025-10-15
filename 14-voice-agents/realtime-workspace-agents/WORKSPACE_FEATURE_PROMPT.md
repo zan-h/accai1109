@@ -1,8 +1,6 @@
 # Multi-Project Workspace System - Implementation Prompt
 
 ## Context
-
-You are working on a Next.js 14+ voice agent application with a spy/command-center aesthetic. The app uses:
 - **Tech Stack**: Next.js 14+, TypeScript, Tailwind CSS, React
 - **Design System**: Dark theme with cyan accents, monospace fonts (JetBrains Mono), terminal aesthetic
 - **Current State**: Single workspace with tabs, already has `WorkspaceContext` managing tab state in localStorage
