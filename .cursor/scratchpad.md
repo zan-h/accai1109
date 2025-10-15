@@ -1351,6 +1351,61 @@ changed after the first agent within a RealtimeSession spoke
 
 ---
 
+## 🏗️ PRODUCTION ROADMAP CREATED (2025-10-15)
+
+**Document:** `.cursor/PRODUCTION_ROADMAP.md` (21,000+ words)
+
+Comprehensive CTO-level plan for productionizing the voice agent platform covering:
+
+### Architecture & Infrastructure
+- Multi-tenant SaaS architecture
+- Target state system diagram
+- Tech stack decisions (Supabase, Clerk, Stripe, Vercel)
+- Scaling strategy (0 → 100k users)
+- Complete database schema with RLS
+
+### Security & Compliance
+- Authentication & authorization (RBAC)
+- Data encryption (at rest & in transit)
+- API security (rate limiting, validation)
+- GDPR, CCPA, HIPAA compliance
+- SOC 2 Type II roadmap
+- Audit logging system
+
+### Business Model
+- B2C: $19-99/month (tiered plans)
+- B2B: $49-199/user/month (team/enterprise)
+- Stripe integration plan
+- Usage tracking & quotas
+- Break-even analysis
+
+**Key Finding:** AI costs ($33/user/month) exceed B2C revenue - **must focus on B2B** at $199/seat to be profitable.
+
+### Implementation Timeline
+- **Phase 1 (Weeks 1-4):** Foundation - Auth, DB, security
+- **Phase 2 (Weeks 5-8):** Multi-tenancy & payments
+- **Phase 3 (Weeks 9-10):** Marketing site & launch
+- **Phase 4 (Weeks 11-14):** Enterprise features
+- **Phase 5 (Weeks 15-20):** Scale & optimization
+
+### Cost Estimates
+- MVP: $500-1k/month
+- Launch: $2-3.5k/month
+- Scale (10k users): $8-15k/month
+- Path to profitability: 50 enterprise seats ($10k MRR)
+
+### Next Steps (Week 1)
+1. ✅ Choose stack: Supabase + Clerk + Vercel + Stripe
+2. 🔨 Set up infrastructure accounts
+3. 🔨 Implement database schema
+4. 🔨 Add authentication
+5. 📝 Finalize pricing
+6. 📝 Write legal documents
+
+**Status:** Ready for Phase 1 implementation
+
+---
+
 Lessons
 - Use `/api/responses` for structured moderation and supervisor iterations; keep tools non-parallel when tool outputs inform subsequent calls.
 - Guardrail trip events are surfaced to the UI; ensure any new guardrails attach rationale and offending text for debugging.
