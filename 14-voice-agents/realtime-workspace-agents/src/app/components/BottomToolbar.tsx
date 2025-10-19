@@ -13,6 +13,9 @@ interface BottomToolbarProps {
   setIsEventsPaneExpanded: (val: boolean) => void;
   isAudioPlaybackEnabled: boolean;
   setIsAudioPlaybackEnabled: (val: boolean) => void;
+  isRecordingEnabled: boolean;
+  setIsRecordingEnabled: (val: boolean) => void;
+  isRecordingActive: boolean;
   codec: string;
   onCodecChange: (newCodec: string) => void;
   isTranscriptVisible: boolean;
@@ -32,6 +35,9 @@ function BottomToolbar({
   setIsEventsPaneExpanded,
   isAudioPlaybackEnabled,
   setIsAudioPlaybackEnabled,
+  isRecordingEnabled,
+  setIsRecordingEnabled,
+  isRecordingActive,
   codec,
   onCodecChange,
   isTranscriptVisible,
@@ -123,6 +129,32 @@ function BottomToolbar({
         >
           Audio playback
         </label>
+      </div>
+
+      <div className="flex flex-row items-center gap-2">
+        <input
+          id="record-audio"
+          type="checkbox"
+          checked={isRecordingEnabled}
+          onChange={(e) => setIsRecordingEnabled(e.target.checked)}
+          disabled={!isConnected}
+          className="w-4 h-4 bg-bg-tertiary border border-border-primary checked:bg-accent-primary checked:border-accent-primary focus:ring-accent-primary accent-accent-primary cursor-pointer disabled:opacity-30"
+        />
+        <label
+          htmlFor="record-audio"
+          className="flex items-center cursor-pointer text-text-secondary font-mono text-sm"
+        >
+          Record audio
+        </label>
+        {isRecordingEnabled && (
+          <span
+            className={`text-xs font-mono uppercase tracking-wide ${
+              isRecordingActive ? "text-status-success" : "text-text-tertiary"
+            }`}
+          >
+            {isRecordingActive ? "Recording..." : "Waiting..."}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-row items-center gap-2">

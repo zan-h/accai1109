@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { convertWebMBlobToWav } from "../lib/audioUtils";
 
 function useAudioDownload() {
@@ -6,6 +6,39 @@ function useAudioDownload() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   // Ref to collect all recorded Blob chunks.
   const recordedChunksRef = useRef<Blob[]>([]);
+  // Track resources so we can tear them down cleanly.
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const resetChunks = () => {
+    recordedChunksRef.current = [];
+  };
+
+  const teardownMediaStreams = () => {
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch (err) {
+          console.warn("Failed to stop microphone track", err);
+        }
+      });
+    }
+    micStreamRef.current = null;
+  };
+
+  const teardownAudioContext = async () => {
+    const ctx = audioContextRef.current;
+    if (ctx) {
+      try {
+        await ctx.close();
+      } catch (err) {
+        console.warn("Failed to close audio context", err);
+      }
+    }
+    audioContextRef.current = null;
+  };
 
   /**
    * Starts recording by combining the provided remote stream with
@@ -13,6 +46,11 @@ function useAudioDownload() {
    * @param remoteStream - The remote MediaStream (e.g., from the audio element).
    */
   const startRecording = async (remoteStream: MediaStream) => {
+    if (isRecording || mediaRecorderRef.current) {
+      return;
+    }
+
+    resetChunks();
     let micStream: MediaStream;
     try {
       micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -24,6 +62,7 @@ function useAudioDownload() {
 
     // Create an AudioContext to merge the streams.
     const audioContext = new AudioContext();
+    audioContextRef.current = audioContext;
     const destination = audioContext.createMediaStreamDestination();
 
     // Connect the remote audio stream.
@@ -50,11 +89,23 @@ function useAudioDownload() {
           recordedChunksRef.current.push(event.data);
         }
       };
+      mediaRecorder.onstop = () => {
+        setIsRecording(false);
+        teardownMediaStreams();
+        teardownAudioContext().catch((error) => {
+          console.warn("Audio context cleanup failed", error);
+        });
+      };
       // Start recording without a timeslice.
       mediaRecorder.start();
       mediaRecorderRef.current = mediaRecorder;
+      micStreamRef.current = micStream;
+      setIsRecording(true);
     } catch (err) {
       console.error("Error starting MediaRecorder with combined stream:", err);
+      // If we failed to start, make sure we clean up the resources we created.
+      teardownMediaStreams();
+      await teardownAudioContext();
     }
   };
 
@@ -65,8 +116,15 @@ function useAudioDownload() {
     if (mediaRecorderRef.current) {
       // Request any final data before stopping.
       mediaRecorderRef.current.requestData();
-      mediaRecorderRef.current.stop();
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (err) {
+        console.warn("Error stopping MediaRecorder:", err);
+      }
       mediaRecorderRef.current = null;
+    }
+    if (isRecording) {
+      setIsRecording(false);
     }
   };
 
@@ -112,10 +170,17 @@ function useAudioDownload() {
       setTimeout(() => URL.revokeObjectURL(url), 100);
     } catch (err) {
       console.error("Error converting recording to WAV:", err);
+    } finally {
+      resetChunks();
     }
   };
 
-  return { startRecording, stopRecording, downloadRecording };
+  return {
+    startRecording,
+    stopRecording,
+    downloadRecording,
+    isRecording,
+  };
 }
 
-export default useAudioDownload; 
+export default useAudioDownload;

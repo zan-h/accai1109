@@ -176,8 +176,14 @@ function App() {
   );
 
   // Initialize the recording hook.
-  const { startRecording, stopRecording, downloadRecording } =
+  const { startRecording, stopRecording, downloadRecording, isRecording } =
     useAudioDownload();
+  const [isRecordingEnabled, setIsRecordingEnabled] = useState<boolean>(false);
+  const stopRecordingRef = useRef(stopRecording);
+
+  useEffect(() => {
+    stopRecordingRef.current = stopRecording;
+  }, [stopRecording]);
 
   const sendClientEvent = (eventObj: any, eventNameSuffix = "") => {
     try {
@@ -340,6 +346,8 @@ function App() {
     disconnect();
     setSessionStatus("DISCONNECTED");
     setIsPTTUserSpeaking(false);
+    setIsRecordingEnabled(false);
+    stopRecording();
     // Clear connected project ref
     connectedProjectIdRef.current = null;
   };
@@ -418,6 +426,12 @@ function App() {
     setIsPTTUserSpeaking(false);
     sendClientEvent({ type: 'input_audio_buffer.commit' }, 'commit PTT');
     sendClientEvent({ type: 'response.create' }, 'trigger response PTT');
+  };
+
+  const handleDownloadRecording = async () => {
+    await downloadRecording();
+    stopRecording();
+    setIsRecordingEnabled(false);
   };
 
   const onToggleConnection = () => {
@@ -506,17 +520,75 @@ function App() {
   }, [sessionStatus, isAudioPlaybackEnabled]);
 
   useEffect(() => {
-    if (sessionStatus === "CONNECTED" && audioElementRef.current?.srcObject) {
-      // The remote audio stream from the audio element.
-      const remoteStream = audioElementRef.current.srcObject as MediaStream;
-      startRecording(remoteStream);
+    if (!isRecordingEnabled) {
+      if (isRecording) {
+        stopRecording();
+      }
+      return;
     }
 
-    // Clean up on unmount or when sessionStatus is updated.
-    return () => {
-      stopRecording();
+    if (sessionStatus !== "CONNECTED") {
+      if (isRecording) {
+        stopRecording();
+      }
+      return;
+    }
+
+    if (isRecording) {
+      return;
+    }
+
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const attemptStart = async (attempt = 0) => {
+      if (
+        cancelled ||
+        !isRecordingEnabled ||
+        sessionStatus !== "CONNECTED" ||
+        isRecording
+      ) {
+        return;
+      }
+
+      const stream = audioElementRef.current?.srcObject as MediaStream | null;
+      if (stream) {
+        try {
+          await startRecording(stream);
+        } catch (err) {
+          console.error("Failed to start recording", err);
+        }
+        return;
+      }
+
+      if (attempt < 10) {
+        retryTimer = setTimeout(() => attemptStart(attempt + 1), 300);
+      } else {
+        console.warn("Remote audio stream not available for recording");
+      }
     };
-  }, [sessionStatus]);
+
+    attemptStart();
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+      }
+    };
+  }, [
+    isRecordingEnabled,
+    sessionStatus,
+    isRecording,
+    startRecording,
+    stopRecording,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      stopRecordingRef.current();
+    };
+  }, []);
 
   // Single-agent app; no scenario key needed
 
@@ -753,7 +825,7 @@ function App() {
           userText={userText}
           setUserText={setUserText}
           onSendMessage={handleSendTextMessage}
-          downloadRecording={downloadRecording}
+          downloadRecording={handleDownloadRecording}
           canSend={sessionStatus === "CONNECTED"}
           isVisible={isTranscriptVisible}
         />
@@ -772,6 +844,9 @@ function App() {
         setIsEventsPaneExpanded={setIsEventsPaneExpanded}
         isAudioPlaybackEnabled={isAudioPlaybackEnabled}
         setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
+        isRecordingEnabled={isRecordingEnabled}
+        setIsRecordingEnabled={setIsRecordingEnabled}
+        isRecordingActive={isRecording}
         codec={urlCodec}
         onCodecChange={handleCodecChange}
         isTranscriptVisible={isTranscriptVisible}
