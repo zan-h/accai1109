@@ -26,6 +26,7 @@ export interface Project {
   lastAccessedAt: string;
   tabs: WorkspaceTab[];
   activeBriefSectionIds: string[];
+  suiteTemplatePreferences?: Record<string, 'add' | 'skip'>;  // Track user's template preference per suite
 }
 
 export interface ProjectState {

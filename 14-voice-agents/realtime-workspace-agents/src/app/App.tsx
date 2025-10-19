@@ -14,6 +14,7 @@ import Workspace from "./components/Workspace";
 import ProjectSwitcher from "./components/ProjectSwitcher";
 import SuiteSelector from "./components/SuiteSelector";
 import SuiteIndicator from "./components/SuiteIndicator";
+import SuiteTemplatePrompt from "./components/SuiteTemplatePrompt";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -94,7 +95,7 @@ function App() {
     addTranscriptBreadcrumb,
   } = useTranscript();
   const { logClientEvent, logServerEvent } = useEvent();
-  const { currentProjectId, getCurrentProject } = useProjectContext();
+  const { currentProjectId, getCurrentProject, updateProject } = useProjectContext();
 
   const [selectedAgentName, setSelectedAgentName] = useState<string>("");
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] = useState<
@@ -111,6 +112,10 @@ function App() {
   });
   const [showSuiteSelector, setShowSuiteSelector] = useState(false);
   const currentSuite = selectedSuiteId ? findSuiteById(selectedSuiteId) : null;
+  
+  // Template prompt state
+  const [showTemplatePrompt, setShowTemplatePrompt] = useState(false);
+  const [pendingSuite, setPendingSuite] = useState<AgentSuite | null>(null);
 
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   // Ref to identify whether the latest agent switch came from an automatic handoff
@@ -637,30 +642,112 @@ function App() {
     }
   }, []); // Only run once on mount
 
-  // Handle suite selection
+  // Handle suite selection (with template prompt)
   const handleSelectSuite = async (suite: AgentSuite) => {
     console.log('📦 Selected suite:', suite.name);
     
-    // Save preference
+    // Save suite selection
     setSelectedSuiteId(suite.id);
     localStorage.setItem('selectedSuiteId', suite.id);
-    
-    // Set root agent
     setSelectedAgentName(suite.rootAgent.name);
-    
-    // Close selector
     setShowSuiteSelector(false);
     
-    // Initialize workspace with templates
-    if (suite.workspaceTemplates && suite.workspaceTemplates.length > 0) {
+    // Check if suite has templates
+    const hasTemplates = suite.workspaceTemplates && suite.workspaceTemplates.length > 0;
+    if (!hasTemplates) {
+      // No templates, just connect
+      addTranscriptBreadcrumb(`📦 Suite selected: ${suite.name}`);
+      return;
+    }
+    
+    // Check user's preference for this suite in this project
+    const currentProject = getCurrentProject();
+    const preference = currentProject?.suiteTemplatePreferences?.[suite.id];
+    
+    if (preference === 'add') {
+      // User previously chose to always add templates
+      console.log('📋 Auto-adding templates (user preference)');
       try {
-        await initializeWorkspaceWithTemplates(suite.workspaceTemplates);
+        await initializeWorkspaceWithTemplates(suite.workspaceTemplates || []);
+        addTranscriptBreadcrumb(`📦 Suite selected: ${suite.name} (templates added)`);
       } catch (err) {
         console.error('Failed to initialize workspace templates:', err);
       }
+      return;
     }
     
-    addTranscriptBreadcrumb(`📦 Suite selected: ${suite.name}`);
+    if (preference === 'skip') {
+      // User previously chose to skip templates
+      console.log('🚫 Skipping templates (user preference)');
+      addTranscriptBreadcrumb(`📦 Suite selected: ${suite.name}`);
+      return;
+    }
+    
+    // No preference set, show prompt
+    setPendingSuite(suite);
+    setShowTemplatePrompt(true);
+  };
+  
+  // Handle template prompt - Add templates
+  const handleAddTemplates = async (remember: boolean) => {
+    if (!pendingSuite) return;
+    
+    console.log('📋 Adding templates from:', pendingSuite.name, remember ? '(remembering)' : '');
+    
+    try {
+      await initializeWorkspaceWithTemplates(pendingSuite.workspaceTemplates || []);
+      addTranscriptBreadcrumb(`📦 Suite selected: ${pendingSuite.name} (templates added)`);
+      
+      // Save preference if user checked "Remember"
+      if (remember && currentProjectId) {
+        await saveTemplatePreference(currentProjectId, pendingSuite.id, 'add');
+      }
+    } catch (err) {
+      console.error('Failed to initialize workspace templates:', err);
+    }
+    
+    setPendingSuite(null);
+  };
+  
+  // Handle template prompt - Skip templates
+  const handleSkipTemplates = async (remember: boolean) => {
+    if (!pendingSuite) return;
+    
+    console.log('🚫 Skipping templates from:', pendingSuite.name, remember ? '(remembering)' : '');
+    
+    addTranscriptBreadcrumb(`📦 Suite selected: ${pendingSuite.name}`);
+    
+    // Save preference if user checked "Remember"
+    if (remember && currentProjectId) {
+      await saveTemplatePreference(currentProjectId, pendingSuite.id, 'skip');
+    }
+    
+    setPendingSuite(null);
+  };
+  
+  // Save template preference to project
+  const saveTemplatePreference = async (
+    projectId: string, 
+    suiteId: string, 
+    preference: 'add' | 'skip'
+  ) => {
+    try {
+      const project = getCurrentProject();
+      if (!project) return;
+      
+      const updatedPreferences = {
+        ...project.suiteTemplatePreferences,
+        [suiteId]: preference,
+      };
+      
+      await updateProject(projectId, {
+        suiteTemplatePreferences: updatedPreferences,
+      });
+      
+      console.log(`✅ Saved template preference for ${suiteId}:`, preference);
+    } catch (err) {
+      console.error('Failed to save template preference:', err);
+    }
   };
 
   // Handle suite change (disconnect first)
@@ -860,6 +947,19 @@ function App() {
         onClose={() => setIsProjectSwitcherOpen(false)}
         sessionStatus={sessionStatus}
       />
+      
+      {/* Template Prompt Modal */}
+      {showTemplatePrompt && pendingSuite && (
+        <SuiteTemplatePrompt
+          suite={pendingSuite}
+          onAdd={handleAddTemplates}
+          onSkip={handleSkipTemplates}
+          onClose={() => {
+            setShowTemplatePrompt(false);
+            setPendingSuite(null);
+          }}
+        />
+      )}
     </div>
   );
 }

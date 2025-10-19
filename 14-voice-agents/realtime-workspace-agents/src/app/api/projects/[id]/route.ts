@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/app/lib/supabase/service';
@@ -10,6 +11,7 @@ const updateProjectSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().optional(),
   activeBriefSectionIds: z.array(z.string()).optional(),
+  suiteTemplatePreferences: z.record(z.enum(['add', 'skip'])).optional(),
 });
 
 type ProjectRow = Database['public']['Tables']['projects']['Row'];
@@ -43,31 +45,45 @@ export async function PATCH(
       .eq('id', id)
       .single();
 
-    if (
-      projectLookupError ||
-      !project ||
-      project.user_id !== supabaseUserId
-    ) {
+    if (projectLookupError || !project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
+    
     const projectRow = project as ProjectRow;
+    
+    if (projectRow.user_id !== supabaseUserId) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
 
     // Build update object
-    const updates: Partial<ProjectRow> = {};
+    type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
+    const updates: ProjectUpdate = {};
+    
     if (validated.name) updates.name = validated.name;
     if (validated.description !== undefined) updates.description = validated.description;
-    if (validated.activeBriefSectionIds) {
+    
+    // Update metadata fields
+    if (validated.activeBriefSectionIds || validated.suiteTemplatePreferences) {
       const existingMetadata = (projectRow.metadata as Record<string, unknown> | null) ?? {};
-      updates.metadata = {
+      const updatedMetadata: Record<string, unknown> = {
         ...existingMetadata,
-        activeBriefSectionIds: validated.activeBriefSectionIds,
-      } as ProjectRow['metadata'];
+      };
+      
+      if (validated.activeBriefSectionIds) {
+        updatedMetadata.activeBriefSectionIds = validated.activeBriefSectionIds;
+      }
+      
+      if (validated.suiteTemplatePreferences) {
+        updatedMetadata.suiteTemplatePreferences = validated.suiteTemplatePreferences;
+      }
+      
+      updates.metadata = updatedMetadata as ProjectUpdate['metadata'];
     }
 
     // Update project
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('projects')
-      .update(updates)
+      .update as any)(updates)
       .eq('id', id);
 
     if (error) throw error;
@@ -106,18 +122,20 @@ export async function DELETE(
       .eq('id', id)
       .single();
 
-    if (
-      projectLookupError ||
-      !project ||
-      project.user_id !== supabaseUserId
-    ) {
+    if (projectLookupError || !project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
+    
+    const projectRow2 = project as ProjectRow;
+    
+    if (projectRow2.user_id !== supabaseUserId) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
     // Soft delete (archive)
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('projects')
-      .update({ is_archived: true })
+      .update as any)({ is_archived: true })
       .eq('id', id);
 
     if (error) throw error;

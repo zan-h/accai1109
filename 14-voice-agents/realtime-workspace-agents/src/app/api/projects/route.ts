@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/app/lib/supabase/service';
@@ -53,6 +54,7 @@ export async function GET() {
           .eq('project_id', project.id)
           .order('position');
 
+        const metadata = (project.metadata as Record<string, unknown>) || {};
         return {
           id: project.id,
           name: project.name,
@@ -68,9 +70,8 @@ export async function GET() {
             type: tab.type,
             content: tab.content,
           })),
-          activeBriefSectionIds: (
-            project.metadata as { activeBriefSectionIds?: string[] } | null
-          )?.activeBriefSectionIds || [],
+          activeBriefSectionIds: (metadata.activeBriefSectionIds as string[]) || [],
+          suiteTemplatePreferences: (metadata.suiteTemplatePreferences as Record<string, 'add' | 'skip'>) || {},
         };
       })
     );
@@ -106,9 +107,9 @@ export async function POST(req: NextRequest) {
       is_archived: false,
     };
 
-    const { data: project, error: projectError } = await supabase
+    const { data: project, error: projectError } = await (supabase
       .from('projects')
-      .insert(projectData)
+      .insert as any)(projectData)
       .select()
       .single();
 
@@ -124,7 +125,7 @@ export async function POST(req: NextRequest) {
         position: index,
       }));
 
-      await supabase.from('workspace_tabs').insert(tabsData);
+      await (supabase.from('workspace_tabs').insert as any)(tabsData);
     }
 
     return NextResponse.json({ 

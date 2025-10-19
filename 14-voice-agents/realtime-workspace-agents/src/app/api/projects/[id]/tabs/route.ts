@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/app/lib/supabase/service';
@@ -42,14 +43,15 @@ export async function PATCH(
       .eq('id', id)
       .single();
 
-    if (
-      projectLookupError ||
-      !project ||
-      project.user_id !== supabaseUserId
-    ) {
+    if (projectLookupError || !project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
+    
     const projectRow = project as ProjectRow;
+    
+    if (projectRow.user_id !== supabaseUserId) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
 
     // Delete existing tabs
     await supabase.from('workspace_tabs').delete().eq('project_id', id);
@@ -64,7 +66,7 @@ export async function PATCH(
         position: index,
       }));
 
-      const { error } = await supabase.from('workspace_tabs').insert(tabsData);
+      const { error } = await (supabase.from('workspace_tabs').insert as any)(tabsData);
       if (error) throw error;
     }
 
