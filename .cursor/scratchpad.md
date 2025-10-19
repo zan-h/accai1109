@@ -1415,3 +1415,37 @@ Lessons
 - Always ask before using the -force git command
 - **Multi-suite implementation**: Suite system allows easy addition of new agent collections by creating a folder structure and registering in index.ts
 - **OpenAI Realtime voice limitation**: Voice parameter cannot change after first agent speaks in a RealtimeSession - use prompt engineering for distinct personalities instead
+
+---
+
+## Executor: Run App - Environment Setup Blocker (2025-10-16)
+
+Status: Dependencies installed in `14-voice-agents/realtime-workspace-agents` (npm install OK, 0 vulnerabilities). Dev server start is blocked by missing environment variables; `.env.local` cannot be created from this environment due to ignore/sandbox rules.
+
+Required env vars to run locally:
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `OPENAI_API_KEY`
+
+Optional (for webhooks/user sync and service ops):
+- `CLERK_WEBHOOK_SECRET`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
+
+What I need from Planner/User to proceed:
+1) Provide the above env values, or confirm I should stub non-critical ones and proceed just to boot UI.
+2) If preferred, create the file `14-voice-agents/realtime-workspace-agents/.env.local` locally with these keys (values redacted here):
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...`
+   - `CLERK_SECRET_KEY=...`
+   - `NEXT_PUBLIC_SUPABASE_URL=...`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY=...`
+   - `OPENAI_API_KEY=...`
+
+Notes:
+- Clerk middleware protects `/` so valid Clerk keys are required to access the app.
+- I can start the server with inline env vars once provided.
+
+Proposed next action after keys received:
+- Launch dev server: `cd 14-voice-agents/realtime-workspace-agents && npm run dev` and verify it boots on `http://localhost:3000`.

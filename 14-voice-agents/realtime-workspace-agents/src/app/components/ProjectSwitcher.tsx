@@ -114,14 +114,19 @@ export default function ProjectSwitcher({ isOpen, onClose, sessionStatus = "DISC
     }
   };
 
-  const handleRenameProject = (projectId: string, newName: string) => {
+  const handleRenameProject = async (projectId: string, newName: string) => {
     if (newName.trim()) {
-      updateProject(projectId, { name: newName.trim() });
-      setRenamingProjectId(null);
+      try {
+        await updateProject(projectId, { name: newName.trim() });
+        setRenamingProjectId(null);
+      } catch (error) {
+        console.error('Failed to rename project:', error);
+        alert('Failed to rename project. Please try again.');
+      }
     }
   };
 
-  const handleDeleteProject = (projectId: string, projectName: string) => {
+  const handleDeleteProject = async (projectId: string, projectName: string) => {
     if (projects.length === 1) {
       alert("Cannot delete the last project. At least one project must exist.");
       return;
@@ -131,18 +136,33 @@ export default function ProjectSwitcher({ isOpen, onClose, sessionStatus = "DISC
       `Delete project "${projectName}"? This cannot be undone.`
     );
     if (confirmed) {
-      deleteProject(projectId);
-      if (projects.length === 1) {
-        onClose(); // Close if this was the last project
+      try {
+        await deleteProject(projectId);
+        if (projects.length === 1) {
+          onClose(); // Close if this was the last project
+        }
+      } catch (error) {
+        console.error('Failed to delete project:', error);
+        alert('Failed to delete project. Please try again.');
       }
     }
   };
 
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     const name = newProjectName.trim();
     if (name) {
-      createProject(name);
-      onClose();
+      try {
+        // Get current suite ID from localStorage or use default
+        const suiteId = typeof window !== 'undefined' 
+          ? localStorage.getItem('selectedSuiteId') || 'energy-focus'
+          : 'energy-focus';
+        
+        await createProject(name, suiteId);
+        onClose();
+      } catch (error) {
+        console.error('Failed to create project:', error);
+        alert('Failed to create project. Please try again.');
+      }
     }
   };
 
@@ -313,7 +333,7 @@ export default function ProjectSwitcher({ isOpen, onClose, sessionStatus = "DISC
                             className="text-text-tertiary text-xs font-mono cursor-pointer"
                             onClick={() => handleSelect(globalIndex)}
                           >
-                            Modified: {formatTimestamp(project.modifiedAt)}
+                            Modified: {formatTimestamp(new Date(project.updatedAt).getTime())}
                           </div>
                         </>
                       )}
@@ -422,7 +442,7 @@ export default function ProjectSwitcher({ isOpen, onClose, sessionStatus = "DISC
                               className="text-text-tertiary text-xs font-mono cursor-pointer"
                               onClick={() => handleSelect(globalIndex)}
                             >
-                              Modified: {formatTimestamp(project.modifiedAt)}
+                              Modified: {formatTimestamp(new Date(project.updatedAt).getTime())}
                             </div>
                           </>
                         )}

@@ -1,8 +1,6 @@
 # Phase 1 Implementation - Production Foundation
 ## AI Assistant Implementation Prompt
 
-**Copy this entire prompt to give to Claude, GPT, or any AI coding assistant**
-
 ---
 
 ## Your Mission

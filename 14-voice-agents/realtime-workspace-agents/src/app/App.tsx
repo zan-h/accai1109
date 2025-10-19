@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useUser, UserButton } from '@clerk/nextjs';
 // import { v4 as uuidv4 } from "uuid"; // No longer needed - removed automatic "hi" message
 
 import Image from "next/image";
@@ -56,6 +57,7 @@ const MEDICAL_RESEARCH_VERSION = 'medical_research_v1';
 
 function App() {
   const searchParams = useSearchParams()!;
+  const { user, isLoaded } = useUser();
 
   // One-time migration: when scenario is workspaceBuilder (investment research) ensure workspace state is versioned.
   React.useEffect(() => {
@@ -644,6 +646,22 @@ function App() {
     }
   }, []);
 
+  // Auth guard: show loading or redirect to sign-in (after all hooks are called)
+  if (!isLoaded) {
+    return <div className="flex items-center justify-center h-screen">
+      <div className="text-text-secondary">Loading...</div>
+    </div>;
+  }
+
+  if (!user) {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/sign-in';
+    }
+    return <div className="flex items-center justify-center h-screen">
+      <div className="text-text-secondary">Redirecting to sign in...</div>
+    </div>;
+  }
+
   return (
     <div className="text-base flex flex-col h-screen bg-bg-primary text-text-primary relative">
       {/* Suite Selector Modal */}
@@ -677,6 +695,16 @@ function App() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* User Info */}
+          {isLoaded && user && (
+            <div className="flex items-center gap-3 mr-4">
+              <span className="text-text-secondary text-sm font-mono">
+                {user.emailAddresses[0]?.emailAddress}
+              </span>
+              <UserButton afterSignOutUrl="/" />
+            </div>
+          )}
+          
           {/* Suite Indicator */}
           {currentSuite && (
             <SuiteIndicator

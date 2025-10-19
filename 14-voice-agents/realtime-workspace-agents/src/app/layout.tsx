@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 import "./lib/envSetup";
 import CornerBrackets from "./components/CornerBrackets";
@@ -14,13 +15,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased font-mono">
-        <CornerBrackets />
-        <div className="dashboard-container min-h-screen border-2 border-border-primary relative">
-          {children}
-        </div>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className="antialiased font-mono">
+          <CornerBrackets />
+          <div className="dashboard-container min-h-screen border-2 border-border-primary relative">
+            {children}
+          </div>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

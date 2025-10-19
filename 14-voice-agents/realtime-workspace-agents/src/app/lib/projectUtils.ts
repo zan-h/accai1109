@@ -50,15 +50,17 @@ export function fuzzyMatch(text: string, search: string): boolean {
 /**
  * Filter and sort projects based on search query
  */
-export function filterProjects<T extends { name: string; modifiedAt: number }>(
+export function filterProjects<T extends { id: string; name: string; updatedAt: string }>(
   projects: T[],
   searchQuery: string,
   recentIds?: string[]
 ): { recent: T[]; all: T[] } {
   const filtered = projects.filter((p) => fuzzyMatch(p.name, searchQuery));
   
-  // Sort by modifiedAt (most recent first)
-  const sorted = [...filtered].sort((a, b) => b.modifiedAt - a.modifiedAt);
+  // Sort by updatedAt (most recent first)
+  const sorted = [...filtered].sort((a, b) => 
+    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  );
   
   if (!recentIds || recentIds.length === 0) {
     return { recent: [], all: sorted };

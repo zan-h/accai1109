@@ -15,6 +15,7 @@ import { registerSuiteManually } from './utils/manualRegistration';
 // Import suites
 import energyFocusSuite from './suites/energy-focus';
 import babyCareSuite from './suites/baby-care';
+import ifsTherapySuite from './suites/ifs-therapy';
 
 // For now, manually register suites
 // In Phase 4, this will be populated with actual suites
@@ -23,6 +24,7 @@ const suiteRegistry: SuiteRegistry = {};
 // Register suites
 registerSuiteManually(suiteRegistry, energyFocusSuite);
 registerSuiteManually(suiteRegistry, babyCareSuite);
+registerSuiteManually(suiteRegistry, ifsTherapySuite);
 
 console.log('📦 Registered suites:', Object.keys(suiteRegistry));
 
