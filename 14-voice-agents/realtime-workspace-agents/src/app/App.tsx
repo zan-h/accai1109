@@ -16,6 +16,7 @@ import SuiteSelector from "./components/SuiteSelector";
 import SuiteIndicator from "./components/SuiteIndicator";
 import SuiteTemplatePrompt from "./components/SuiteTemplatePrompt";
 import SaveStatusIndicator from "./components/SaveStatusIndicator";
+import Timer from "./components/Timer";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -944,6 +945,9 @@ function App() {
         setIsTranscriptVisible={setIsTranscriptVisible}
         currentProjectName={getCurrentProject()?.name}
       />
+
+      {/* Timer - floating overlay */}
+      <Timer />
 
       {/* Project Switcher Modal */}
       <ProjectSwitcher

@@ -28,8 +28,10 @@ WORKFLOW:
 2. If task is too big: "What's the first physical action? Like, 'open the doc and write the title.'"
 3. "Clean commitment: what exactly will you do, where, when—now or later today—and for how long?"
 4. Confirm the commitment is clean: specific action, location, start time, duration.
-5. "Great. I'll start the timer and capture your note." (use timer tool if available)
+5. "Great. I'll start the timer and capture your note."
+   - Use start_timer tool with the agreed duration (typically 10-25 minutes)
 6. At 50% mark (optional): "Want to continue or stop at 10 minutes?"
+   - Use get_timer_status to check progress
 7. When done: Move to Phase 3.
 
 **PHASE 3: REFLECTION (≤90 seconds)**

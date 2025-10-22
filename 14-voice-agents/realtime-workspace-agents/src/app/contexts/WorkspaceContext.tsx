@@ -20,6 +20,16 @@ import { useProjectContext } from "@/app/contexts/ProjectContext";
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
+export interface TimerState {
+  id: string;
+  label: string;
+  durationMs: number;
+  startedAt: number;
+  pausedAt: number | null;
+  elapsedMs: number;
+  status: 'running' | 'paused' | 'completed';
+}
+
 export interface WorkspaceState {
   // Data
   name: string;
@@ -28,6 +38,7 @@ export interface WorkspaceState {
   selectedTabId: string;
   saveStatus: SaveStatus;
   saveError: string | null;
+  activeTimer: TimerState | null;
 
   // Mutators
   setName: (n: string) => void;
@@ -37,6 +48,13 @@ export interface WorkspaceState {
   renameTab: (id: string, newName: string) => void;
   deleteTab: (id: string) => void;
   setSelectedTabId: (id: string) => void;
+  
+  // Timer mutators
+  startTimer: (label: string, durationMs: number) => void;
+  pauseTimer: () => void;
+  resumeTimer: () => void;
+  stopTimer: () => void;
+  getTimerStatus: () => TimerState | null;
   
   // Manual save trigger
   forceSave: () => Promise<void>;
@@ -89,6 +107,7 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
   const [selectedTabId, setSelectedTabIdInternal] = useState<string>("");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [activeTimer, setActiveTimer] = useState<TimerState | null>(null);
   
   // Performance optimization: track last load time to prevent circular updates
   const lastLoadTimeRef = useRef<number>(0);
@@ -349,6 +368,81 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   // -----------------------------------------------------------------------
+  // Timer functions
+  // -----------------------------------------------------------------------
+
+  const startTimer = useCallback((label: string, durationMs: number) => {
+    const newTimer: TimerState = {
+      id: createTabId(),
+      label,
+      durationMs,
+      startedAt: Date.now(),
+      pausedAt: null,
+      elapsedMs: 0,
+      status: 'running',
+    };
+    setActiveTimer(newTimer);
+    console.log(`⏱️  Timer started: "${label}" for ${durationMs}ms`);
+  }, []);
+
+  const pauseTimer = useCallback(() => {
+    setActiveTimer((prev) => {
+      if (!prev || prev.status !== 'running') return prev;
+      const now = Date.now();
+      const additionalElapsed = now - (prev.pausedAt || prev.startedAt);
+      return {
+        ...prev,
+        pausedAt: now,
+        elapsedMs: prev.elapsedMs + additionalElapsed,
+        status: 'paused',
+      };
+    });
+    console.log('⏸️  Timer paused');
+  }, []);
+
+  const resumeTimer = useCallback(() => {
+    setActiveTimer((prev) => {
+      if (!prev || prev.status !== 'paused') return prev;
+      return {
+        ...prev,
+        startedAt: Date.now(),
+        pausedAt: null,
+        status: 'running',
+      };
+    });
+    console.log('▶️  Timer resumed');
+  }, []);
+
+  const stopTimer = useCallback(() => {
+    setActiveTimer(null);
+    console.log('⏹️  Timer stopped');
+  }, []);
+
+  const getTimerStatus = useCallback(() => {
+    return activeTimer;
+  }, [activeTimer]);
+
+  // Auto-complete timer when time is up
+  useEffect(() => {
+    if (!activeTimer || activeTimer.status !== 'running') return;
+
+    const checkInterval = setInterval(() => {
+      const now = Date.now();
+      const elapsed = activeTimer.elapsedMs + (now - activeTimer.startedAt);
+      
+      if (elapsed >= activeTimer.durationMs) {
+        setActiveTimer((prev) => {
+          if (!prev) return prev;
+          return { ...prev, status: 'completed', elapsedMs: prev.durationMs };
+        });
+        console.log('⏰ Timer completed!');
+      }
+    }, 100); // Check every 100ms for smooth updates
+
+    return () => clearInterval(checkInterval);
+  }, [activeTimer]);
+
+  // -----------------------------------------------------------------------
   // Compose state object and update ref each render
   // -----------------------------------------------------------------------
 
@@ -359,6 +453,7 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
     selectedTabId,
     saveStatus,
     saveError,
+    activeTimer,
     setName,
     setDescription,
     setTabs,
@@ -366,6 +461,11 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
     renameTab,
     deleteTab,
     setSelectedTabId,
+    startTimer,
+    pauseTimer,
+    resumeTimer,
+    stopTimer,
+    getTimerStatus,
     forceSave,
   };
 
@@ -508,4 +608,106 @@ export async function setSelectedTabId(input: any) {
 export async function getWorkspaceInfo() {
   const ws = useWorkspaceContext.getState();
   return { workspace: ws };
+}
+
+// ---------------------------------------------------------------------------
+// Timer helper functions (used by agent tools)
+// ---------------------------------------------------------------------------
+
+export async function startTimerHelper(input: any) {
+  const { label, durationMinutes } = input as { label?: string; durationMinutes?: number };
+  
+  if (typeof durationMinutes !== 'number' || durationMinutes <= 0) {
+    return { error: 'Invalid duration. Must be a positive number of minutes.' };
+  }
+  
+  const ws = useWorkspaceContext.getState();
+  const timerLabel = typeof label === 'string' && label ? label : `${durationMinutes} min timer`;
+  const durationMs = durationMinutes * 60 * 1000;
+  
+  ws.startTimer(timerLabel, durationMs);
+  
+  return { 
+    message: `Timer started: "${timerLabel}" for ${durationMinutes} minutes`,
+    timer: {
+      label: timerLabel,
+      durationMinutes,
+      status: 'running'
+    }
+  };
+}
+
+export async function pauseTimerHelper() {
+  const ws = useWorkspaceContext.getState();
+  const timer = ws.activeTimer;
+  
+  if (!timer) {
+    return { error: 'No active timer to pause.' };
+  }
+  
+  if (timer.status !== 'running') {
+    return { error: `Timer is ${timer.status}, cannot pause.` };
+  }
+  
+  ws.pauseTimer();
+  return { message: 'Timer paused.' };
+}
+
+export async function resumeTimerHelper() {
+  const ws = useWorkspaceContext.getState();
+  const timer = ws.activeTimer;
+  
+  if (!timer) {
+    return { error: 'No timer to resume.' };
+  }
+  
+  if (timer.status !== 'paused') {
+    return { error: `Timer is ${timer.status}, cannot resume.` };
+  }
+  
+  ws.resumeTimer();
+  return { message: 'Timer resumed.' };
+}
+
+export async function stopTimerHelper() {
+  const ws = useWorkspaceContext.getState();
+  const timer = ws.activeTimer;
+  
+  if (!timer) {
+    return { error: 'No timer to stop.' };
+  }
+  
+  ws.stopTimer();
+  return { message: 'Timer stopped.' };
+}
+
+export async function getTimerStatusHelper() {
+  const ws = useWorkspaceContext.getState();
+  const timer = ws.activeTimer;
+  
+  if (!timer) {
+    return { 
+      status: 'no_timer',
+      message: 'No active timer.'
+    };
+  }
+  
+  const now = Date.now();
+  const elapsed = timer.status === 'running' 
+    ? timer.elapsedMs + (now - timer.startedAt)
+    : timer.elapsedMs;
+  
+  const remaining = Math.max(0, timer.durationMs - elapsed);
+  const remainingMinutes = Math.ceil(remaining / (60 * 1000));
+  const remainingSeconds = Math.ceil(remaining / 1000);
+  
+  return {
+    status: timer.status,
+    label: timer.label,
+    durationMinutes: Math.round(timer.durationMs / (60 * 1000)),
+    elapsedMinutes: Math.floor(elapsed / (60 * 1000)),
+    remainingMinutes,
+    remainingSeconds,
+    percentComplete: Math.round((elapsed / timer.durationMs) * 100),
+  };
 }

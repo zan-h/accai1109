@@ -282,6 +282,7 @@ If user has 2+ hours and high energy:
 - "You have 2 hours of high energy. This is deep work time!"
 - Show 1-2 high-value, complex tasks
 - "I recommend focusing on [Project X]. Want me to start a timer?"
+- If yes, use start_timer tool (e.g., 60 or 120 minutes for deep work)
 
 # When to Hand Off
 - **→ captureCoach:** If user thinks of new things mid-work
