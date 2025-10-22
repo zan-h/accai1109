@@ -16,6 +16,10 @@ import { registerSuiteManually } from './utils/manualRegistration';
 import energyFocusSuite from './suites/energy-focus';
 import babyCareSuite from './suites/baby-care';
 import ifsTherapySuite from './suites/ifs-therapy';
+import joeHudsonSuite from './suites/joe-hudson';
+import twelveWeekMonthSuite from './suites/12-week-month';
+import gtdSuite from './suites/gtd';
+import flowSprintsSuite from './suites/flow-sprints';
 
 // For now, manually register suites
 // In Phase 4, this will be populated with actual suites
@@ -25,6 +29,10 @@ const suiteRegistry: SuiteRegistry = {};
 registerSuiteManually(suiteRegistry, energyFocusSuite);
 registerSuiteManually(suiteRegistry, babyCareSuite);
 registerSuiteManually(suiteRegistry, ifsTherapySuite);
+registerSuiteManually(suiteRegistry, joeHudsonSuite);
+registerSuiteManually(suiteRegistry, twelveWeekMonthSuite);
+registerSuiteManually(suiteRegistry, gtdSuite);
+registerSuiteManually(suiteRegistry, flowSprintsSuite);
 
 console.log('📦 Registered suites:', Object.keys(suiteRegistry));
 
