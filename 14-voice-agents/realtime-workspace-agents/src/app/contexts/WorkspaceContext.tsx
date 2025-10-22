@@ -14,9 +14,11 @@ import React, {
   useRef,
 } from "react";
 
-import { nanoid } from "nanoid";
+import { v4 as uuidv4 } from "uuid";
 import type { WorkspaceTab } from "@/app/types";
 import { useProjectContext } from "@/app/contexts/ProjectContext";
+
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 export interface WorkspaceState {
   // Data
@@ -24,6 +26,8 @@ export interface WorkspaceState {
   description: string;
   tabs: WorkspaceTab[];
   selectedTabId: string;
+  saveStatus: SaveStatus;
+  saveError: string | null;
 
   // Mutators
   setName: (n: string) => void;
@@ -33,9 +37,44 @@ export interface WorkspaceState {
   renameTab: (id: string, newName: string) => void;
   deleteTab: (id: string) => void;
   setSelectedTabId: (id: string) => void;
+  
+  // Manual save trigger
+  forceSave: () => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceState | undefined>(undefined);
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const createTabId = (): string => {
+  if (
+    typeof globalThis !== "undefined" &&
+    globalThis.crypto &&
+    typeof globalThis.crypto.randomUUID === "function"
+  ) {
+    try {
+      return globalThis.crypto.randomUUID();
+    } catch (error) {
+      console.warn("crypto.randomUUID failed, falling back to uuidv4()", error);
+    }
+  }
+  return uuidv4();
+};
+
+const normalizeTabIds = (tabs: WorkspaceTab[]) => {
+  const replacements = new Map<string, string>();
+
+  const normalizedTabs = tabs.map((tab) => {
+    if (typeof tab.id === "string" && UUID_REGEX.test(tab.id)) {
+      return tab;
+    }
+
+    const newId = createTabId();
+    replacements.set(tab.id, newId);
+    return { ...tab, id: newId };
+  });
+
+  return { normalizedTabs, replacements };
+};
 
 export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
   const { currentProjectId, getCurrentProject, updateProjectTabs } = useProjectContext();
@@ -48,9 +87,27 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
   const [description, setDescription] = useState("");
   const [tabs, setTabsInternal] = useState<WorkspaceTab[]>([]);
   const [selectedTabId, setSelectedTabIdInternal] = useState<string>("");
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [saveError, setSaveError] = useState<string | null>(null);
   
   // Performance optimization: track last load time to prevent circular updates
   const lastLoadTimeRef = useRef<number>(0);
+  
+  // Track pending changes to save after grace period
+  const pendingSaveRef = useRef<{ projectId: string; tabs: WorkspaceTab[] } | null>(null);
+  
+  // Track debounce timeout
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastPersistedTabsRef = useRef<string>("[]");
+  const applyTabIdReplacements = useCallback((normalizedTabs: WorkspaceTab[], replacements: Map<string, string>) => {
+    setTabsInternal(() => normalizedTabs);
+    setSelectedTabIdInternal((prevSelected) => {
+      if (!normalizedTabs.length) return "";
+      const candidate = prevSelected ? (replacements.get(prevSelected) ?? prevSelected) : normalizedTabs[0].id;
+      const exists = normalizedTabs.some((tab) => tab.id === candidate);
+      return exists ? candidate : normalizedTabs[0].id;
+    });
+  }, []);
 
   // Load tabs from current project when it changes
   useEffect(() => {
@@ -59,13 +116,20 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
     const currentProject = getCurrentProject();
     if (!currentProject) return;
     
-    // Load tabs from project
-    setTabsInternal(currentProject.tabs || []);
-    
-    // Select first tab if none selected or selected tab doesn't exist
-    if (!currentProject.tabs.find((t) => t.id === selectedTabId)) {
-      setSelectedTabIdInternal(currentProject.tabs[0]?.id || "");
+    const { normalizedTabs, replacements } = normalizeTabIds(currentProject.tabs || []);
+    if (replacements.size > 0) {
+      applyTabIdReplacements(normalizedTabs, replacements);
+    } else {
+      setTabsInternal(normalizedTabs);
+      setSelectedTabIdInternal((prevSelected) => {
+        if (!normalizedTabs.length) return "";
+        if (normalizedTabs.some((t) => t.id === prevSelected)) return prevSelected;
+        return normalizedTabs[0].id;
+      });
     }
+    
+    // Load tabs from project
+    lastPersistedTabsRef.current = JSON.stringify(normalizedTabs);
     
     // Update project name/description
     setName(currentProject.name);
@@ -74,49 +138,183 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
     // Track when we loaded
     lastLoadTimeRef.current = Date.now();
     
+    // Reset save status
+    setSaveStatus('idle');
+    setSaveError(null);
+    
     console.log('📂 Loaded tabs for project:', currentProject.name, '→', currentProject.tabs.length, 'tabs');
-  }, [currentProjectId]); // Only depend on currentProjectId, not getCurrentProject
+  }, [currentProjectId, getCurrentProject, applyTabIdReplacements]);
+  
+  // Force save function (used by beforeunload and visibility handlers)
+  const forceSave = useCallback(async () => {
+    if (!currentProjectId) return;
+    if (tabs.length === 0) return;
+    
+    // Clear any pending debounced save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
 
-  // Save tabs back to project (debounced)
+    const { normalizedTabs, replacements } = normalizeTabIds(tabs);
+    const tabsToPersist = replacements.size > 0 ? normalizedTabs : tabs;
+    if (replacements.size > 0) {
+      applyTabIdReplacements(normalizedTabs, replacements);
+    }
+    
+    try {
+      setSaveStatus('saving');
+      setSaveError(null);
+      await updateProjectTabs(currentProjectId, tabsToPersist);
+      lastPersistedTabsRef.current = JSON.stringify(tabsToPersist);
+      setSaveStatus('saved');
+      console.log('✅ Force saved tabs:', tabs.length, 'tabs');
+      
+      // Reset to idle after 2 seconds
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      setSaveStatus('error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setSaveError(errorMessage);
+      console.error('❌ Failed to save tabs:', error);
+    }
+  }, [currentProjectId, tabs, updateProjectTabs, applyTabIdReplacements]);
+
+  // Save tabs back to project (debounced with improved error handling)
   useEffect(() => {
     if (!currentProjectId) return;
-    if (tabs.length === 0 && !getCurrentProject()) return; // Don't save empty state on initial load
+    if (tabs.length === 0) return;
     
-    // Grace period: don't save immediately after loading to prevent circular updates
-    const timeSinceLoad = Date.now() - lastLoadTimeRef.current;
-    if (timeSinceLoad < 300) {
-      console.log('⏸️  Skipping save (within grace period)');
+    const serializedTabs = JSON.stringify(tabs);
+    if (serializedTabs === lastPersistedTabsRef.current) {
+      return;
+    }
+
+    const { normalizedTabs, replacements } = normalizeTabIds(tabs);
+    if (replacements.size > 0) {
+      applyTabIdReplacements(normalizedTabs, replacements);
       return;
     }
     
-    // Debounce: wait 200ms before saving
-    const timeout = setTimeout(() => {
-      updateProjectTabs(currentProjectId, tabs);
-      console.log('💾 Saved tabs to project:', tabs.length, 'tabs');
-    }, 200);
+    // Grace period: don't save immediately after loading to prevent circular updates
+    // But DO store pending changes to save after grace period
+    const timeSinceLoad = Date.now() - lastLoadTimeRef.current;
+    if (timeSinceLoad < 300) {
+      console.log('⏸️  Deferring save (within grace period)');
+      pendingSaveRef.current = { projectId: currentProjectId, tabs };
+      
+      // Schedule save for after grace period
+      const remainingGracePeriod = 300 - timeSinceLoad;
+      const timeout = setTimeout(() => {
+        if (pendingSaveRef.current?.projectId === currentProjectId) {
+          forceSave();
+          pendingSaveRef.current = null;
+        }
+      }, remainingGracePeriod + 100); // +100ms for the debounce
+      
+      return () => clearTimeout(timeout);
+    }
     
-    return () => clearTimeout(timeout);
-  }, [tabs, currentProjectId, updateProjectTabs, getCurrentProject]);
+    // Clear any pending grace period save
+    pendingSaveRef.current = null;
+    
+    // Debounce: wait 100ms before saving (reduced from 200ms)
+    const timeout = setTimeout(async () => {
+      try {
+        setSaveStatus('saving');
+        setSaveError(null);
+        await updateProjectTabs(currentProjectId, tabs);
+        lastPersistedTabsRef.current = JSON.stringify(tabs);
+        setSaveStatus('saved');
+        console.log('💾 Saved tabs to project:', tabs.length, 'tabs');
+        
+        // Reset to idle after 2 seconds
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } catch (error) {
+        setSaveStatus('error');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setSaveError(errorMessage);
+        console.error('❌ Failed to save tabs:', error);
+      }
+    }, 100);
+    
+    saveTimeoutRef.current = timeout;
+    return () => {
+      clearTimeout(timeout);
+      if (saveTimeoutRef.current === timeout) {
+        saveTimeoutRef.current = null;
+      }
+    };
+  }, [tabs, currentProjectId, updateProjectTabs, forceSave, applyTabIdReplacements]);
+  
+  // beforeunload handler - force save on page close/refresh
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (!currentProjectId) return;
+      if (tabs.length === 0) return;
+      
+      // If there are unsaved changes (status is not 'saved'), force save with keepalive
+      if (saveStatus !== 'saved') {
+        const data = JSON.stringify({ tabs });
+        
+        // Use fetch with keepalive to ensure request completes even if page closes
+        fetch(`/api/projects/${currentProjectId}/tabs`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: data,
+          keepalive: true, // Ensures request completes even if page closes
+        }).catch(err => {
+          console.error('Failed to save on beforeunload:', err);
+        });
+        
+        console.log('💾 Triggered save on page unload');
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [currentProjectId, tabs, saveStatus]);
+  
+  // visibilitychange handler - save when user switches browser tabs
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // User switched away from tab - trigger immediate save if there are pending changes
+        if (saveStatus !== 'saved' && currentProjectId && tabs.length > 0) {
+          forceSave();
+          console.log('💾 Triggered save on visibility change');
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [currentProjectId, tabs, saveStatus, forceSave]);
 
   // -----------------------------------------------------------------------
   // Helper setters that also maintain invariants
   // -----------------------------------------------------------------------
 
   const setTabs = useCallback((newTabs: WorkspaceTab[]) => {
+    const safeTabs = Array.isArray(newTabs) ? newTabs : [];
+    const { normalizedTabs, replacements } = normalizeTabIds(safeTabs);
     setTabsInternal(() => {
-      const safeTabs = Array.isArray(newTabs) ? newTabs : [];
       setSelectedTabIdInternal((prevSelected) => {
-        if (safeTabs.find((t) => t.id === prevSelected)) return prevSelected;
-        return safeTabs[0]?.id ?? "";
+        if (!normalizedTabs.length) return "";
+        const candidate = prevSelected
+          ? replacements.get(prevSelected) ?? prevSelected
+          : normalizedTabs[0].id;
+        const exists = normalizedTabs.some((tab) => tab.id === candidate);
+        return exists ? candidate : normalizedTabs[0].id;
       });
-      return safeTabs;
+      return normalizedTabs;
     });
   }, []);
 
   const addTab = useCallback(
     (partial: Partial<Omit<WorkspaceTab, "id">> = {}) => {
       setTabsInternal((prev) => {
-        const id = nanoid();
+        const id = createTabId();
         const newTab: WorkspaceTab = {
           id,
           name: partial.name ?? `Tab ${prev.length + 1}`,
@@ -159,6 +357,8 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
     description,
     tabs,
     selectedTabId,
+    saveStatus,
+    saveError,
     setName,
     setDescription,
     setTabs,
@@ -166,6 +366,7 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
     renameTab,
     deleteTab,
     setSelectedTabId,
+    forceSave,
   };
 
   // Update shared ref so `useWorkspaceContext.getState()` is always current.
@@ -233,7 +434,7 @@ export async function addWorkspaceTab(input: any) {
   const { name, type, content } = input as { name?: string; type?: string; content?: string };
   const ws = useWorkspaceContext.getState();
   const newTab: WorkspaceTab = {
-    id: nanoid(),
+    id: createTabId(),
     name: typeof name === 'string' && name ? name : `Tab ${ws.tabs.length + 1}`,
     type: typeof type === 'string' && (type === 'markdown' || type === 'csv') ? type : 'markdown',
     content: typeof content === 'string' && content ? content : '',

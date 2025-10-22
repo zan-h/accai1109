@@ -1,12 +1,23 @@
 // Utility functions for project management
 
-import { nanoid } from "nanoid";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Generate a unique project ID
  */
 export function generateProjectId(): string {
-  return nanoid();
+  if (
+    typeof globalThis !== "undefined" &&
+    globalThis.crypto &&
+    typeof globalThis.crypto.randomUUID === "function"
+  ) {
+    try {
+      return globalThis.crypto.randomUUID();
+    } catch (error) {
+      console.warn("crypto.randomUUID failed, falling back to uuidv4()", error);
+    }
+  }
+  return uuidv4();
 }
 
 /**
@@ -74,4 +85,3 @@ export function filterProjects<T extends { id: string; name: string; updatedAt: 
   
   return { recent, all: sorted };
 }
-

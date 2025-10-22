@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/app/lib/supabase/service';
@@ -107,6 +105,7 @@ export async function POST(req: NextRequest) {
       is_archived: false,
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: project, error: projectError } = await (supabase
       .from('projects')
       .insert as any)(projectData)
@@ -125,6 +124,7 @@ export async function POST(req: NextRequest) {
         position: index,
       }));
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from('workspace_tabs').insert as any)(tabsData);
     }
 

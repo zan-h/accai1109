@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/app/lib/supabase/service';
@@ -81,6 +79,7 @@ export async function PATCH(
     }
 
     // Update project
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase
       .from('projects')
       .update as any)(updates)
@@ -133,6 +132,7 @@ export async function DELETE(
     }
 
     // Soft delete (archive)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase
       .from('projects')
       .update as any)({ is_archived: true })

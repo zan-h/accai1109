@@ -15,6 +15,7 @@ import ProjectSwitcher from "./components/ProjectSwitcher";
 import SuiteSelector from "./components/SuiteSelector";
 import SuiteIndicator from "./components/SuiteIndicator";
 import SuiteTemplatePrompt from "./components/SuiteTemplatePrompt";
+import SaveStatusIndicator from "./components/SaveStatusIndicator";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -823,6 +824,9 @@ function App() {
 
   return (
     <div className="text-base flex flex-col h-screen bg-bg-primary text-text-primary relative">
+      {/* Save Status Indicator */}
+      <SaveStatusIndicator />
+      
       {/* Suite Selector Modal */}
       <SuiteSelector
         isOpen={showSuiteSelector}

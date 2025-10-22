@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/app/lib/supabase/service';
@@ -53,22 +51,80 @@ export async function PATCH(
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    // Delete existing tabs
-    await supabase.from('workspace_tabs').delete().eq('project_id', id);
+    // Try to use atomic function first (requires migration 003)
+    // Falls back to safer upsert pattern if function doesn't exist
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: rpcError } = await (supabase as any).rpc('update_project_tabs_atomic', {
+        p_project_id: id,
+        p_tabs: validated.tabs,
+      });
+
+      if (rpcError) {
+        // If function doesn't exist (code 42883), fall back to manual upsert
+        if (rpcError.code === '42883' || rpcError.message?.includes('does not exist')) {
+          console.warn('Atomic function not found, using fallback upsert pattern');
+          // Fall through to fallback
+        } else {
+          throw rpcError;
+        }
+      } else {
+        return NextResponse.json({ success: true });
+      }
+    } catch (err) {
+      console.warn('RPC call failed, using fallback:', err);
+      // Fall through to fallback
+    }
+
+    // FALLBACK: Safer delete-then-insert with validation
+    // This should be removed after migration 003 is applied
+    console.log('⚠️ Using fallback pattern for tabs update (migration 003 not applied yet)');
+    
+    // First, verify all tab data is valid before making any changes
+    if (!validated.tabs || validated.tabs.length === 0) {
+      console.log('No tabs to update');
+      return NextResponse.json({ success: true });
+    }
+
+    // Delete existing tabs for this project
+    const { error: deleteError } = await supabase
+      .from('workspace_tabs')
+      .delete()
+      .eq('project_id', id);
+
+    if (deleteError) {
+      console.error('Error deleting existing tabs:', deleteError);
+      throw new Error(`Failed to delete existing tabs: ${deleteError.message}`);
+    }
 
     // Insert new tabs
-    if (validated.tabs.length > 0) {
-      const tabsData = validated.tabs.map((tab, index) => ({
-        project_id: projectRow.id,
-        name: tab.name,
-        type: tab.type,
-        content: tab.content,
-        position: index,
-      }));
+    const tabsData = validated.tabs.map((tab, index) => ({
+      id: tab.id,
+      project_id: id,
+      name: tab.name,
+      type: tab.type,
+      content: tab.content,
+      position: index,
+    }));
 
-      const { error } = await (supabase.from('workspace_tabs').insert as any)(tabsData);
-      if (error) throw error;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: insertError } = await (supabase
+      .from('workspace_tabs')
+      .insert as any)(tabsData);
+
+    if (insertError) {
+      console.error('Error inserting tabs:', insertError);
+      throw new Error(`Failed to insert tabs: ${insertError.message}`);
     }
+
+    // Update project timestamp
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase
+      .from('projects')
+      .update as any)({ updated_at: new Date().toISOString() })
+      .eq('id', id);
+      
+    console.log('✅ Tabs updated successfully (fallback pattern)');
 
     return NextResponse.json({ success: true });
   } catch (error) {

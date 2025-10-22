@@ -219,6 +219,7 @@ export const ProjectProvider: FC<PropsWithChildren> = ({ children }) => {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tabs }),
+      keepalive: true, // Ensures request completes even if page closes
     });
 
     if (!response.ok) {

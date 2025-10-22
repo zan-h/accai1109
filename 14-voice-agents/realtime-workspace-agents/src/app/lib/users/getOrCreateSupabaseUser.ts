@@ -53,9 +53,10 @@ export async function getOrCreateSupabaseUser(
   };
 
   try {
-    const { data: inserted, error: insertError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: inserted, error: insertError } = await (supabase
       .from('users')
-      .insert(newUser)
+      .insert as any)(newUser)
       .select('*')
       .single();
 
