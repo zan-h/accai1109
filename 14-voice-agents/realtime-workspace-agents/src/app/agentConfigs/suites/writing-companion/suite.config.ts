@@ -7,7 +7,7 @@ export const writingCompanionSuite: AgentSuite = {
   name: 'Writing Companion',
   description: 'Complete writing workflow: from ideation to publication-ready prose',
   icon: '✍️',
-  category: 'creative',
+  category: 'creativity',
   tags: ['writing', 'editing', 'creativity', 'publishing', 'prose', 'ideation', 'free-writing'],
   
   suggestedUseCases: [
