@@ -1,12 +1,14 @@
 // src/app/agentConfigs/suites/writing-companion/index.ts
 
+import { AgentSuite } from '@/app/agentConfigs/types';
+import { writingCompanionSuite } from './suite.config';
 import { ideationAgent } from './agents/ideation';
 import { freeWriterAgent } from './agents/freeWriter';
 import { substantiveEditorAgent } from './agents/substantiveEditor';
 import { lineEditorAgent } from './agents/lineEditor';
 import { copyEditorAgent } from './agents/copyEditor';
 import { proofreaderAgent } from './agents/proofreader';
-import { writingCompanionSuite } from './suite.config';
+import { createModerationGuardrail } from '@/app/agentConfigs/shared/guardrails';
 
 // Wire handoffs between agents
 // Each agent can hand off to relevant agents in the writing workflow
@@ -29,7 +31,8 @@ import { writingCompanionSuite } from './suite.config';
 // Proofreader can hand off back to any editor if issues found, or declare done
 (proofreaderAgent.handoffs as any).push(copyEditorAgent, lineEditorAgent, substantiveEditorAgent);
 
-export const writingCompanionAgents = [
+// All agents
+const agents = [
   ideationAgent,
   freeWriterAgent,
   substantiveEditorAgent,
@@ -38,5 +41,15 @@ export const writingCompanionAgents = [
   proofreaderAgent,
 ];
 
-export { writingCompanionSuite };
+// Export suite
+const writingCompanionSuiteComplete: AgentSuite = {
+  ...writingCompanionSuite,
+  agents,
+  rootAgent: ideationAgent, // Start with ideation by default
+  guardrails: [
+    createModerationGuardrail('Writing Companion'),
+  ],
+};
+
+export default writingCompanionSuiteComplete;
 
