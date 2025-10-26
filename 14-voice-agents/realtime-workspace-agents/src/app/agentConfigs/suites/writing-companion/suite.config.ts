@@ -5,18 +5,19 @@ import type { AgentSuite } from '@/app/agentConfigs/types';
 export const writingCompanionSuite: AgentSuite = {
   id: 'writing-companion',
   name: 'Writing Companion',
-  description: 'Complete writing workflow: from ideation to publication-ready prose',
+  description: 'Complete writing workflow with web research: from ideation to publication-ready prose',
   icon: '✍️',
   category: 'creativity',
-  tags: ['writing', 'editing', 'creativity', 'publishing', 'prose', 'ideation', 'free-writing'],
+  tags: ['writing', 'editing', 'creativity', 'publishing', 'prose', 'ideation', 'free-writing', 'research', 'fact-checking'],
   
   suggestedUseCases: [
     'Writing essays, articles, or blog posts',
+    'Researching topics and verifying facts',
     'Developing ideas through free-writing',
     'Editing and polishing drafts',
     'Overcoming writer\'s block',
     'Morning pages and creative exploration',
-    'Professional editing workflow',
+    'Professional editing workflow with research',
   ],
   
   targetUsers: [
@@ -223,12 +224,15 @@ What seems fun to explore?
 
 The writer can work through stages:
 1. IDEATION - Explore curiosities and generate ideas
-2. FREE-WRITING - Write freely without judgment (with timed sessions)
-3. DRAFTING - Develop the piece in Current Draft
-4. SUBSTANTIVE EDITING - Structure, clarity, argument
-5. LINE EDITING - Sentence-level flow and style
-6. COPYEDITING - Grammar and consistency
-7. PROOFREADING - Final polish
+2. RESEARCH - Search the web for information, facts, and sources
+3. FREE-WRITING - Write freely without judgment (with timed sessions)
+4. DRAFTING - Develop the piece in Current Draft
+5. SUBSTANTIVE EDITING - Structure, clarity, argument
+6. LINE EDITING - Sentence-level flow and style
+7. COPYEDITING - Grammar and consistency
+8. PROOFREADING - Final polish
+
+The Research Assistant can search the web at any stage to verify facts, find sources, or gather background information.
 
 The agent should read Structure Inspiration before helping with writing, and use the Editing Checklist to track progress.`,
 };
