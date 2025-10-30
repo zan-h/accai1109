@@ -29,7 +29,7 @@ function Transcript({
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const [prevLogs, setPrevLogs] = useState<TranscriptItem[]>([]);
   const [justCopied, setJustCopied] = useState(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   function scrollToBottom() {
     if (transcriptRef.current) {
@@ -56,10 +56,20 @@ function Transcript({
 
   // Autofocus on text box input on load
   useEffect(() => {
-    if (canSend && inputRef.current) {
-      inputRef.current.focus();
+    if (canSend && textareaRef.current) {
+      textareaRef.current.focus();
     }
   }, [canSend]);
+
+  // Auto-grow textarea based on content
+  useEffect(() => {
+    if (textareaRef.current) {
+      // Reset height to auto to get the correct scrollHeight
+      textareaRef.current.style.height = 'auto';
+      // Set height to scrollHeight (content height)
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [userText]);
 
   const handleCopyTranscript = async () => {
     if (!transcriptRef.current) return;
@@ -218,18 +228,19 @@ function Transcript({
       </div>
 
       <div className="p-4 flex items-center gap-x-2 flex-shrink-0 border-t border-border-primary bg-bg-tertiary">
-        <input
-          ref={inputRef}
-          type="text"
+        <textarea
+          ref={textareaRef}
+          rows={1}
           value={userText}
           onChange={(e) => setUserText(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && canSend) {
+            if (e.key === "Enter" && !e.shiftKey && canSend) {
+              e.preventDefault();
               onSendMessage();
             }
           }}
-          className="flex-1 px-4 py-2 bg-bg-primary border border-border-primary text-text-primary focus:outline-none focus:border-accent-primary font-mono transition-colors placeholder:text-text-tertiary"
-          placeholder="Type a message..."
+          className="flex-1 px-4 py-2 bg-bg-primary border border-border-primary text-text-primary focus:outline-none focus:border-accent-primary font-mono transition-colors placeholder:text-text-tertiary resize-none overflow-y-auto min-h-[40px] max-h-[200px]"
+          placeholder="Type a message... (Shift+Enter for new line)"
         />
         <button
           onClick={onSendMessage}
