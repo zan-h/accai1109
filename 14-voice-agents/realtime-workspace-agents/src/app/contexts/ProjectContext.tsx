@@ -10,6 +10,7 @@ import React, {
   PropsWithChildren,
   FC,
   useEffect,
+  useRef,
 } from "react";
 
 import { useUser } from '@clerk/nextjs';
@@ -60,6 +61,7 @@ export const ProjectProvider: FC<PropsWithChildren> = ({ children }) => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [recentProjectIds, setRecentProjectIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const hasAttemptedBootstrapRef = useRef(false);
 
   // -----------------------------------------------------------------------
   // Load projects from API
@@ -98,6 +100,25 @@ export const ProjectProvider: FC<PropsWithChildren> = ({ children }) => {
       loadProjects();
     }
   }, [isLoaded, loadProjects]);
+
+  // Ensure a project is always selected once projects are loaded
+  useEffect(() => {
+    if (isLoading) return;
+    if (!projects.length) return;
+
+    const projectExists = currentProjectId
+      ? projects.some((project) => project.id === currentProjectId)
+      : false;
+
+    if (!projectExists) {
+      const [mostRecent] = projects;
+      if (!mostRecent) return;
+
+      setCurrentProjectId(mostRecent.id);
+      setRecentProjectIds((prev) => [mostRecent.id, ...prev.filter((id) => id !== mostRecent.id)].slice(0, 3));
+      console.log('✅ Auto-selected project:', mostRecent.name);
+    }
+  }, [isLoading, projects, currentProjectId]);
 
   // Load currentProjectId from localStorage
   useEffect(() => {
@@ -156,6 +177,33 @@ export const ProjectProvider: FC<PropsWithChildren> = ({ children }) => {
     console.log('✅ Created project:', project.name);
     return project.id;
   }, [user]);
+
+  // Bootstrap a default project for completely new users
+  useEffect(() => {
+    if (isLoading) return;
+    if (projects.length > 0) return;
+    if (!user) return;
+    if (hasAttemptedBootstrapRef.current) return;
+
+    hasAttemptedBootstrapRef.current = true;
+
+    const createDefaultProject = async () => {
+      try {
+        const defaultName = 'My Workspace';
+        const suiteId =
+          typeof window !== 'undefined'
+            ? localStorage.getItem('selectedSuiteId') || 'energy-focus'
+            : 'energy-focus';
+
+        await createProject(defaultName, suiteId);
+        console.log('✅ Created default project for new user');
+      } catch (error) {
+        console.error('Failed to create default project:', error);
+      }
+    };
+
+    createDefaultProject();
+  }, [isLoading, projects, user, createProject]);
 
   const updateProject = useCallback(async (
     id: string,

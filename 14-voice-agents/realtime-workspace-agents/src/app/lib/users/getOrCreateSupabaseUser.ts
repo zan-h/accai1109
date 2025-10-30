@@ -30,7 +30,8 @@ export async function getOrCreateSupabaseUser(
     throw error;
   }
 
-  const clerkUser = await clerkClient.users.getUser(clerkUserId);
+  const client = await clerkClient();
+  const clerkUser = await client.users.getUser(clerkUserId);
   const primaryEmail =
     clerkUser.emailAddresses.find(
       (email) => email.id === clerkUser.primaryEmailAddressId

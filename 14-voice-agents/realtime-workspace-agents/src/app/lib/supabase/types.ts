@@ -149,6 +149,35 @@ export type Database = {
   };
 };
 
+// ============================================
+// VOICE PREFERENCES TYPES
+// ============================================
 
+/**
+ * OpenAI Realtime API supported voice names
+ */
+export type OpenAIVoiceName = 
+  | 'alloy' 
+  | 'echo' 
+  | 'fable' 
+  | 'onyx' 
+  | 'nova' 
+  | 'shimmer' 
+  | 'sage' 
+  | 'verse';
 
+/**
+ * User's voice preferences stored in users.metadata.voicePreferences
+ */
+export interface VoicePreferences {
+  enabled: boolean;  // If true, override default agent voices
+  voice: OpenAIVoiceName;  // Selected voice to use for all agents
+}
 
+/**
+ * Extended metadata type for users table
+ */
+export interface UserMetadata {
+  voicePreferences?: VoicePreferences;
+  [key: string]: any;  // Allow other metadata fields
+}

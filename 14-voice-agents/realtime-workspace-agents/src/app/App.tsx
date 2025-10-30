@@ -17,6 +17,7 @@ import SuiteIndicator from "./components/SuiteIndicator";
 import SuiteTemplatePrompt from "./components/SuiteTemplatePrompt";
 import SaveStatusIndicator from "./components/SaveStatusIndicator";
 import Timer from "./components/Timer";
+import VoiceSettingsModal from "./components/settings/VoiceSettingsModal";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -40,6 +41,10 @@ import {
 import { AgentSuite } from '@/app/agentConfigs/types';
 import { findSuiteById } from '@/app/agentConfigs';
 import { initializeWorkspaceWithTemplates, getWorkspaceInfoForContext } from './lib/workspaceInitializer';
+
+// Voice customization
+import { applyVoicePreferences, fetchVoicePreferences } from './lib/voiceUtils';
+import { VoicePreferences } from './lib/supabase/types';
 
 // Map used by connect logic for scenarios defined via the SDK
 const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
@@ -118,6 +123,10 @@ function App() {
   // Template prompt state
   const [showTemplatePrompt, setShowTemplatePrompt] = useState(false);
   const [pendingSuite, setPendingSuite] = useState<AgentSuite | null>(null);
+  
+  // Voice preferences state
+  const [voicePreferences, setVoicePreferences] = useState<VoicePreferences | null>(null);
+  const [showVoiceSettings, setShowVoiceSettings] = useState(false);
 
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   // Ref to identify whether the latest agent switch came from an automatic handoff
@@ -223,6 +232,22 @@ function App() {
     setSelectedAgentConfigSet(agents);
   }, [searchParams]);
 
+  // Fetch voice preferences when user is loaded
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    
+    const loadVoicePreferences = async () => {
+      const preferences = await fetchVoicePreferences();
+      setVoicePreferences(preferences);
+      
+      if (preferences?.enabled) {
+        console.log('🎙️ Voice preferences loaded:', preferences.voice);
+      }
+    };
+    
+    loadVoicePreferences();
+  }, [isLoaded, user]);
+
   useEffect(() => {
     if (selectedAgentName && sessionStatus === "DISCONNECTED") {
       connectToRealtime();
@@ -316,6 +341,12 @@ function App() {
         } else {
           throw new Error('No suite or scenario selected');
         }
+      }
+      
+      // Apply voice preferences to all agents if enabled
+      agents = applyVoicePreferences(agents, voicePreferences);
+      if (voicePreferences?.enabled) {
+        console.log(`🎙️ Applied voice override: ${voicePreferences.voice} to all agents`);
       }
 
       await connect({
@@ -865,7 +896,19 @@ function App() {
               <span className="text-text-secondary text-sm font-mono">
                 {user.emailAddresses[0]?.emailAddress}
               </span>
-              <UserButton afterSignOutUrl="/" />
+              <UserButton afterSignOutUrl="/">
+                <UserButton.MenuItems>
+                  <UserButton.Action
+                    label="Voice Settings"
+                    labelIcon={
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      </svg>
+                    }
+                    onClick={() => setShowVoiceSettings(true)}
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
             </div>
           )}
           
@@ -968,6 +1011,19 @@ function App() {
           }}
         />
       )}
+      
+      {/* Voice Settings Modal */}
+      <VoiceSettingsModal
+        isOpen={showVoiceSettings}
+        onClose={() => {
+          setShowVoiceSettings(false);
+          // Reload preferences after closing modal to update state
+          fetchVoicePreferences().then((prefs) => {
+            setVoicePreferences(prefs);
+          });
+        }}
+        sessionStatus={sessionStatus}
+      />
     </div>
   );
 }

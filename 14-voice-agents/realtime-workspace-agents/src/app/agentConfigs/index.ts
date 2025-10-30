@@ -21,6 +21,7 @@ import twelveWeekMonthSuite from './suites/12-week-month';
 import gtdSuite from './suites/gtd';
 import flowSprintsSuite from './suites/flow-sprints';
 import writingCompanionSuite from './suites/writing-companion';
+import videoProductionSuite from './suites/video-production';
 
 // For now, manually register suites
 // In Phase 4, this will be populated with actual suites
@@ -35,6 +36,7 @@ registerSuiteManually(suiteRegistry, twelveWeekMonthSuite);
 registerSuiteManually(suiteRegistry, gtdSuite);
 registerSuiteManually(suiteRegistry, flowSprintsSuite);
 registerSuiteManually(suiteRegistry, writingCompanionSuite);
+registerSuiteManually(suiteRegistry, videoProductionSuite);
 
 console.log('📦 Registered suites:', Object.keys(suiteRegistry));
 

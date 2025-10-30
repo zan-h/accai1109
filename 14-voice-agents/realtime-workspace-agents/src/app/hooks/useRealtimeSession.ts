@@ -59,6 +59,10 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
         break;
       }
       default: {
+        const eventType = typeof event?.type === 'string' ? event.type : '';
+        if (eventType.startsWith('logs.')) {
+          return;
+        }
         logServerEvent(event);
         break;
       } 

@@ -107,10 +107,9 @@ export async function PATCH(
       position: index,
     }));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: insertError } = await (supabase
+    const { error: insertError } = await supabase
       .from('workspace_tabs')
-      .insert as any)(tabsData);
+      .insert(tabsData);
 
     if (insertError) {
       console.error('Error inserting tabs:', insertError);
@@ -118,10 +117,9 @@ export async function PATCH(
     }
 
     // Update project timestamp
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase
+    await supabase
       .from('projects')
-      .update as any)({ updated_at: new Date().toISOString() })
+      .update({ updated_at: new Date().toISOString() })
       .eq('id', id);
       
     console.log('✅ Tabs updated successfully (fallback pattern)');

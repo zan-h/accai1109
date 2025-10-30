@@ -1,8 +1,8 @@
 // src/app/agentConfigs/suites/writing-companion/suite.config.ts
 
-import type { AgentSuite } from '@/app/agentConfigs/types';
+import type { SuiteConfig } from '@/app/agentConfigs/types';
 
-export const writingCompanionSuite: AgentSuite = {
+export const writingCompanionSuite: SuiteConfig = {
   id: 'writing-companion',
   name: 'Writing Companion',
   description: 'Complete writing workflow with web research: from ideation to publication-ready prose',
@@ -18,14 +18,6 @@ export const writingCompanionSuite: AgentSuite = {
     'Overcoming writer\'s block',
     'Morning pages and creative exploration',
     'Professional editing workflow with research',
-  ],
-  
-  targetUsers: [
-    'Writers and authors',
-    'Bloggers and content creators',
-    'Journalists and essayists',
-    'Students working on papers',
-    'Anyone who writes regularly',
   ],
 
   workspaceTemplates: [
@@ -60,8 +52,6 @@ export const writingCompanionSuite: AgentSuite = {
 
 **Word Count:** 0
 `,
-      primary_agent: 'freeWriter',
-      secondary_agents: ['substantiveEditor', 'lineEditor', 'copyEditor', 'proofreader'],
     },
     
     {
@@ -104,8 +94,6 @@ Paste any reference material, example structures, or inspiration here. The agent
 [Paste any articles, outlines, or inspiration here...]
 
 `,
-      primary_agent: 'ideation',
-      secondary_agents: ['substantiveEditor'],
     },
     
     {
@@ -148,8 +136,6 @@ What seems fun to explore?
 [Capture anything that comes to mind...]
 
 `,
-      primary_agent: 'ideation',
-      secondary_agents: ['freeWriter'],
     },
     
     {
@@ -215,12 +201,11 @@ What seems fun to explore?
 **Publication Status:** 🟡 In Progress
 
 `,
-      primary_agent: 'substantiveEditor',
-      secondary_agents: ['lineEditor', 'copyEditor', 'proofreader'],
     },
   ],
   
-  initialContext: `This is a writing workspace for developing written pieces from ideation through publication.
+  initialContext: {
+    workflowDescription: `This is a writing workspace for developing written pieces from ideation through publication.
 
 The writer can work through stages:
 1. IDEATION - Explore curiosities and generate ideas
@@ -235,5 +220,6 @@ The writer can work through stages:
 The Research Assistant can search the web at any stage to verify facts, find sources, or gather background information.
 
 The agent should read Structure Inspiration before helping with writing, and use the Editing Checklist to track progress.`,
+  },
 };
 
