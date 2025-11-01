@@ -62,7 +62,7 @@ function Workspace({ sessionStatus = "DISCONNECTED", onOpenProjectSwitcher }: Wo
   );
 
   return (
-    <div className="w-full flex flex-col bg-bg-secondary border border-border-primary overflow-hidden">
+    <div className="flex-1 min-w-[400px] flex flex-col bg-bg-secondary border border-border-primary overflow-hidden">
       {/* Header - compact on mobile */}
       <div className={`flex items-center justify-between sticky top-0 z-10 border-b border-border-primary bg-bg-secondary ${
         isMobile ? 'px-3 py-2 text-sm' : 'px-6 py-3 text-base'

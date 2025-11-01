@@ -34,8 +34,8 @@ function Events({ isExpanded }: EventsProps) {
   return (
     <div
       className={
-        (isExpanded ? "w-1/2 overflow-auto" : "w-0 overflow-hidden opacity-0") +
-        " transition-all duration-200 ease-in-out flex-col bg-bg-secondary border border-border-primary min-h-0 flex"
+        (isExpanded ? "w-80 overflow-auto" : "w-0 overflow-hidden opacity-0") +
+        " transition-all duration-200 ease-in-out flex-col bg-bg-secondary border border-border-primary min-h-0 flex flex-shrink-0"
       }
       ref={eventLogsContainerRef}
     >
@@ -58,25 +58,26 @@ function Events({ isExpanded }: EventsProps) {
                 >
                   <div
                     onClick={() => toggleExpand(log.id)}
-                    className="flex items-center justify-between cursor-pointer"
+                    className="flex items-center justify-between cursor-pointer gap-2"
                   >
-                    <div className="flex items-center flex-1">
+                    <div className="flex items-center flex-1 min-w-0">
                       <span
                         style={{ color: arrowInfo.color }}
-                        className="ml-1 mr-2 font-bold"
+                        className="ml-1 mr-2 font-bold flex-shrink-0"
                       >
                       {arrowInfo.symbol}
                       </span>
                       <span
+                        title={log.eventName}
                         className={
-                          "flex-1 text-sm " +
+                          "text-sm truncate " +
                           (isError ? "text-status-error" : "text-text-primary")
                         }
                       >
                         {log.eventName}
                       </span>
                     </div>
-                    <div className="text-text-tertiary ml-1 text-xs whitespace-nowrap">
+                    <div className="text-text-tertiary text-xs whitespace-nowrap flex-shrink-0">
                       {log.timestamp}
                     </div>
                   </div>

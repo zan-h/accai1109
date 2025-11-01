@@ -217,7 +217,7 @@ function Transcript({
         (isVisible 
           ? isMobile 
             ? "w-full overflow-auto" 
-            : "w-1/2 overflow-auto" 
+            : "flex-1 min-w-[400px] overflow-auto" 
           : "w-0 overflow-hidden opacity-0") +
         " transition-all duration-200 ease-in-out flex-col bg-bg-secondary border border-border-primary min-h-0 flex"
       }
