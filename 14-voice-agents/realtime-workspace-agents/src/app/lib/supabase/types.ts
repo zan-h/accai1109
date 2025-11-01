@@ -145,6 +145,103 @@ export type Database = {
           change_type?: 'user_edit' | 'agent_edit' | 'restore';
         };
       };
+      voice_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          project_id: string;
+          suite_id: string;
+          started_at: string;
+          ended_at: string | null;
+          is_active: boolean;
+          is_saved: boolean;
+          title: string | null;
+          last_activity_at: string;
+          metadata: Record<string, any>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          project_id: string;
+          suite_id: string;
+          started_at?: string;
+          ended_at?: string | null;
+          is_active?: boolean;
+          is_saved?: boolean;
+          title?: string | null;
+          last_activity_at?: string;
+          metadata?: Record<string, any>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          project_id?: string;
+          suite_id?: string;
+          started_at?: string;
+          ended_at?: string | null;
+          is_active?: boolean;
+          is_saved?: boolean;
+          title?: string | null;
+          last_activity_at?: string;
+          metadata?: Record<string, any>;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      transcript_items: {
+        Row: {
+          id: string;
+          session_id: string;
+          item_id: string;
+          type: 'MESSAGE' | 'BREADCRUMB';
+          role: 'user' | 'assistant' | null;
+          title: string | null;
+          data: Record<string, any> | null;
+          timestamp: string;
+          created_at_ms: number;
+          status: 'IN_PROGRESS' | 'DONE';
+          is_hidden: boolean;
+          guardrail_result: Record<string, any> | null;
+          sequence: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          item_id: string;
+          type: 'MESSAGE' | 'BREADCRUMB';
+          role?: 'user' | 'assistant' | null;
+          title?: string | null;
+          data?: Record<string, any> | null;
+          timestamp: string;
+          created_at_ms: number;
+          status: 'IN_PROGRESS' | 'DONE';
+          is_hidden?: boolean;
+          guardrail_result?: Record<string, any> | null;
+          sequence: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          item_id?: string;
+          type?: 'MESSAGE' | 'BREADCRUMB';
+          role?: 'user' | 'assistant' | null;
+          title?: string | null;
+          data?: Record<string, any> | null;
+          timestamp?: string;
+          created_at_ms?: number;
+          status?: 'IN_PROGRESS' | 'DONE';
+          is_hidden?: boolean;
+          guardrail_result?: Record<string, any> | null;
+          sequence?: number;
+          created_at?: string;
+        };
+      };
     };
   };
 };
@@ -180,4 +277,79 @@ export interface VoicePreferences {
 export interface UserMetadata {
   voicePreferences?: VoicePreferences;
   [key: string]: any;  // Allow other metadata fields
+}
+
+// ============================================
+// VOICE SESSIONS & TRANSCRIPT TYPES
+// ============================================
+
+/**
+ * Type alias for voice session database rows
+ */
+export type VoiceSessionRow = Database['public']['Tables']['voice_sessions']['Row'];
+export type VoiceSessionInsert = Database['public']['Tables']['voice_sessions']['Insert'];
+export type VoiceSessionUpdate = Database['public']['Tables']['voice_sessions']['Update'];
+
+/**
+ * Type alias for transcript item database rows
+ */
+export type TranscriptItemRow = Database['public']['Tables']['transcript_items']['Row'];
+export type TranscriptItemInsert = Database['public']['Tables']['transcript_items']['Insert'];
+export type TranscriptItemUpdate = Database['public']['Tables']['transcript_items']['Update'];
+
+/**
+ * Frontend TranscriptItem type (from @/app/types)
+ * Imported here for conversion utilities
+ */
+import type { TranscriptItem, GuardrailResultType } from '@/app/types';
+
+/**
+ * Convert database row to frontend TranscriptItem
+ */
+export function dbRowToTranscriptItem(row: TranscriptItemRow): TranscriptItem {
+  return {
+    itemId: row.item_id,
+    type: row.type,
+    role: row.role || undefined,
+    title: row.title || undefined,
+    data: row.data || undefined,
+    expanded: false, // Default to collapsed when loading from DB
+    timestamp: row.timestamp,
+    createdAtMs: row.created_at_ms,
+    status: row.status,
+    isHidden: row.is_hidden,
+    guardrailResult: row.guardrail_result as GuardrailResultType | undefined,
+  };
+}
+
+/**
+ * Convert frontend TranscriptItem to database insert format
+ */
+export function transcriptItemToDbInsert(
+  item: TranscriptItem,
+  sessionId: string,
+  sequence: number
+): TranscriptItemInsert {
+  return {
+    session_id: sessionId,
+    item_id: item.itemId,
+    type: item.type,
+    role: item.role || null,
+    title: item.title || null,
+    data: item.data || null,
+    timestamp: item.timestamp,
+    created_at_ms: item.createdAtMs,
+    status: item.status,
+    is_hidden: item.isHidden,
+    guardrail_result: item.guardrailResult || null,
+    sequence,
+  };
+}
+
+/**
+ * Voice session with additional computed properties for UI
+ */
+export interface VoiceSessionWithMetadata extends VoiceSessionRow {
+  messageCount?: number;
+  duration?: number; // in seconds
 }

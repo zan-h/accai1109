@@ -102,6 +102,11 @@ function App() {
   const {
     // addTranscriptMessage, // No longer needed - removed automatic "hi" message
     addTranscriptBreadcrumb,
+    currentSessionId,
+    setCurrentSession,
+    loadTranscriptFromSession,
+    saveTranscriptToDatabase,
+    clearTranscript,
   } = useTranscript();
   const { logClientEvent, logServerEvent } = useEvent();
   const { currentProjectId, getCurrentProject, updateProject } = useProjectContext();
@@ -366,6 +371,61 @@ function App() {
       // Track which project we connected to
       connectedProjectIdRef.current = currentProjectId;
       
+      // ============================================
+      // SESSION PERSISTENCE: Create or Resume Session
+      // ============================================
+      try {
+        if (!currentProjectId) {
+          console.warn('No project selected, skipping session creation');
+        } else {
+          // Check if there's a working session for this project (is_saved=false)
+          const sessionsResponse = await fetch(`/api/sessions?projectId=${currentProjectId}&saved=false&limit=1`);
+          if (sessionsResponse.ok) {
+            const { sessions } = await sessionsResponse.json();
+            const workingSession = sessions?.[0]; // Most recent working session
+            
+            if (workingSession) {
+              // Resume existing working session (continuous transcript)
+              console.log('📂 Resuming working session:', workingSession.id);
+              setCurrentSession(workingSession.id);
+              
+              // Load existing transcript
+              try {
+                await loadTranscriptFromSession(workingSession.id);
+                addTranscriptBreadcrumb(`📂 Resumed working session`);
+              } catch (loadError) {
+                console.warn('Failed to load transcript from session:', loadError);
+                // Continue anyway with empty transcript
+              }
+            } else {
+              // Create new working session
+              const suiteId = currentSuite?.id || 'default';
+              const createResponse = await fetch('/api/sessions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  projectId: currentProjectId, 
+                  suiteId 
+                }),
+              });
+              
+              if (createResponse.ok) {
+                const { session } = await createResponse.json();
+                console.log('✅ Created new working session:', session.id);
+                setCurrentSession(session.id);
+                clearTranscript(); // Start fresh
+                addTranscriptBreadcrumb(`🆕 New conversation started`);
+              } else {
+                console.error('Failed to create session, continuing without persistence');
+              }
+            }
+          }
+        }
+      } catch (sessionError) {
+        console.error('Error managing session:', sessionError);
+        // Non-fatal: continue without persistence
+      }
+      
       // Add breadcrumb showing which project agent is connected to
       const currentProject = getCurrentProject();
       if (currentProject) {
@@ -382,7 +442,29 @@ function App() {
     }
   };
 
-  const disconnectFromRealtime = () => {
+  const disconnectFromRealtime = async () => {
+    // ============================================
+    // SESSION PERSISTENCE: Save and End Session
+    // ============================================
+    if (currentSessionId) {
+      try {
+        // Save transcript one final time
+        await saveTranscriptToDatabase();
+        console.log('💾 Final transcript save completed');
+        
+        // NOTE: We do NOT mark the working session as ended
+        // This allows it to be resumed on reconnect (continuous transcript)
+        // The user can explicitly save or start a new conversation if they want
+        console.log('⏸️  Session paused (will resume on reconnect):', currentSessionId);
+        
+        // Keep currentSessionId in context so auto-save continues
+        // Don't call setCurrentSession(null) here
+      } catch (error) {
+        console.error('Error saving session:', error);
+        // Continue with disconnect anyway
+      }
+    }
+    
     disconnect();
     setSessionStatus("DISCONNECTED");
     setIsPTTUserSpeaking(false);
@@ -815,6 +897,39 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // ============================================
+  // PAGE UNLOAD HANDLER: Save transcript before exit
+  // ============================================
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Only try to save if we have an active session
+      if (currentSessionId && sessionStatus === "CONNECTED") {
+        // Save transcript synchronously using navigator.sendBeacon
+        // This is more reliable than fetch() for unload events
+        const transcriptData = {
+          items: [], // Will be populated by the actual transcript items
+        };
+        
+        // Note: We can't await here, but the auto-save debounce should have
+        // already saved most of the transcript. This is just a final attempt.
+        saveTranscriptToDatabase().catch(err => {
+          console.error('Failed to save on unload:', err);
+        });
+        
+        // Optional: Show confirmation dialog if user has unsaved changes
+        // Uncomment if you want to warn users before closing
+        // e.preventDefault();
+        // e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [currentSessionId, sessionStatus, saveTranscriptToDatabase]);
 
   // Auto-disconnect agent when switching projects (CRITICAL for context sync)
   useEffect(() => {

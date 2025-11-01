@@ -5,9 +5,11 @@ import ReactMarkdown from "react-markdown";
 import { TranscriptItem } from "@/app/types";
 import Image from "next/image";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
-import { DownloadIcon, ClipboardCopyIcon } from "@radix-ui/react-icons";
+import { DownloadIcon, ClipboardCopyIcon, ClockIcon, BookmarkIcon, PlusIcon } from "@radix-ui/react-icons";
 import { GuardrailChip } from "./GuardrailChip";
 import { useResponsive } from "./layouts/ResponsiveLayout";
+import { useProjectContext } from "@/app/contexts/ProjectContext";
+import type { VoiceSessionWithMetadata } from "@/app/lib/supabase/types";
 
 export interface TranscriptProps {
   userText: string;
@@ -26,12 +28,34 @@ function Transcript({
   downloadRecording,
   isVisible = true,
 }: TranscriptProps) {
-  const { transcriptItems, toggleTranscriptItemExpand } = useTranscript();
+  const { 
+    transcriptItems, 
+    toggleTranscriptItemExpand,
+    currentSessionId,
+    isLoadingTranscript,
+    isViewingHistoricalSession,
+    loadTranscriptFromSession,
+    setIsViewingHistoricalSession,
+    saveSessionWithTitle,
+    startNewConversation,
+  } = useTranscript();
+  
+  const { currentProjectId } = useProjectContext();
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const [prevLogs, setPrevLogs] = useState<TranscriptItem[]>([]);
   const [justCopied, setJustCopied] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { isMobile } = useResponsive();
+  
+  // Session history state
+  const [showSessionHistory, setShowSessionHistory] = useState(false);
+  const [sessions, setSessions] = useState<VoiceSessionWithMetadata[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  
+  // Save session dialog state
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [sessionTitle, setSessionTitle] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   function scrollToBottom() {
     if (transcriptRef.current) {
@@ -84,6 +108,109 @@ function Transcript({
     }
   };
 
+  // Load sessions when session history is opened
+  useEffect(() => {
+    if (showSessionHistory && currentProjectId) {
+      fetchSessions();
+    }
+  }, [showSessionHistory, currentProjectId]);
+
+  const fetchSessions = async () => {
+    if (!currentProjectId) return;
+    
+    setLoadingSessions(true);
+    try {
+      // Only fetch saved sessions (is_saved=true)
+      const response = await fetch(`/api/sessions?projectId=${currentProjectId}&saved=true&limit=20`);
+      if (response.ok) {
+        const { sessions: fetchedSessions } = await response.json();
+        setSessions(fetchedSessions || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch sessions:', error);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  const handleOpenSaveDialog = () => {
+    // Generate default title with current date/time
+    const now = new Date();
+    const defaultTitle = `Session ${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}`;
+    setSessionTitle(defaultTitle);
+    setShowSaveDialog(true);
+  };
+
+  const handleSaveSession = async () => {
+    if (!sessionTitle.trim()) return;
+    
+    setIsSaving(true);
+    try {
+      await saveSessionWithTitle(sessionTitle);
+      setShowSaveDialog(false);
+      setSessionTitle('');
+      // Refresh session list to show the new saved session
+      fetchSessions();
+    } catch (error) {
+      console.error('Failed to save session:', error);
+      alert('Failed to save session. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleNewConversation = async () => {
+    if (!confirm('Start a new conversation? Your current transcript will be saved and cleared.')) {
+      return;
+    }
+    
+    try {
+      await startNewConversation();
+    } catch (error) {
+      console.error('Failed to start new conversation:', error);
+      alert('Failed to start new conversation. Please try again.');
+    }
+  };
+
+  const handleLoadSession = async (sessionId: string) => {
+    try {
+      await loadTranscriptFromSession(sessionId);
+      setIsViewingHistoricalSession(sessionId !== currentSessionId);
+      setShowSessionHistory(false);
+    } catch (error) {
+      console.error('Failed to load session:', error);
+    }
+  };
+
+  const handleBackToLive = () => {
+    if (currentSessionId) {
+      loadTranscriptFromSession(currentSessionId);
+      setIsViewingHistoricalSession(false);
+    }
+  };
+
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return '—';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+  };
+
+  const formatSessionDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 60) {
+      return `${diffMins}m ago`;
+    } else if (diffMins < 1440) {
+      return `${Math.floor(diffMins / 60)}h ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
   return (
     <div
       className={
@@ -99,8 +226,94 @@ function Transcript({
         {/* Hide header on mobile - tab indicator already shows context */}
         {!isMobile && (
           <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b border-border-primary bg-bg-secondary">
-            <span className="font-semibold uppercase tracking-widest">Transcript</span>
+            <div className="flex items-center gap-x-3">
+              <span className="font-semibold uppercase tracking-widest">Transcript</span>
+              {isViewingHistoricalSession && (
+                <div className="flex items-center gap-x-2">
+                  <span className="text-xs text-text-secondary font-mono">Viewing Past Session</span>
+                  <button
+                    onClick={handleBackToLive}
+                    className="text-xs px-2 py-1 border border-accent-primary bg-bg-tertiary hover:bg-accent-primary/10 text-accent-primary flex items-center justify-center gap-x-1 transition-all font-mono"
+                  >
+                    Back to Live
+                  </button>
+                </div>
+              )}
+              {isLoadingTranscript && (
+                <span className="text-xs text-text-tertiary font-mono animate-pulse">Loading...</span>
+              )}
+            </div>
             <div className="flex gap-x-2">
+              {/* Session History Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowSessionHistory(!showSessionHistory)}
+                  className="text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide"
+                  title="View Session History"
+                >
+                  <ClockIcon />
+                  <span>Sessions</span>
+                </button>
+                {showSessionHistory && (
+                  <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto border border-border-primary bg-bg-tertiary shadow-lg z-20">
+                    <div className="p-3 border-b border-border-primary">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-text-primary">Saved Sessions</span>
+                    </div>
+                    {loadingSessions ? (
+                      <div className="p-4 text-center text-text-tertiary text-sm font-mono">Loading...</div>
+                    ) : sessions.length === 0 ? (
+                      <div className="p-4 text-center text-text-tertiary text-sm font-mono">No saved sessions yet</div>
+                    ) : (
+                      <div className="divide-y divide-border-primary">
+                        {sessions.map((session) => (
+                          <button
+                            key={session.id}
+                            onClick={() => handleLoadSession(session.id)}
+                            className="w-full px-3 py-2 hover:bg-bg-secondary text-left transition-colors"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="text-xs text-text-primary font-mono font-semibold">
+                                  {(session as any).title || 'Untitled Session'}
+                                </div>
+                                <div className="text-xs text-text-tertiary font-mono mt-1">
+                                  {formatSessionDate(session.started_at)}
+                                </div>
+                                <div className="text-xs text-text-tertiary font-mono mt-1">
+                                  {session.messageCount || 0} messages • {formatDuration(session.duration)}
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Save Session Button */}
+              <button
+                onClick={handleOpenSaveDialog}
+                disabled={!currentSessionId || transcriptItems.length === 0}
+                className="text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Save Session to History"
+              >
+                <BookmarkIcon />
+                <span>Save</span>
+              </button>
+
+              {/* New Conversation Button */}
+              <button
+                onClick={handleNewConversation}
+                disabled={!currentSessionId}
+                className="text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-secondary hover:shadow-glow-magenta text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Start New Conversation"
+              >
+                <PlusIcon />
+                <span>New</span>
+              </button>
+
               <button
                 onClick={handleCopyTranscript}
                 className="w-24 text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide"
@@ -266,6 +479,51 @@ function Transcript({
           <Image src="arrow.svg" alt="Send" width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} />
         </button>
       </div>
+
+      {/* Save Session Dialog */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-bg-tertiary border border-border-primary p-6 max-w-md w-full mx-4">
+            <h3 className="text-text-primary font-mono font-semibold mb-4 uppercase tracking-wide">
+              Save Session
+            </h3>
+            <p className="text-text-tertiary text-sm font-mono mb-4">
+              Give this conversation a memorable name so you can find it later.
+            </p>
+            <input
+              type="text"
+              value={sessionTitle}
+              onChange={(e) => setSessionTitle(e.target.value)}
+              className="w-full bg-bg-primary border border-border-primary text-text-primary px-3 py-2 font-mono focus:outline-none focus:border-accent-primary mb-4"
+              placeholder="e.g., Project Planning Discussion"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !isSaving) {
+                  handleSaveSession();
+                } else if (e.key === 'Escape') {
+                  setShowSaveDialog(false);
+                }
+              }}
+            />
+            <div className="flex gap-x-2 justify-end">
+              <button
+                onClick={() => setShowSaveDialog(false)}
+                disabled={isSaving}
+                className="px-4 py-2 border border-border-primary text-text-primary font-mono uppercase tracking-wide text-sm hover:border-accent-secondary transition-colors disabled:opacity-30"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveSession}
+                disabled={!sessionTitle.trim() || isSaving}
+                className="px-4 py-2 bg-accent-primary text-bg-primary font-mono uppercase tracking-wide text-sm hover:bg-accent-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
