@@ -7915,8 +7915,8 @@ Updated `Events.tsx` with proper text handling:
 
 **Testing:**
 - ✅ No linting errors
-- ⏳ Awaiting user verification on desktop
-- ⏳ Awaiting user verification on tablet
+- ✅ User verified fix works perfectly
+- ✅ Changes committed and pushed to repository (commit: 71c38cc)
 
 **What Should Happen Now:**
 1. **Logs panel is 320px wide** (was ~15-20% / squeezed)
