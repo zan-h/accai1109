@@ -32,7 +32,7 @@ export default function Sidebar({
   };
 
   return (
-    <div className="flex flex-col h-full px-3 py-4 space-y-2 relative">
+    <div className="flex flex-col h-full px-2 py-3 space-y-2 relative">
       <ul className="space-y-1 overflow-y-auto max-h-[60vh] pr-1">
         {tabs.map((tab) => (
           <TabItem
@@ -48,9 +48,9 @@ export default function Sidebar({
 
       <button
         onClick={handleAddDefaultTab}
-        className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-accent-primary transition-colors font-mono uppercase tracking-wide"
+        className="flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-accent-primary transition-colors font-mono uppercase tracking-wide py-1"
       >
-        <FontAwesomeIcon icon={faPlus} className="h-4 w-4" /> Add tab
+        <FontAwesomeIcon icon={faPlus} className="h-3 w-3" /> Add tab
       </button>
 
       <div className="flex-1" />
@@ -102,12 +102,12 @@ function TabItem({ tab, isActive, onSelect, onRename, onDelete }: ItemProps) {
 
   return (
     <li
-      className={`group relative flex items-center justify-between px-3 py-2 text-sm font-medium transition-all cursor-pointer border border-transparent font-mono ${isActive ? "bg-bg-tertiary border-accent-primary text-text-primary shadow-glow-cyan" : "text-text-secondary hover:bg-bg-tertiary/50 hover:border-border-primary hover:text-text-primary"}`}
+      className={`group relative flex items-center justify-between px-2 py-1.5 text-xs font-medium transition-all cursor-pointer border border-transparent font-mono ${isActive ? "bg-bg-tertiary border-accent-primary text-text-primary shadow-glow-cyan" : "text-text-secondary hover:bg-bg-tertiary/50 hover:border-border-primary hover:text-text-primary"}`}
       onClick={() => onSelect(tab.id)}
     >
       {editing ? (
         <input
-          className="w-full bg-transparent outline-none border-none text-sm text-text-primary font-mono"
+          className="w-full bg-transparent outline-none border-none text-xs text-text-primary font-mono"
           value={draftName}
           onChange={(e) => setDraftName(e.target.value)}
           onBlur={saveName}
@@ -124,29 +124,29 @@ function TabItem({ tab, isActive, onSelect, onRename, onDelete }: ItemProps) {
           autoFocus
         />
       ) : (
-        <span className="truncate mr-6 select-none">{tab.name}</span>
+        <span className="truncate mr-5 select-none">{tab.name}</span>
       )}
 
       {/* Hover controls */}
       {!editing && (
-        <div className="absolute right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            className="text-text-tertiary hover:text-accent-primary transition-colors"
+            className="text-text-tertiary hover:text-accent-primary transition-colors p-0.5"
             onClick={(e) => {
               e.stopPropagation();
               setEditing(true);
             }}
           >
-            <FontAwesomeIcon icon={faPen} className="h-3.5 w-3.5" />
+            <FontAwesomeIcon icon={faPen} className="h-2.5 w-2.5" />
           </button>
           <button
-            className="text-text-tertiary hover:text-status-error transition-colors"
+            className="text-text-tertiary hover:text-status-error transition-colors p-0.5"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(tab.id);
             }}
           >
-            <FontAwesomeIcon icon={faTrash} className="h-3.5 w-3.5" />
+            <FontAwesomeIcon icon={faTrash} className="h-2.5 w-2.5" />
           </button>
         </div>
       )}

@@ -48,7 +48,7 @@ export default function TabContent({ tab }: Props) {
     if (tab.type === "markdown" || tab.type === "csv") {
       return (
         <textarea
-          className="w-full h-full min-h-[300px] flex-1 p-2 border border-border-primary bg-bg-primary text-text-primary text-sm font-mono mb-4 focus:outline-none focus:border-accent-primary resize-vertical"
+          className="w-full h-full min-h-[300px] flex-1 p-2 border border-border-primary bg-bg-primary text-text-primary text-xs leading-relaxed font-mono mb-4 focus:outline-none focus:border-accent-primary resize-vertical"
           style={{ minHeight: "300px", height: "100%" }}
           value={draft}
           onChange={e => setDraft(e.target.value)}
@@ -57,7 +57,7 @@ export default function TabContent({ tab }: Props) {
     }
     return (
       <input
-        className="w-full p-2 border border-border-primary bg-bg-primary text-text-primary text-sm font-mono mb-4 focus:outline-none focus:border-accent-primary"
+        className="w-full p-2 border border-border-primary bg-bg-primary text-text-primary text-xs font-mono mb-4 focus:outline-none focus:border-accent-primary"
         value={draft}
         onChange={e => setDraft(e.target.value)}
       />
@@ -91,11 +91,11 @@ export default function TabContent({ tab }: Props) {
       content = <CsvView csv={draft} />;
       break;
     default:
-      content = <pre className="whitespace-pre-wrap text-sm">{draft}</pre>;
+      content = <pre className="whitespace-pre-wrap text-xs leading-relaxed">{draft}</pre>;
   }
 
   return (
-    <div className="relative">
+    <div className="relative pt-8">
       <div className="absolute right-0 top-0 z-10">
         <button
           className={buttonClass}
@@ -104,7 +104,7 @@ export default function TabContent({ tab }: Props) {
           Edit
         </button>
       </div>
-      <div>{content}</div>
+      <div className="pr-20">{content}</div>
     </div>
   );
 }
@@ -116,7 +116,17 @@ export default function TabContent({ tab }: Props) {
 
 function MarkdownView({ markdown }: { markdown: string }) {
   return (
-    <div className="markdown-body text-sm leading-6 prose dark:prose-invert max-w-none">
+    <div className="markdown-body max-w-none text-text-primary text-xs leading-normal
+      [&_h1]:text-sm [&_h1]:font-bold [&_h1]:font-mono [&_h1]:mb-1.5 [&_h1]:mt-3
+      [&_h2]:text-xs [&_h2]:font-semibold [&_h2]:font-mono [&_h2]:mb-1 [&_h2]:mt-2
+      [&_h3]:text-xs [&_h3]:font-medium [&_h3]:font-mono [&_h3]:mb-0.5 [&_h3]:mt-1.5
+      [&_p]:text-xs [&_p]:leading-relaxed [&_p]:mb-1.5
+      [&_li]:text-xs [&_li]:leading-relaxed [&_li]:my-0
+      [&_ul]:my-1 [&_ul]:ml-4 [&_ol]:my-1 [&_ol]:ml-4
+      [&_code]:text-[10px] [&_code]:bg-bg-tertiary [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded
+      [&_pre]:text-[10px] [&_pre]:bg-bg-tertiary [&_pre]:p-2 [&_pre]:rounded [&_pre]:my-2
+      [&_pre_code]:bg-transparent [&_pre_code]:p-0
+    ">
       <ReactMarkdown>{markdown}</ReactMarkdown>
     </div>
   );
@@ -137,11 +147,11 @@ function CsvView({ csv }: { csv: string }) {
 
   return (
     <div className="overflow-auto">
-      <table className="table-auto w-full text-sm border-collapse border border-border-primary">
+      <table className="table-auto w-full text-xs border-collapse border border-border-primary">
         <thead className="bg-bg-tertiary text-text-secondary border-b-2 border-border-primary">
           <tr>
             {header.map((h, idx) => (
-              <th key={idx} className="px-3 py-2 text-left font-semibold uppercase tracking-wide text-xs font-mono">
+              <th key={idx} className="px-2 py-1 text-left font-semibold uppercase tracking-wide text-[10px] font-mono">
                 {h}
               </th>
             ))}
@@ -151,7 +161,7 @@ function CsvView({ csv }: { csv: string }) {
           {dataRows.map((row, rIdx) => (
             <tr key={rIdx} className="odd:bg-bg-secondary even:bg-bg-primary hover:bg-bg-tertiary transition-colors">
               {row.map((cell, cIdx) => (
-                <td key={cIdx} className="px-3 py-2 whitespace-pre-wrap align-top text-text-primary font-mono text-sm">
+                <td key={cIdx} className="px-2 py-1 whitespace-pre-wrap align-top text-text-primary font-mono text-xs">
                   {cell}
                 </td>
               ))}

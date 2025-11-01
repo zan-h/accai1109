@@ -3,6 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 import "./lib/envSetup";
 import CornerBrackets from "./components/CornerBrackets";
+import { ResponsiveLayout } from "./components/layouts/ResponsiveLayout";
 
 export const metadata: Metadata = {
   title: "Realtime API Agents - Command Center",
@@ -18,10 +19,12 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className="antialiased font-mono">
-          <CornerBrackets />
-          <div className="dashboard-container min-h-screen border-2 border-border-primary relative">
-            {children}
-          </div>
+          <ResponsiveLayout>
+            <CornerBrackets />
+            <div className="dashboard-container min-h-screen border-2 border-border-primary relative">
+              {children}
+            </div>
+          </ResponsiveLayout>
         </body>
       </html>
     </ClerkProvider>

@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { DownloadIcon, ClipboardCopyIcon } from "@radix-ui/react-icons";
 import { GuardrailChip } from "./GuardrailChip";
+import { useResponsive } from "./layouts/ResponsiveLayout";
 
 export interface TranscriptProps {
   userText: string;
@@ -30,6 +31,7 @@ function Transcript({
   const [prevLogs, setPrevLogs] = useState<TranscriptItem[]>([]);
   const [justCopied, setJustCopied] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const { isMobile } = useResponsive();
 
   function scrollToBottom() {
     if (transcriptRef.current) {
@@ -85,35 +87,42 @@ function Transcript({
   return (
     <div
       className={
-        (isVisible ? "w-1/2 overflow-auto" : "w-0 overflow-hidden opacity-0") +
+        (isVisible 
+          ? isMobile 
+            ? "w-full overflow-auto" 
+            : "w-1/2 overflow-auto" 
+          : "w-0 overflow-hidden opacity-0") +
         " transition-all duration-200 ease-in-out flex-col bg-bg-secondary border border-border-primary min-h-0 flex"
       }
     >
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b border-border-primary bg-bg-secondary">
-          <span className="font-semibold uppercase tracking-widest">Transcript</span>
-          <div className="flex gap-x-2">
-            <button
-              onClick={handleCopyTranscript}
-              className="w-24 text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide"
-            >
-              <ClipboardCopyIcon />
-              {justCopied ? "Copied!" : "Copy"}
-            </button>
-            <button
-              onClick={downloadRecording}
-              className="w-40 text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide"
-            >
-              <DownloadIcon />
-              <span>Download Audio</span>
-            </button>
+        {/* Hide header on mobile - tab indicator already shows context */}
+        {!isMobile && (
+          <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b border-border-primary bg-bg-secondary">
+            <span className="font-semibold uppercase tracking-widest">Transcript</span>
+            <div className="flex gap-x-2">
+              <button
+                onClick={handleCopyTranscript}
+                className="w-24 text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide"
+              >
+                <ClipboardCopyIcon />
+                {justCopied ? "Copied!" : "Copy"}
+              </button>
+              <button
+                onClick={downloadRecording}
+                className="w-40 text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide"
+              >
+                <DownloadIcon />
+                <span>Download Audio</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Transcript Content */}
+        {/* Transcript Content - less padding on mobile */}
         <div
           ref={transcriptRef}
-          className="overflow-auto p-4 flex flex-col gap-y-4 h-full"
+          className={`overflow-auto flex flex-col gap-y-4 h-full ${isMobile ? 'p-2' : 'p-4'}`}
         >
           {[...transcriptItems]
             .sort((a, b) => a.createdAtMs - b.createdAtMs)
@@ -227,7 +236,10 @@ function Transcript({
         </div>
       </div>
 
-      <div className="p-4 flex items-center gap-x-2 flex-shrink-0 border-t border-border-primary bg-bg-tertiary">
+      {/* Input area - compact on mobile */}
+      <div className={`flex items-center gap-x-2 flex-shrink-0 border-t border-border-primary bg-bg-tertiary ${
+        isMobile ? 'p-2' : 'p-4'
+      }`}>
         <textarea
           ref={textareaRef}
           rows={1}
@@ -239,15 +251,19 @@ function Transcript({
               onSendMessage();
             }
           }}
-          className="flex-1 px-4 py-2 bg-bg-primary border border-border-primary text-text-primary focus:outline-none focus:border-accent-primary font-mono transition-colors placeholder:text-text-tertiary resize-none overflow-y-auto min-h-[40px] max-h-[200px]"
-          placeholder="Type a message... (Shift+Enter for new line)"
+          className={`flex-1 bg-bg-primary border border-border-primary text-text-primary focus:outline-none focus:border-accent-primary font-mono transition-colors placeholder:text-text-tertiary resize-none overflow-y-auto min-h-[40px] max-h-[200px] ${
+            isMobile ? 'px-2 py-1 text-sm' : 'px-4 py-2'
+          }`}
+          placeholder={isMobile ? "Type a message..." : "Type a message... (Shift+Enter for new line)"}
         />
         <button
           onClick={onSendMessage}
           disabled={!canSend || !userText.trim()}
-          className="bg-accent-primary text-bg-primary hover:bg-accent-secondary rounded-full px-2 py-2 disabled:opacity-30 transition-all shadow-glow-cyan"
+          className={`bg-accent-primary text-bg-primary hover:bg-accent-secondary active:bg-accent-secondary rounded-full disabled:opacity-30 transition-all shadow-glow-cyan touch-manipulation ${
+            isMobile ? 'p-2' : 'px-2 py-2'
+          }`}
         >
-          <Image src="arrow.svg" alt="Send" width={24} height={24} />
+          <Image src="arrow.svg" alt="Send" width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} />
         </button>
       </div>
     </div>

@@ -18,6 +18,8 @@ import SuiteTemplatePrompt from "./components/SuiteTemplatePrompt";
 import SaveStatusIndicator from "./components/SaveStatusIndicator";
 import Timer from "./components/Timer";
 import VoiceSettingsModal from "./components/settings/VoiceSettingsModal";
+import { BottomNav, MobileTab } from "./components/mobile/BottomNav";
+import { useResponsive } from "./components/layouts/ResponsiveLayout";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -645,6 +647,12 @@ function App() {
     localStorage.setItem('transcriptVisible', isTranscriptVisible.toString());
   }, [isTranscriptVisible]);
 
+  // Mobile tab navigation state
+  const [mobileTab, setMobileTab] = useState<MobileTab>('workspace');
+  
+  // Get responsive context
+  const { isMobile } = useResponsive();
+
   // Project Switcher state
   const [isProjectSwitcherOpen, setIsProjectSwitcherOpen] = useState(false);
 
@@ -871,7 +879,8 @@ function App() {
         }}
       />
 
-      <div className="p-5 text-lg font-semibold flex justify-between items-center">
+      {/* Header - mobile-optimized: compact and clean */}
+      <div className={`flex justify-between items-center ${isMobile ? 'p-3 text-base' : 'p-5 text-lg'} font-semibold`}>
         <div
           className="flex items-center cursor-pointer"
           onClick={() => window.location.reload()}
@@ -880,24 +889,37 @@ function App() {
             <Image
               src="/openai-logomark.svg"
               alt="OpenAI Logo"
-              width={20}
-              height={20}
+              width={isMobile ? 16 : 20}
+              height={isMobile ? 16 : 20}
               className="mr-2"
             />
           </div>
-          <div>
+          <div className={isMobile ? 'text-sm' : ''}>
             accai <span className="text-text-secondary">Agent</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {/* User Info */}
+          {/* User Info - hide email on mobile, keep avatar */}
           {isLoaded && user && (
-            <div className="flex items-center gap-3 mr-4">
-              <span className="text-text-secondary text-sm font-mono">
+            <div className="flex items-center gap-3">
+              {/* Hide email on mobile */}
+              <span className="text-text-secondary text-sm font-mono hidden lg:inline">
                 {user.emailAddresses[0]?.emailAddress}
               </span>
               <UserButton afterSignOutUrl="/">
                 <UserButton.MenuItems>
+                  {/* Switch Suite - especially useful on mobile where suite indicator is hidden */}
+                  {currentSuite && (
+                    <UserButton.Action
+                      label={`Suite: ${currentSuite.name}`}
+                      labelIcon={
+                        <span className="text-base" role="img" aria-label={currentSuite.name}>
+                          {currentSuite.icon}
+                        </span>
+                      }
+                      onClick={handleChangeSuite}
+                    />
+                  )}
                   <UserButton.Action
                     label="Voice Settings"
                     labelIcon={
@@ -912,17 +934,19 @@ function App() {
             </div>
           )}
           
-          {/* Suite Indicator */}
+          {/* Suite Indicator - hide on mobile, show on desktop */}
           {currentSuite && (
-            <SuiteIndicator
-              currentSuite={currentSuite}
-              onChangeSuite={handleChangeSuite}
-            />
+            <div className="hidden lg:block">
+              <SuiteIndicator
+                currentSuite={currentSuite}
+                onChangeSuite={handleChangeSuite}
+              />
+            </div>
           )}
           
-          {/* Fallback: Old scenario selector (for backwards compatibility) */}
+          {/* Fallback: Old scenario selector (for backwards compatibility) - hide on mobile */}
           {!currentSuite && (
-            <>
+            <div className="hidden lg:flex lg:items-center lg:gap-2">
               <label className="text-sm text-text-secondary uppercase tracking-wider">Scenario</label>
               <select
                 className="border border-border-primary bg-bg-secondary text-text-primary px-2 py-1 focus:outline-none focus:border-accent-primary cursor-pointer text-sm font-mono transition-colors"
@@ -943,29 +967,62 @@ function App() {
                   <option key={key} value={key}>{key}</option>
                 ))}
               </select>
-            </>
+            </div>
           )}
         </div>
       </div>
 
-      <div className="flex flex-1 gap-2 px-2 overflow-hidden relative">
-        {/* Show workspace if suite is selected OR if using old workspaceBuilder scenario */}
-        {(currentSuite || (typeof window !== 'undefined' && new URL(window.location.href).searchParams.get('agentConfig') === 'workspaceBuilder')) && (
-          <Workspace 
-            sessionStatus={sessionStatus}
-            onOpenProjectSwitcher={() => setIsProjectSwitcherOpen(true)}
-          />
+      <div className={`flex flex-1 overflow-hidden relative ${isMobile ? 'px-0 gap-0' : 'px-2 gap-2'}`} style={{ marginBottom: isMobile ? '56px' : '0' }}>
+        {/* MOBILE: Show only one panel at a time based on tab */}
+        {isMobile ? (
+          <>
+            {mobileTab === 'workspace' && (currentSuite || (typeof window !== 'undefined' && new URL(window.location.href).searchParams.get('agentConfig') === 'workspaceBuilder')) && (
+              <Workspace 
+                sessionStatus={sessionStatus}
+                onOpenProjectSwitcher={() => setIsProjectSwitcherOpen(true)}
+              />
+            )}
+            {mobileTab === 'transcript' && (
+              <Transcript
+                userText={userText}
+                setUserText={setUserText}
+                onSendMessage={handleSendTextMessage}
+                downloadRecording={handleDownloadRecording}
+                canSend={sessionStatus === "CONNECTED"}
+                isVisible={true}
+              />
+            )}
+          </>
+        ) : (
+          /* DESKTOP/TABLET: Show workspace + transcript side-by-side */
+          <>
+            {(currentSuite || (typeof window !== 'undefined' && new URL(window.location.href).searchParams.get('agentConfig') === 'workspaceBuilder')) && (
+              <Workspace 
+                sessionStatus={sessionStatus}
+                onOpenProjectSwitcher={() => setIsProjectSwitcherOpen(true)}
+              />
+            )}
+            <Transcript
+              userText={userText}
+              setUserText={setUserText}
+              onSendMessage={handleSendTextMessage}
+              downloadRecording={handleDownloadRecording}
+              canSend={sessionStatus === "CONNECTED"}
+              isVisible={isTranscriptVisible}
+            />
+            {/* Hide logs on mobile - developer feature */}
+            <div className="hidden lg:block">
+              <Events isExpanded={isEventsPaneExpanded} />
+            </div>
+          </>
         )}
-        <Transcript
-          userText={userText}
-          setUserText={setUserText}
-          onSendMessage={handleSendTextMessage}
-          downloadRecording={handleDownloadRecording}
-          canSend={sessionStatus === "CONNECTED"}
-          isVisible={isTranscriptVisible}
-        />
-        <Events isExpanded={isEventsPaneExpanded} />
       </div>
+      
+      {/* Mobile bottom navigation */}
+      <BottomNav 
+        activeTab={mobileTab} 
+        onTabChange={setMobileTab} 
+      />
 
       <BottomToolbar
         sessionStatus={sessionStatus}

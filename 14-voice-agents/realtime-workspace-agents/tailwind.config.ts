@@ -8,6 +8,16 @@ export default {
   ],
   theme: {
     extend: {
+      // Mobile-first responsive breakpoints
+      // Default styles apply to mobile (< 640px)
+      // Use prefixes (sm:, md:, lg:, xl:, 2xl:) for larger screens
+      screens: {
+        'sm': '640px',   // Phones landscape / small tablets
+        'md': '768px',   // Tablets portrait (iPad portrait)
+        'lg': '1024px',  // Tablets landscape (iPad landscape) / small laptops
+        'xl': '1280px',  // Desktop
+        '2xl': '1536px', // Large desktop
+      },
       colors: {
         bg: {
           primary: '#0a0a0a',

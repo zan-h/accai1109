@@ -6,6 +6,7 @@ import TabContent from "@/app/components/workspace/TabContent";
 import { useWorkspaceContext, WorkspaceState } from "@/app/contexts/WorkspaceContext";
 import { useProjectContext } from "@/app/contexts/ProjectContext";
 import { SessionStatus } from "@/app/types";
+import { useResponsive } from "./layouts/ResponsiveLayout";
 
 // Container panel rendered when the workspaceBuilder scenario is active.
 // Combines the Sidebar (tab list) and TabContent(renderer) components.
@@ -19,6 +20,8 @@ function Workspace({ sessionStatus = "DISCONNECTED", onOpenProjectSwitcher }: Wo
   const { getCurrentProject, isLoading } = useProjectContext();
   const currentProject = getCurrentProject();
   const projectLabel = currentProject?.name ?? (isLoading ? "Loading..." : "No Project Selected");
+  const { isMobile } = useResponsive();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
   // Extract data + mutators from the Zustand store.
   // Stable selectors avoid triggering the subscription effect on every render
   // (because arrow functions create a new function each time).
@@ -60,13 +63,20 @@ function Workspace({ sessionStatus = "DISCONNECTED", onOpenProjectSwitcher }: Wo
 
   return (
     <div className="w-full flex flex-col bg-bg-secondary border border-border-primary overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b border-border-primary bg-bg-secondary">
-        <div className="flex items-center gap-3">
-          <span className="text-text-tertiary uppercase tracking-widest text-xs font-mono">Project:</span>
+      {/* Header - compact on mobile */}
+      <div className={`flex items-center justify-between sticky top-0 z-10 border-b border-border-primary bg-bg-secondary ${
+        isMobile ? 'px-3 py-2 text-sm' : 'px-6 py-3 text-base'
+      }`}>
+        <div className="flex items-center gap-2">
+          {/* Hide "Project:" label on mobile to save space */}
+          {!isMobile && (
+            <span className="text-text-tertiary uppercase tracking-widest text-xs font-mono">Project:</span>
+          )}
           <button
             onClick={onOpenProjectSwitcher}
-            className="font-semibold font-mono text-accent-primary hover:text-accent-secondary transition-colors cursor-pointer focus:outline-none focus:underline"
+            className={`font-semibold font-mono text-accent-primary hover:text-accent-secondary transition-colors cursor-pointer focus:outline-none focus:underline ${
+              isMobile ? 'text-xs' : ''
+            }`}
             title="Click to switch projects (Cmd+P)"
           >
             {projectLabel}
@@ -74,9 +84,15 @@ function Workspace({ sessionStatus = "DISCONNECTED", onOpenProjectSwitcher }: Wo
           
           {/* Live indicator when agent connected */}
           {sessionStatus === "CONNECTED" && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-status-success/10 border border-status-success/30 rounded">
-              <span className="w-1.5 h-1.5 bg-status-success rounded-full animate-pulse"></span>
-              <span className="text-status-success text-xs font-mono uppercase tracking-wider">Live</span>
+            <div className={`flex items-center gap-1.5 px-2 py-1 bg-status-success/10 border border-status-success/30 rounded ${
+              isMobile ? 'gap-1 px-1.5 py-0.5' : ''
+            }`}>
+              <span className={`bg-status-success rounded-full animate-pulse ${
+                isMobile ? 'w-1 h-1' : 'w-1.5 h-1.5'
+              }`}></span>
+              <span className={`text-status-success font-mono uppercase tracking-wider ${
+                isMobile ? 'text-[10px]' : 'text-xs'
+              }`}>Live</span>
             </div>
           )}
         </div>
@@ -115,34 +131,55 @@ function Workspace({ sessionStatus = "DISCONNECTED", onOpenProjectSwitcher }: Wo
           </div>
         ) : (
           <>
-            <div className="w-48 border-r border-border-primary overflow-y-auto">
-              <Sidebar
-                tabs={tabs}
-                selectedTabId={selectedTabId}
-                onSelect={setSelectedTabId}
-                onRename={renameTab}
-                onDelete={deleteTab}
-                onAdd={addTab}
-              />
-            </div>
+            {/* Sidebar - collapsible, narrower */}
+            {!isSidebarCollapsed && (
+              <div className="w-40 border-r border-border-primary overflow-y-auto flex-shrink-0">
+                <Sidebar
+                  tabs={tabs}
+                  selectedTabId={selectedTabId}
+                  onSelect={setSelectedTabId}
+                  onRename={renameTab}
+                  onDelete={deleteTab}
+                  onAdd={addTab}
+                />
+              </div>
+            )}
 
-            <div className="flex-1 overflow-auto p-4">
-              {tabs.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center max-w-md">
-                    <div className="text-6xl mb-4 opacity-30">📂</div>
-                    <div className="text-text-secondary font-mono text-lg mb-2">No tabs yet in this project</div>
-                    <div className="text-text-tertiary text-sm mb-6">
-                      Click <span className="text-accent-primary">&quot;+ Add Tab&quot;</span> in the sidebar to create your first workspace tab
-                    </div>
-                    <div className="text-text-tertiary text-xs opacity-50 font-mono">
-                      Tip: Press <kbd className="px-1.5 py-0.5 border border-border-primary rounded bg-bg-tertiary">Cmd+P</kbd> to switch between projects
+            {/* Content area with collapse button */}
+            <div className="flex-1 overflow-auto relative">
+              {/* Collapse/expand toggle button */}
+              <button
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                className="absolute top-2 left-2 z-20 p-1.5 border border-border-primary bg-bg-secondary hover:bg-bg-tertiary hover:border-accent-primary transition-all text-text-tertiary hover:text-accent-primary"
+                title={isSidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {isSidebarCollapsed ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                  )}
+                </svg>
+              </button>
+
+              <div className="p-3">
+                {tabs.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center max-w-md">
+                      <div className="text-6xl mb-4 opacity-30">📂</div>
+                      <div className="text-text-secondary font-mono text-lg mb-2">No tabs yet in this project</div>
+                      <div className="text-text-tertiary text-sm mb-6">
+                        Click <span className="text-accent-primary">&quot;+ Add Tab&quot;</span> in the sidebar to create your first workspace tab
+                      </div>
+                      <div className="text-text-tertiary text-xs opacity-50 font-mono">
+                        Tip: Press <kbd className="px-1.5 py-0.5 border border-border-primary rounded bg-bg-tertiary">Cmd+P</kbd> to switch between projects
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <TabContent tab={selectedTab} />
-              )}
+                ) : (
+                  <TabContent tab={selectedTab} />
+                )}
+              </div>
             </div>
           </>
         )}

@@ -60,19 +60,21 @@ function BottomToolbar({
   }
 
   function getConnectionButtonClasses() {
-    const baseClasses = "text-base p-2 px-6 h-full font-mono uppercase tracking-wider transition-all border-2";
+    // Mobile-first: full-width with min-height, desktop: inline with other controls
+    const baseClasses = "text-base p-2 px-6 font-mono uppercase tracking-wider transition-all border-2 touch-manipulation";
+    const mobileClasses = "w-full min-h-[48px] lg:w-auto lg:h-full"; // Full-width on mobile, auto on desktop
     const cursorClass = isConnecting ? "cursor-not-allowed" : "cursor-pointer";
 
     if (isConnected) {
       // Connected -> label "Disconnect" -> dark with red border
-      return `bg-bg-secondary text-status-error border-status-error hover:bg-status-error hover:text-bg-primary hover:shadow-glow-error ${cursorClass} ${baseClasses}`;
+      return `bg-bg-secondary text-status-error border-status-error hover:bg-status-error active:bg-status-error hover:text-bg-primary active:text-bg-primary hover:shadow-glow-error ${cursorClass} ${baseClasses} ${mobileClasses}`;
     }
     // Disconnected or connecting -> label is either "Connect" or "Connecting"
-    return `bg-bg-secondary text-accent-primary border-accent-primary hover:bg-accent-primary hover:text-bg-primary hover:shadow-glow-cyan ${cursorClass} ${baseClasses}`;
+    return `bg-bg-secondary text-accent-primary border-accent-primary hover:bg-accent-primary active:bg-accent-primary hover:text-bg-primary active:text-bg-primary hover:shadow-glow-cyan ${cursorClass} ${baseClasses} ${mobileClasses}`;
   }
 
   return (
-    <div className="p-4 flex flex-row items-center justify-center gap-x-8 bg-bg-secondary border-t border-border-primary">
+    <div className="p-4 flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-x-8 bg-bg-secondary border-t border-border-primary">
       <button
         onClick={onToggleConnection}
         className={getConnectionButtonClasses()}
@@ -131,7 +133,8 @@ function BottomToolbar({
         </label>
       </div>
 
-      <div className="flex flex-row items-center gap-2">
+      {/* Hide recording controls on mobile - advanced feature */}
+      <div className="hidden lg:flex flex-row items-center gap-2">
         <input
           id="record-audio"
           type="checkbox"
@@ -157,7 +160,8 @@ function BottomToolbar({
         )}
       </div>
 
-      <div className="flex flex-row items-center gap-2">
+      {/* Hide logs toggle on mobile - developer feature */}
+      <div className="hidden lg:flex flex-row items-center gap-2">
         <input
           id="logs"
           type="checkbox"
@@ -182,7 +186,8 @@ function BottomToolbar({
         </label>
       </div>
 
-      <div className="flex flex-row items-center gap-2">
+      {/* Hide codec selector on mobile - developer/testing feature */}
+      <div className="hidden lg:flex flex-row items-center gap-2">
         <div className="text-text-secondary font-mono text-sm uppercase tracking-wide">Codec:</div>
         {/*
           Codec selector – Lets you force the WebRTC track to use 8 kHz 
