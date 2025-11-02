@@ -717,16 +717,26 @@ function App() {
   const [isTranscriptVisible, setIsTranscriptVisible] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('transcriptVisible');
-    if (stored !== null) {
-      setIsTranscriptVisible(stored === 'true');
+    // Migration: Check for old key first, then use new key
+    const oldStored = localStorage.getItem('transcriptVisible');
+    const newStored = localStorage.getItem('sessionVisible');
+    
+    if (newStored !== null) {
+      // New key exists, use it
+      setIsTranscriptVisible(newStored === 'true');
+    } else if (oldStored !== null) {
+      // Migrate from old key
+      setIsTranscriptVisible(oldStored === 'true');
+      localStorage.setItem('sessionVisible', oldStored);
+      localStorage.removeItem('transcriptVisible');
     } else {
+      // Default
       setIsTranscriptVisible(true);
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('transcriptVisible', isTranscriptVisible.toString());
+    localStorage.setItem('sessionVisible', isTranscriptVisible.toString());
   }, [isTranscriptVisible]);
 
   // Mobile tab navigation state
@@ -1105,6 +1115,12 @@ function App() {
                 downloadRecording={handleDownloadRecording}
                 canSend={sessionStatus === "CONNECTED"}
                 isVisible={true}
+                sessionStatus={sessionStatus}
+                isPTTActive={isPTTActive}
+                setIsPTTActive={setIsPTTActive}
+                isPTTUserSpeaking={isPTTUserSpeaking}
+                handleTalkButtonDown={handleTalkButtonDown}
+                handleTalkButtonUp={handleTalkButtonUp}
               />
             )}
           </>
@@ -1124,6 +1140,12 @@ function App() {
               downloadRecording={handleDownloadRecording}
               canSend={sessionStatus === "CONNECTED"}
               isVisible={isTranscriptVisible}
+              sessionStatus={sessionStatus}
+              isPTTActive={isPTTActive}
+              setIsPTTActive={setIsPTTActive}
+              isPTTUserSpeaking={isPTTUserSpeaking}
+              handleTalkButtonDown={handleTalkButtonDown}
+              handleTalkButtonUp={handleTalkButtonUp}
             />
             {/* Hide logs on mobile - developer feature */}
             <div className="hidden lg:block">
@@ -1142,11 +1164,6 @@ function App() {
       <BottomToolbar
         sessionStatus={sessionStatus}
         onToggleConnection={onToggleConnection}
-        isPTTActive={isPTTActive}
-        setIsPTTActive={setIsPTTActive}
-        isPTTUserSpeaking={isPTTUserSpeaking}
-        handleTalkButtonDown={handleTalkButtonDown}
-        handleTalkButtonUp={handleTalkButtonUp}
         isEventsPaneExpanded={isEventsPaneExpanded}
         setIsEventsPaneExpanded={setIsEventsPaneExpanded}
         isAudioPlaybackEnabled={isAudioPlaybackEnabled}

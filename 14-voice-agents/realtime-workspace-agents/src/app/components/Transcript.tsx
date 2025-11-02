@@ -5,11 +5,13 @@ import ReactMarkdown from "react-markdown";
 import { TranscriptItem } from "@/app/types";
 import Image from "next/image";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
-import { DownloadIcon, ClipboardCopyIcon, ClockIcon, BookmarkIcon, PlusIcon } from "@radix-ui/react-icons";
 import { GuardrailChip } from "./GuardrailChip";
 import { useResponsive } from "./layouts/ResponsiveLayout";
 import { useProjectContext } from "@/app/contexts/ProjectContext";
+import SessionMenu from "./SessionMenu";
+import PushToTalkButton from "./PushToTalkButton";
 import type { VoiceSessionWithMetadata } from "@/app/lib/supabase/types";
+import { SessionStatus } from "@/app/types";
 
 export interface TranscriptProps {
   userText: string;
@@ -18,6 +20,13 @@ export interface TranscriptProps {
   canSend: boolean;
   downloadRecording: () => void;
   isVisible?: boolean;
+  // Push-to-talk props
+  sessionStatus: SessionStatus;
+  isPTTActive: boolean;
+  setIsPTTActive: (active: boolean) => void;
+  isPTTUserSpeaking: boolean;
+  handleTalkButtonDown: () => void;
+  handleTalkButtonUp: () => void;
 }
 
 function Transcript({
@@ -27,6 +36,12 @@ function Transcript({
   canSend,
   downloadRecording,
   isVisible = true,
+  sessionStatus,
+  isPTTActive,
+  setIsPTTActive,
+  isPTTUserSpeaking,
+  handleTalkButtonDown,
+  handleTalkButtonUp,
 }: TranscriptProps) {
   const { 
     transcriptItems, 
@@ -51,6 +66,7 @@ function Transcript({
   const [showSessionHistory, setShowSessionHistory] = useState(false);
   const [sessions, setSessions] = useState<VoiceSessionWithMetadata[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
+  const sessionHistoryRef = useRef<HTMLDivElement | null>(null);
   
   // Save session dialog state
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -97,6 +113,47 @@ function Transcript({
     }
   }, [userText]);
 
+  // Spacebar keyboard shortcut for PTT
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only activate if PTT is enabled and not already speaking
+      // Don't trigger if user is typing in an input/textarea
+      if (
+        e.code === 'Space' &&
+        isPTTActive &&
+        !e.repeat &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        handleTalkButtonDown();
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      // Release PTT when spacebar released
+      if (
+        e.code === 'Space' &&
+        isPTTActive &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        handleTalkButtonUp();
+      }
+    };
+
+    if (isPTTActive) {
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('keyup', handleKeyUp);
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+      };
+    }
+  }, [isPTTActive, handleTalkButtonDown, handleTalkButtonUp]);
+
   const handleCopyTranscript = async () => {
     if (!transcriptRef.current) return;
     try {
@@ -114,6 +171,23 @@ function Transcript({
       fetchSessions();
     }
   }, [showSessionHistory, currentProjectId]);
+
+  // Close session history dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        sessionHistoryRef.current &&
+        !sessionHistoryRef.current.contains(event.target as Node)
+      ) {
+        setShowSessionHistory(false);
+      }
+    };
+
+    if (showSessionHistory) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showSessionHistory]);
 
   const fetchSessions = async () => {
     if (!currentProjectId) return;
@@ -223,112 +297,131 @@ function Transcript({
       }
     >
       <div className="flex flex-col flex-1 min-h-0">
-        {/* Hide header on mobile - tab indicator already shows context */}
+        {/* Header - responsive layout */}
         {!isMobile && (
-          <div className="flex items-center justify-between px-6 py-3 sticky top-0 z-10 text-base border-b border-border-primary bg-bg-secondary">
-            <div className="flex items-center gap-x-3">
-              <span className="font-semibold uppercase tracking-widest">Transcript</span>
-              {isViewingHistoricalSession && (
-                <div className="flex items-center gap-x-2">
-                  <span className="text-xs text-text-secondary font-mono">Viewing Past Session</span>
-                  <button
-                    onClick={handleBackToLive}
-                    className="text-xs px-2 py-1 border border-accent-primary bg-bg-tertiary hover:bg-accent-primary/10 text-accent-primary flex items-center justify-center gap-x-1 transition-all font-mono"
-                  >
-                    Back to Live
-                  </button>
-                </div>
-              )}
-              {isLoadingTranscript && (
-                <span className="text-xs text-text-tertiary font-mono animate-pulse">Loading...</span>
-              )}
-            </div>
-            <div className="flex gap-x-2">
-              {/* Session History Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowSessionHistory(!showSessionHistory)}
-                  className="text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide"
-                  title="View Session History"
-                >
-                  <ClockIcon />
-                  <span>Sessions</span>
-                </button>
-                {showSessionHistory && (
-                  <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto border border-border-primary bg-bg-tertiary shadow-lg z-20">
-                    <div className="p-3 border-b border-border-primary">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-text-primary">Saved Sessions</span>
-                    </div>
-                    {loadingSessions ? (
-                      <div className="p-4 text-center text-text-tertiary text-sm font-mono">Loading...</div>
-                    ) : sessions.length === 0 ? (
-                      <div className="p-4 text-center text-text-tertiary text-sm font-mono">No saved sessions yet</div>
-                    ) : (
-                      <div className="divide-y divide-border-primary">
-                        {sessions.map((session) => (
-                          <button
-                            key={session.id}
-                            onClick={() => handleLoadSession(session.id)}
-                            className="w-full px-3 py-2 hover:bg-bg-secondary text-left transition-colors"
-                          >
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <div className="text-xs text-text-primary font-mono font-semibold">
-                                  {(session as any).title || 'Untitled Session'}
-                                </div>
-                                <div className="text-xs text-text-tertiary font-mono mt-1">
-                                  {formatSessionDate(session.started_at)}
-                                </div>
-                                <div className="text-xs text-text-tertiary font-mono mt-1">
-                                  {session.messageCount || 0} messages • {formatDuration(session.duration)}
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+          <div className="sticky top-0 z-10 border-b border-border-primary bg-bg-secondary">
+            {/* Desktop: Horizontal layout */}
+            <div className="flex items-center justify-between px-6 py-3 gap-x-4">
+              {/* Left: Label and status */}
+              <div className="flex items-center gap-x-3">
+                <span className="font-semibold uppercase tracking-widest text-base">Session</span>
+                {isViewingHistoricalSession && (
+                  <div className="flex items-center gap-x-2">
+                    <span className="text-xs text-text-secondary font-mono">Viewing Past Session</span>
+                    <button
+                      onClick={handleBackToLive}
+                      className="text-xs px-2 py-1 border border-accent-primary bg-bg-tertiary hover:bg-accent-primary/10 text-accent-primary flex items-center justify-center gap-x-1 transition-all font-mono"
+                    >
+                      Back to Live
+                    </button>
                   </div>
+                )}
+                {isLoadingTranscript && (
+                  <span className="text-xs text-text-tertiary font-mono animate-pulse">Loading...</span>
                 )}
               </div>
 
-              {/* Save Session Button */}
-              <button
-                onClick={handleOpenSaveDialog}
-                disabled={!currentSessionId || transcriptItems.length === 0}
-                className="text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Save Session to History"
-              >
-                <BookmarkIcon />
-                <span>Save</span>
-              </button>
+              {/* Center: Push-to-Talk Button */}
+              <div className="flex-1 flex justify-center">
+                <PushToTalkButton
+                  isConnected={sessionStatus === "CONNECTED"}
+                  isPTTActive={isPTTActive}
+                  onToggle={setIsPTTActive}
+                  isSpeaking={isPTTUserSpeaking}
+                />
+              </div>
 
-              {/* New Conversation Button */}
-              <button
-                onClick={handleNewConversation}
-                disabled={!currentSessionId}
-                className="text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-secondary hover:shadow-glow-magenta text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Start New Conversation"
-              >
-                <PlusIcon />
-                <span>New</span>
-              </button>
-
-              <button
-                onClick={handleCopyTranscript}
-                className="w-24 text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide"
-              >
-                <ClipboardCopyIcon />
-                {justCopied ? "Copied!" : "Copy"}
-              </button>
-              <button
-                onClick={downloadRecording}
-                className="w-40 text-sm px-3 py-1 border border-border-primary bg-bg-tertiary hover:border-accent-primary hover:shadow-glow-cyan text-text-primary flex items-center justify-center gap-x-1 transition-all font-mono uppercase tracking-wide"
-              >
-                <DownloadIcon />
-                <span>Download Audio</span>
-              </button>
+              {/* Right: Menu */}
+              <SessionMenu
+                onViewHistory={() => setShowSessionHistory(!showSessionHistory)}
+                showHistoryDropdown={showSessionHistory}
+                onSaveSession={handleOpenSaveDialog}
+                canSave={!!currentSessionId && transcriptItems.length > 0}
+                onNewConversation={handleNewConversation}
+                canStartNew={!!currentSessionId}
+                onCopyTranscript={handleCopyTranscript}
+                justCopied={justCopied}
+                onDownloadAudio={downloadRecording}
+              />
             </div>
+          </div>
+        )}
+
+        {/* Mobile: Show PTT button and menu in tab content */}
+        {isMobile && (
+          <div className="sticky top-0 z-10 border-b border-border-primary bg-bg-secondary">
+            {/* Mobile PTT button - full width */}
+            <div className="px-3 py-2">
+              <PushToTalkButton
+                isConnected={sessionStatus === "CONNECTED"}
+                isPTTActive={isPTTActive}
+                onToggle={setIsPTTActive}
+                isSpeaking={isPTTUserSpeaking}
+              />
+            </div>
+            {/* Mobile menu and status */}
+            <div className="flex items-center justify-between px-3 pb-2">
+              <div className="flex items-center gap-x-2 text-xs">
+                {isViewingHistoricalSession && (
+                  <span className="text-text-secondary font-mono">Past Session</span>
+                )}
+                {isLoadingTranscript && (
+                  <span className="text-text-tertiary font-mono animate-pulse">Loading...</span>
+                )}
+              </div>
+              <SessionMenu
+                onViewHistory={() => setShowSessionHistory(!showSessionHistory)}
+                showHistoryDropdown={showSessionHistory}
+                onSaveSession={handleOpenSaveDialog}
+                canSave={!!currentSessionId && transcriptItems.length > 0}
+                onNewConversation={handleNewConversation}
+                canStartNew={!!currentSessionId}
+                onCopyTranscript={handleCopyTranscript}
+                justCopied={justCopied}
+                onDownloadAudio={downloadRecording}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Session History Dropdown - appears when triggered from menu */}
+        {showSessionHistory && !isMobile && (
+          <div 
+            ref={sessionHistoryRef}
+            className="absolute right-6 top-14 w-80 max-h-96 overflow-y-auto border border-border-primary bg-bg-tertiary shadow-lg z-20"
+          >
+            <div className="p-3 border-b border-border-primary">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-primary">Saved Sessions</span>
+            </div>
+            {loadingSessions ? (
+              <div className="p-4 text-center text-text-tertiary text-sm font-mono">Loading...</div>
+            ) : sessions.length === 0 ? (
+              <div className="p-4 text-center text-text-tertiary text-sm font-mono">No saved sessions yet</div>
+            ) : (
+              <div className="divide-y divide-border-primary">
+                {sessions.map((session) => (
+                  <button
+                    key={session.id}
+                    onClick={() => handleLoadSession(session.id)}
+                    className="w-full px-3 py-2 hover:bg-bg-secondary text-left transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="text-xs text-text-primary font-mono font-semibold">
+                          {(session as any).title || 'Untitled Session'}
+                        </div>
+                        <div className="text-xs text-text-tertiary font-mono mt-1">
+                          {formatSessionDate(session.started_at)}
+                        </div>
+                        <div className="text-xs text-text-tertiary font-mono mt-1">
+                          {session.messageCount || 0} messages • {formatDuration(session.duration)}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
