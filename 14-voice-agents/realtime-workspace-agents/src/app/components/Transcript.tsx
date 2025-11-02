@@ -328,6 +328,8 @@ function Transcript({
                   isPTTActive={isPTTActive}
                   onToggle={setIsPTTActive}
                   isSpeaking={isPTTUserSpeaking}
+                  onPressDown={handleTalkButtonDown}
+                  onPressUp={handleTalkButtonUp}
                 />
               </div>
 
@@ -357,6 +359,8 @@ function Transcript({
                 isPTTActive={isPTTActive}
                 onToggle={setIsPTTActive}
                 isSpeaking={isPTTUserSpeaking}
+                onPressDown={handleTalkButtonDown}
+                onPressUp={handleTalkButtonUp}
               />
             </div>
             {/* Mobile menu and status */}

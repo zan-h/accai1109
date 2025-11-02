@@ -8,6 +8,8 @@ export interface PushToTalkButtonProps {
   isPTTActive: boolean;
   onToggle: (active: boolean) => void;
   isSpeaking: boolean;
+  onPressDown: () => void;
+  onPressUp: () => void;
 }
 
 export function PushToTalkButton({
@@ -15,8 +17,11 @@ export function PushToTalkButton({
   isPTTActive,
   onToggle,
   isSpeaking,
+  onPressDown,
+  onPressUp,
 }: PushToTalkButtonProps) {
   const { isMobile } = useResponsive();
+  const [isHoldingButton, setIsHoldingButton] = React.useState(false);
 
   // Determine button state and styling
   const getButtonClasses = () => {
@@ -72,21 +77,68 @@ export function PushToTalkButton({
   };
 
   const handleClick = () => {
-    if (isConnected) {
+    // Only toggle mode if not holding the button
+    if (isConnected && !isHoldingButton) {
       onToggle(!isPTTActive);
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isConnected || !isPTTActive) return;
+    
+    // Prevent click event from firing
+    e.preventDefault();
+    
+    setIsHoldingButton(true);
+    onPressDown();
+  };
+
+  const handleMouseUp = () => {
+    if (!isConnected || !isPTTActive || !isHoldingButton) return;
+    
+    setIsHoldingButton(false);
+    onPressUp();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isConnected || !isPTTActive) return;
+    
+    e.preventDefault();
+    
+    setIsHoldingButton(true);
+    onPressDown();
+  };
+
+  const handleTouchEnd = () => {
+    if (!isConnected || !isPTTActive || !isHoldingButton) return;
+    
+    setIsHoldingButton(false);
+    onPressUp();
+  };
+
+  // Clean up if user moves mouse away while holding
+  const handleMouseLeave = () => {
+    if (isHoldingButton) {
+      setIsHoldingButton(false);
+      onPressUp();
     }
   };
 
   return (
     <button
       onClick={handleClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       disabled={!isConnected}
       className={getButtonClasses()}
       title={
         !isConnected
           ? "Connect to enable push-to-talk"
           : isPTTActive
-          ? "Push-to-talk enabled (Press spacebar to speak)"
+          ? "Hold to speak, or press spacebar"
           : "Click to enable push-to-talk mode"
       }
       aria-label={getButtonLabel()}
