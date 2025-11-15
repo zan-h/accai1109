@@ -187,7 +187,6 @@ function App() {
 
   const [isEventsPaneExpanded, setIsEventsPaneExpanded] =
     useState<boolean>(true);
-  const [userText, setUserText] = useState<string>("");
   const [isPTTActive, setIsPTTActive] = useState<boolean>(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
   const [isAudioPlaybackEnabled, setIsAudioPlaybackEnabled] = useState<boolean>(
@@ -518,17 +517,16 @@ function App() {
     // }
   }
 
-  const handleSendTextMessage = () => {
-    if (!userText.trim()) return;
+  const handleSendTextMessage = (text: string) => {
+    const trimmedMessage = text.trim();
+    if (!trimmedMessage) return;
     interrupt();
 
     try {
-      sendUserText(userText.trim());
+      sendUserText(trimmedMessage);
     } catch (err) {
       console.error('Failed to send via SDK', err);
     }
-
-    setUserText("");
   };
 
   const handleTalkButtonDown = () => {
@@ -1109,8 +1107,6 @@ function App() {
             )}
             {mobileTab === 'transcript' && (
               <Transcript
-                userText={userText}
-                setUserText={setUserText}
                 onSendMessage={handleSendTextMessage}
                 downloadRecording={handleDownloadRecording}
                 canSend={sessionStatus === "CONNECTED"}
@@ -1134,8 +1130,6 @@ function App() {
               />
             )}
             <Transcript
-              userText={userText}
-              setUserText={setUserText}
               onSendMessage={handleSendTextMessage}
               downloadRecording={handleDownloadRecording}
               canSend={sessionStatus === "CONNECTED"}

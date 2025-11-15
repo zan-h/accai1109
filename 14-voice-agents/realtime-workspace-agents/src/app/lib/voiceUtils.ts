@@ -1,6 +1,10 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
 import { VoicePreferences, OpenAIVoiceName } from './supabase/types';
 
+const VOICE_PREFS_API_CONFIGURED =
+  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+  Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
 /**
  * Descriptions for each OpenAI Realtime API voice
  * to help users make informed choices
@@ -79,17 +83,31 @@ export function applyVoicePreferences(
  * @returns Promise resolving to voice preferences or null
  */
 export async function fetchVoicePreferences(): Promise<VoicePreferences | null> {
+  if (!VOICE_PREFS_API_CONFIGURED) {
+    if (process.env.NODE_ENV === 'development') {
+      console.info('Voice preferences API disabled (missing Supabase configuration). Skipping fetch.');
+    }
+    return null;
+  }
+
   try {
-    const response = await fetch('/api/user/voice-preferences');
+    const response = await fetch('/api/user/voice-preferences', {
+      credentials: 'include',
+      cache: 'no-store',
+    });
     
     if (!response.ok) {
-      console.error('Failed to fetch voice preferences:', response.statusText);
+      console.warn('Failed to fetch voice preferences:', response.statusText);
       return null;
     }
 
     const data = await response.json();
     return data.voicePreferences || null;
   } catch (error) {
+    if (error instanceof TypeError && /load failed/i.test(error.message)) {
+      console.info('Voice preferences endpoint is unreachable in this environment; continuing without personalization.');
+      return null;
+    }
     console.error('Error fetching voice preferences:', error);
     return null;
   }
@@ -123,4 +141,3 @@ export async function saveVoicePreferences(
     return false;
   }
 }
-

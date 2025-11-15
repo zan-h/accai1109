@@ -1,6 +1,6 @@
-"use-client";
+"use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { TranscriptItem } from "@/app/types";
 import Image from "next/image";
@@ -14,9 +14,7 @@ import type { VoiceSessionWithMetadata } from "@/app/lib/supabase/types";
 import { SessionStatus } from "@/app/types";
 
 export interface TranscriptProps {
-  userText: string;
-  setUserText: (val: string) => void;
-  onSendMessage: () => void;
+  onSendMessage: (message: string) => void;
   canSend: boolean;
   downloadRecording: () => void;
   isVisible?: boolean;
@@ -30,8 +28,6 @@ export interface TranscriptProps {
 }
 
 function Transcript({
-  userText,
-  setUserText,
   onSendMessage,
   canSend,
   downloadRecording,
@@ -59,7 +55,6 @@ function Transcript({
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const [prevLogs, setPrevLogs] = useState<TranscriptItem[]>([]);
   const [justCopied, setJustCopied] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { isMobile } = useResponsive();
   
   // Session history state
@@ -95,23 +90,6 @@ function Transcript({
 
     setPrevLogs(transcriptItems);
   }, [transcriptItems]);
-
-  // Autofocus on text box input on load
-  useEffect(() => {
-    if (canSend && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [canSend]);
-
-  // Auto-grow textarea based on content
-  useEffect(() => {
-    if (textareaRef.current) {
-      // Reset height to auto to get the correct scrollHeight
-      textareaRef.current.style.height = 'auto';
-      // Set height to scrollHeight (content height)
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [userText]);
 
   // Spacebar keyboard shortcut for PTT
   useEffect(() => {
@@ -546,36 +524,7 @@ function Transcript({
         </div>
       </div>
 
-      {/* Input area - compact on mobile */}
-      <div className={`flex items-center gap-x-2 flex-shrink-0 border-t border-border-primary bg-bg-tertiary ${
-        isMobile ? 'p-2' : 'p-4'
-      }`}>
-        <textarea
-          ref={textareaRef}
-          rows={1}
-          value={userText}
-          onChange={(e) => setUserText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && canSend) {
-              e.preventDefault();
-              onSendMessage();
-            }
-          }}
-          className={`flex-1 bg-bg-primary border border-border-primary text-text-primary focus:outline-none focus:border-accent-primary font-mono transition-colors placeholder:text-text-tertiary resize-none overflow-y-auto min-h-[40px] max-h-[200px] ${
-            isMobile ? 'px-2 py-1 text-sm' : 'px-4 py-2'
-          }`}
-          placeholder={isMobile ? "Type a message..." : "Type a message... (Shift+Enter for new line)"}
-        />
-        <button
-          onClick={onSendMessage}
-          disabled={!canSend || !userText.trim()}
-          className={`bg-accent-primary text-bg-primary hover:bg-accent-secondary active:bg-accent-secondary rounded-full disabled:opacity-30 transition-all shadow-glow-cyan touch-manipulation ${
-            isMobile ? 'p-2' : 'px-2 py-2'
-          }`}
-        >
-          <Image src="arrow.svg" alt="Send" width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} />
-        </button>
-      </div>
+      <TranscriptInput canSend={canSend} onSendMessage={onSendMessage} isMobile={isMobile} />
 
       {/* Save Session Dialog */}
       {showSaveDialog && (
@@ -626,3 +575,75 @@ function Transcript({
 }
 
 export default Transcript;
+
+interface TranscriptInputProps {
+  canSend: boolean;
+  onSendMessage: (message: string) => void;
+  isMobile: boolean;
+}
+
+const TranscriptInput = React.memo(function TranscriptInput({
+  canSend,
+  onSendMessage,
+  isMobile,
+}: TranscriptInputProps) {
+  const [value, setValue] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (canSend && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [canSend]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [value]);
+
+  const handleSubmit = useCallback(() => {
+    if (!canSend) return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    onSendMessage(trimmed);
+    setValue("");
+  }, [canSend, onSendMessage, value]);
+
+  return (
+    <div
+      className={`flex items-center gap-x-2 flex-shrink-0 border-t border-border-primary bg-bg-tertiary ${
+        isMobile ? "p-2" : "p-4"
+      }`}
+    >
+      <textarea
+        ref={textareaRef}
+        rows={1}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey && canSend) {
+            e.preventDefault();
+            handleSubmit();
+          }
+        }}
+        className={`flex-1 bg-bg-primary border border-border-primary text-text-primary focus:outline-none focus:border-accent-primary font-mono transition-colors placeholder:text-text-tertiary resize-none overflow-y-auto min-h-[40px] max-h-[200px] ${
+          isMobile ? "px-2 py-1 text-sm" : "px-4 py-2"
+        }`}
+        placeholder={
+          isMobile ? "Type a message..." : "Type a message... (Shift+Enter for new line)"
+        }
+      />
+      <button
+        onClick={handleSubmit}
+        disabled={!canSend || !value.trim()}
+        className={`bg-accent-primary text-bg-primary hover:bg-accent-secondary active:bg-accent-secondary rounded-full disabled:opacity-30 transition-all shadow-glow-cyan touch-manipulation ${
+          isMobile ? "p-2" : "px-2 py-2"
+        }`}
+      >
+        <Image src="arrow.svg" alt="Send" width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} />
+      </button>
+    </div>
+  );
+});
