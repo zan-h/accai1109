@@ -910,14 +910,11 @@ function App() {
   // PAGE UNLOAD HANDLER: Save transcript before exit
   // ============================================
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = () => {
       // Only try to save if we have an active session
       if (currentSessionId && sessionStatus === "CONNECTED") {
         // Save transcript synchronously using navigator.sendBeacon
         // This is more reliable than fetch() for unload events
-        const transcriptData = {
-          items: [], // Will be populated by the actual transcript items
-        };
         
         // Note: We can't await here, but the auto-save debounce should have
         // already saved most of the transcript. This is just a final attempt.

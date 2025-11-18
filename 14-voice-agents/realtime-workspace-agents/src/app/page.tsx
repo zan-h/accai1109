@@ -3,6 +3,7 @@ import { TranscriptProvider } from "@/app/contexts/TranscriptContext";
 import { EventProvider } from "@/app/contexts/EventContext";
 import { WorkspaceProvider } from "@/app/contexts/WorkspaceContext";
 import { ProjectProvider } from "@/app/contexts/ProjectContext";
+import { WorkJournalProvider } from "@/app/contexts/WorkJournalContext";
 import App from "./App";
 
 export default function Page() {
@@ -10,11 +11,13 @@ export default function Page() {
     <Suspense fallback={<div>Loading...</div>}>
       <ProjectProvider>
         <TranscriptProvider>
-          <EventProvider>
-            <WorkspaceProvider>
-              <App />
-            </WorkspaceProvider>
-          </EventProvider>
+          <WorkJournalProvider>
+            <EventProvider>
+              <WorkspaceProvider>
+                <App />
+              </WorkspaceProvider>
+            </EventProvider>
+          </WorkJournalProvider>
         </TranscriptProvider>
       </ProjectProvider>
     </Suspense>

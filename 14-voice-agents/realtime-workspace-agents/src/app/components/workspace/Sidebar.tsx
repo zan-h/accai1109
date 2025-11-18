@@ -33,6 +33,23 @@ export default function Sidebar({
 
   return (
     <div className="flex flex-col h-full px-2 py-3 space-y-2 relative">
+      {/* Built-in Work Journal Tab */}
+      <button
+        onClick={() => onSelect('work-journal')}
+        className={`flex items-center gap-2 px-2 py-1.5 text-xs font-medium transition-all border font-mono ${
+          selectedTabId === 'work-journal'
+            ? 'bg-bg-tertiary border-accent-primary text-text-primary shadow-glow-cyan'
+            : 'border-transparent text-text-secondary hover:bg-bg-tertiary/50 hover:border-border-primary hover:text-text-primary'
+        }`}
+        title="Work Journal - Track your daily progress"
+      >
+        <span>📝</span>
+        <span className="truncate">Work Journal</span>
+      </button>
+
+      {/* Separator */}
+      <div className="border-t border-border-primary opacity-30 my-1"></div>
+
       <ul className="space-y-1 overflow-y-auto max-h-[60vh] pr-1">
         {tabs.map((tab) => (
           <TabItem

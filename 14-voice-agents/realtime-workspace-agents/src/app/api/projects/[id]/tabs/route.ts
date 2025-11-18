@@ -54,7 +54,6 @@ export async function PATCH(
     // Try to use atomic function first (requires migration 003)
     // Falls back to safer upsert pattern if function doesn't exist
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: rpcError } = await (supabase as any).rpc('update_project_tabs_atomic', {
         p_project_id: id,
         p_tabs: validated.tabs,
@@ -109,7 +108,7 @@ export async function PATCH(
 
     const { error: insertError } = await supabase
       .from('workspace_tabs')
-      .insert(tabsData);
+      .insert(tabsData as any);
 
     if (insertError) {
       console.error('Error inserting tabs:', insertError);
@@ -117,7 +116,7 @@ export async function PATCH(
     }
 
     // Update project timestamp
-    await supabase
+    await (supabase as any)
       .from('projects')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', id);
@@ -134,6 +133,5 @@ export async function PATCH(
   }
 }
 type ProjectRow = Database['public']['Tables']['projects']['Row'];
-
 
 

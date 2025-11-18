@@ -3,6 +3,7 @@
 import React from "react";
 import Sidebar from "@/app/components/workspace/Sidebar";
 import TabContent from "@/app/components/workspace/TabContent";
+import { WorkJournal } from "@/app/components/WorkJournal";
 import { useWorkspaceContext, WorkspaceState } from "@/app/contexts/WorkspaceContext";
 import { useProjectContext } from "@/app/contexts/ProjectContext";
 import { SessionStatus } from "@/app/types";
@@ -47,12 +48,15 @@ function Workspace({ sessionStatus = "DISCONNECTED", onOpenProjectSwitcher }: Wo
   React.useEffect(() => {
     if (!currentProject) return;
     if (tabs.length === 0) {
-      addTab();
+      // Default to Work Journal when no tabs exist
+      if (selectedTabId !== 'work-journal') {
+        setSelectedTabId('work-journal');
+      }
       return;
     }
 
-    if (!tabs.find((t) => t.id === selectedTabId)) {
-      setSelectedTabId(tabs[0]?.id ?? "");
+    if (!tabs.find((t) => t.id === selectedTabId) && selectedTabId !== 'work-journal') {
+      setSelectedTabId(tabs[0]?.id ?? "work-journal");
     }
   }, [tabs, selectedTabId, addTab, setSelectedTabId, currentProject]);
 
@@ -163,7 +167,9 @@ function Workspace({ sessionStatus = "DISCONNECTED", onOpenProjectSwitcher }: Wo
               </button>
 
               <div className="p-3">
-                {tabs.length === 0 ? (
+                {selectedTabId === 'work-journal' ? (
+                  <WorkJournal />
+                ) : tabs.length === 0 ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center max-w-md">
                       <div className="text-6xl mb-4 opacity-30">📂</div>

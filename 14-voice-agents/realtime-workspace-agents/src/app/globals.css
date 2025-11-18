@@ -255,3 +255,109 @@ body {
 .shadow-glow-cyan-subtle {
   box-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
 }
+
+/* ───────────────────────────────
+   Intention Canvas Animations
+   ─────────────────────────────── */
+
+/* Slide down animation for agent notifications */
+@keyframes slide-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+/* Fade in animation for journal entries */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* ───────────────────────────────
+   Progress Arc HUD Animations
+   ─────────────────────────────── */
+
+/* Stage transition fade */
+@keyframes stage-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-stage-fade-in {
+  animation: stage-fade-in 0.3s ease-out;
+}
+
+/* Progress ring pulse */
+@keyframes progress-ring-pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-progress-ring-pulse {
+  animation: progress-ring-pulse 2s ease-in-out infinite;
+}
+
+/* Stage completion celebration */
+@keyframes stage-complete {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-stage-complete {
+  animation: stage-complete 0.5s ease-out;
+}
+
+/* ───────────────────────────────
+   Smooth Transitions
+   ─────────────────────────────── */
+
+/* Smooth color transitions */
+.transition-colors-smooth {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Smooth transform transitions */
+.transition-transform-smooth {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth opacity transitions */
+.transition-opacity-smooth {
+  transition: opacity 0.3s ease;
+}

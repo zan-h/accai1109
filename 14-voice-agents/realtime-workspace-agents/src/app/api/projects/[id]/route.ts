@@ -79,7 +79,6 @@ export async function PATCH(
     }
 
     // Update project
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase
       .from('projects')
       .update as any)(updates)
@@ -132,7 +131,6 @@ export async function DELETE(
     }
 
     // Soft delete (archive)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase
       .from('projects')
       .update as any)({ is_archived: true })
@@ -146,6 +144,5 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
 
 

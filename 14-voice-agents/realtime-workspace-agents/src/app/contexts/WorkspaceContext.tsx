@@ -431,11 +431,25 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
       const elapsed = activeTimer.elapsedMs + (now - activeTimer.startedAt);
       
       if (elapsed >= activeTimer.durationMs) {
+        const completedTimer = activeTimer;
+        
         setActiveTimer((prev) => {
           if (!prev) return prev;
           return { ...prev, status: 'completed', elapsedMs: prev.durationMs };
         });
+        
         console.log('⏰ Timer completed!');
+        
+        // Dispatch event for work journal auto-logging
+        window.dispatchEvent(
+          new CustomEvent('timer.completed', {
+            detail: {
+              label: completedTimer.label,
+              durationMs: completedTimer.durationMs,
+              timerId: completedTimer.id,
+            },
+          })
+        );
       }
     }, 100); // Check every 100ms for smooth updates
 

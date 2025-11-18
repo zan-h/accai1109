@@ -30,6 +30,30 @@ export default function Timer() {
     }
   }, [activeTimer?.id]); // Only when a new timer starts
   
+  // Emit completion event when timer reaches zero
+  useEffect(() => {
+    if (!activeTimer || activeTimer.status !== 'running') return;
+    
+    const now = Date.now();
+    const elapsed = activeTimer.elapsedMs + (now - activeTimer.startedAt);
+    const remaining = Math.max(0, activeTimer.durationMs - elapsed);
+    
+    // If timer just completed (within last 500ms)
+    if (remaining === 0 && elapsed >= activeTimer.durationMs) {
+      console.log('⏰ Timer complete:', activeTimer.label);
+      
+      // Emit completion event
+      const event = new CustomEvent('timer.complete', {
+        detail: {
+          label: activeTimer.label,
+          durationMs: activeTimer.durationMs,
+          timerId: activeTimer.id,
+        },
+      });
+      window.dispatchEvent(event);
+    }
+  }, [activeTimer, currentTime]);
+  
   if (!activeTimer) return null;
   
   const now = currentTime;

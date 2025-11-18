@@ -33,6 +33,8 @@ export interface SessionMenuProps {
 
 export function SessionMenu({
   onViewHistory,
+  // showHistoryDropdown is currently unused but kept in props interface for future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   showHistoryDropdown,
   onSaveSession,
   canSave,

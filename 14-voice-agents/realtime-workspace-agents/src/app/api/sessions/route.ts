@@ -201,6 +201,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Remove the nested transcript_items count object
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { transcript_items, ...sessionData } = session as any;
 
       return {

@@ -54,7 +54,6 @@ export async function getOrCreateSupabaseUser(
   };
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: inserted, error: insertError } = await (supabase
       .from('users')
       .insert as any)(newUser)
