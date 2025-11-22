@@ -8,7 +8,7 @@ import {
   setTabContent,
   getWorkspaceInfo,
   setSelectedTabId,
-} from '@/app/contexts/WorkspaceContext';
+} from '@/app/contexts/workspaceActions';
 
 // Info only tool for agents to use to get the current state of the workspace
 export const workspaceInfoTool = tool({
@@ -175,6 +175,5 @@ export const advancedWorkspaceTools = [
   deleteTabTool,
   selectTabTool,
 ];
-
 
 

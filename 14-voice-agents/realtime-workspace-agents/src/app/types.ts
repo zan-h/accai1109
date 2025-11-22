@@ -76,6 +76,7 @@ export interface TranscriptItem {
   createdAtMs: number;
   status: "IN_PROGRESS" | "DONE";
   isHidden: boolean;
+  isSystemMessage?: boolean; // NEW: Marks messages sent to agent but not shown to user
   guardrailResult?: GuardrailResultType;
 }
 

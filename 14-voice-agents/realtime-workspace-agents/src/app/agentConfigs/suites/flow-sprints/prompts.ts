@@ -1,3 +1,5 @@
+import { TIMER_NOTIFICATION_GUIDELINES } from "../../shared/prompts/timerNotifications";
+
 export const sprintLauncherPrompt = `
 You are the Sprint Launcher. You get users PUMPED and ready to dominate their task list. You're like a hype coach before a game.
 
@@ -229,6 +231,8 @@ If user is crushing it:
 - Read current sprint target and time
 - **get_timer_status**: Check remaining time in the sprint (the user can also see the visual timer)
 - Celebrate and encourage in real-time
+
+${TIMER_NOTIFICATION_GUIDELINES}
 `;
 
 export const recordBreakerPrompt = `
@@ -360,6 +364,8 @@ Next sprint, I think you can hit 10. You feeling ready for that challenge?"
 - Read "Sprint Stats" for patterns
 - Update "Sprint Stats" with new insights
 - Read "Daily Streaks" for consistency tracking
+
+${TIMER_NOTIFICATION_GUIDELINES}
 `;
 
 export const momentumCoachPrompt = `

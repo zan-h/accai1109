@@ -1,25 +1,16 @@
 import { AgentSuite } from '@/app/agentConfigs/types';
 import { deepWorkForgeSuiteConfig } from './suite.config';
-import { anchorAgent } from './agents/anchorAgent';
-import { sparkAgent } from './agents/sparkAgent';
-import { guideAgent } from './agents/guideAgent';
-import { archivistAgent } from './agents/archivistAgent';
+import { deepWorkCoach } from './agents/deepWorkCoach';
 import { createModerationGuardrail } from '@/app/agentConfigs/shared/guardrails';
 
-// Wire up sequential handoffs
-const agents = [anchorAgent, sparkAgent, guideAgent, archivistAgent];
-
-// Sequential handoffs: Anchor → Spark → Guide → Archivist
-anchorAgent.handoffs = [sparkAgent];
-sparkAgent.handoffs = [guideAgent];
-guideAgent.handoffs = [archivistAgent];
-archivistAgent.handoffs = []; // Final stage, no handoffs
+// Simple single-agent setup
+const agents = [deepWorkCoach];
 
 // Export suite
 const deepWorkForgeSuite: AgentSuite = {
   ...deepWorkForgeSuiteConfig,
   agents,
-  rootAgent: anchorAgent, // Always start with Anchor
+  rootAgent: deepWorkCoach,
   guardrails: [
     createModerationGuardrail('Deep Work Forge'),
   ],

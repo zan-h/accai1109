@@ -16,7 +16,7 @@ if (!OPENAI_API_KEY) {
   });
 } else {
   // Mock the WorkspaceContext so executing tools does not require full React context
-  jest.mock('@/app/contexts/WorkspaceContext', () => {
+  jest.mock('@/app/contexts/workspaceActions', () => {
     return {
       addWorkspaceTab: jest.fn(async () => ({})),
       renameWorkspaceTab: jest.fn(),

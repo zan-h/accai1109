@@ -7,11 +7,19 @@ import {
   resumeTimerHelper,
   stopTimerHelper,
   getTimerStatusHelper,
-} from '@/app/contexts/WorkspaceContext';
+} from '@/app/contexts/workspaceActions';
 
 export const startTimerTool = tool({
   name: 'start_timer',
-  description: 'Start a visible countdown timer for the user. Perfect for sprints, focus sessions, or any timed activity. The timer will be prominently displayed in the UI.',
+  description: `Start a visible countdown timer for the user. Perfect for sprints, focus sessions, or any timed activity.
+  
+  You can optionally configure when you'll receive timer notifications to check in with the user:
+  - Halfway mark (50%)
+  - Final stretch (< 5 minutes remaining)
+  - Completion
+  
+  Use notifications to stay engaged and provide motivation during the user's timed session.`,
+  
   parameters: {
     type: 'object',
     properties: {
@@ -23,6 +31,32 @@ export const startTimerTool = tool({
         type: 'number',
         description: 'Duration in minutes (e.g., 15, 30, 60)',
         minimum: 1,
+      },
+      notifications: {
+        type: 'object',
+        description: 'Optional: Configure which timer intervals will send you notifications (defaults: halfway=true, finalStretch=true, completion=true)',
+        properties: {
+          enable25Percent: { 
+            type: 'boolean',
+            description: 'Get notified at 25% progress (rarely needed)',
+          },
+          enableHalfway: { 
+            type: 'boolean',
+            description: 'Get notified at 50% progress (recommended for check-ins)',
+          },
+          enable75Percent: { 
+            type: 'boolean',
+            description: 'Get notified at 75% progress (rarely needed)',
+          },
+          enableFinalStretch: { 
+            type: 'boolean',
+            description: 'Get notified when < 5 minutes remain (recommended for motivation)',
+          },
+          enableCompletion: { 
+            type: 'boolean',
+            description: 'Get notified when timer completes (recommended for debrief)',
+          },
+        },
       },
     },
     required: ['durationMinutes'],
@@ -87,6 +121,5 @@ export const timerTools = [
   stopTimerTool,
   getTimerStatusTool,
 ];
-
 
 

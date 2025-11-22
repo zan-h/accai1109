@@ -19,6 +19,7 @@ The timer appears as a **floating overlay** in the top-right corner of the scree
 
 - **Large countdown display** (MM:SS format)
 - **Progress bar** with percentage complete
+- **Agent Check-ins toggle** (NEW!) - Control whether agents respond during timer
 - **Status indicator** (Running, Paused, or Completed)
 - **Session label** (e.g., "30-min Sprint", "Deep Work Session")
 - **Elapsed/Remaining time** display
@@ -39,6 +40,67 @@ The timer uses intelligent color coding for at-a-glance status:
 1. **Running**: Timer actively counting down
 2. **Paused**: Timer stopped but can be resumed
 3. **Completed**: Timer reached zero (shows "TIME'S UP!" message)
+
+### Agent Notifications (NEW!)
+
+**Feature:** Agents can now automatically check in with users at key milestones during timed sessions!
+
+#### How It Works
+
+When a timer is running with agent notifications enabled, the agent will receive automatic notifications at strategic intervals:
+
+- **Halfway (50%):** "Halfway there! How's it going?"
+- **Final Stretch (<5 min):** "5 minutes left—finish strong!"
+- **Completion (100%):** "Time's up! What did you accomplish?"
+
+These notifications are sent **invisibly** to the agent (not shown in the user's transcript) so the agent can proactively check in without being explicitly prompted.
+
+#### User Control: Agent Check-ins Toggle
+
+Users have full control over agent responsiveness via the **"Agent Check-ins"** toggle:
+
+- **ON (default):** Agent will check in at intervals - motivating and accountable
+- **OFF:** Agent stays silent during timer - perfect for deep focus work
+
+**Location:** Toggle appears between the progress bar and control buttons.
+
+**Visual States:**
+- **ON:** Green button with "✓ ON" - agent is actively monitoring
+- **OFF:** Gray button with "✗ OFF" - agent won't interrupt
+
+#### When to Use Each Mode
+
+**Agent Check-ins ON:**
+- Sprint sessions where motivation helps
+- When you want accountability
+- Learning to build a new habit
+- Short timers (15-30 minutes)
+
+**Agent Check-ins OFF:**
+- Deep focus work requiring zero interruption
+- When you're in flow state
+- Long timers (60+ minutes)
+- Meditation or therapy sessions
+
+#### What Agents Receive
+
+When an interval is reached, agents receive a structured system message:
+
+```
+[TIMER_HALFWAY: 50% complete, 15m remaining for "30-min Sprint"]
+[TIMER_FINAL_STRETCH: <5 minutes remaining for "30-min Sprint"]
+[TIMER_COMPLETE: Timer complete for "30-min Sprint"]
+```
+
+Agents are trained to respond naturally and briefly (1-2 sentences) without explicitly mentioning they received a notification.
+
+**Example Responses:**
+- Flow Sprints: "Halfway there! You're crushing it. 5/10 tasks done!"
+- GTD: "Halfway mark. Still in focus?"
+- 12-Week Month: "50% done. Keep the momentum!"
+- Joe Hudson: "Halfway. How's it flowing?"
+
+> **For detailed agent implementation:** See [TIMER_NOTIFICATIONS_GUIDE.md](./TIMER_NOTIFICATIONS_GUIDE.md)
 
 ## For Developers
 
@@ -98,17 +160,53 @@ You are a productivity coach.
 
 #### 1. `start_timer`
 
-Starts a new visible countdown timer.
+Starts a new visible countdown timer with optional notification preferences.
 
 **Parameters:**
 - `label` (string, optional): Descriptive name for the timer (e.g., "30-min Sprint")
 - `durationMinutes` (number, required): Duration in minutes
+- `notifications` (object, optional): Configure which intervals trigger agent check-ins
+  - `enable25Percent` (boolean): Notify at 25% complete (default: false)
+  - `enableHalfway` (boolean): Notify at 50% complete (default: true)
+  - `enable75Percent` (boolean): Notify at 75% complete (default: false)
+  - `enableFinalStretch` (boolean): Notify when <5 min remain (default: true)
+  - `enableCompletion` (boolean): Notify on completion (default: true)
 
-**Example:**
+**Examples:**
+
+Basic usage (uses smart defaults: halfway, final stretch, completion):
 ```typescript
 await start_timer({
   label: "Pomodoro Session",
   durationMinutes: 25
+});
+```
+
+Deep work session (minimal interruption):
+```typescript
+await start_timer({
+  label: "Deep Work",
+  durationMinutes: 90,
+  notifications: {
+    enableHalfway: false,        // Don't interrupt at 50%
+    enableFinalStretch: true,    // Warn before ending
+    enableCompletion: true       // Debrief after
+  }
+});
+```
+
+High-engagement sprint (all check-ins):
+```typescript
+await start_timer({
+  label: "Power Hour",
+  durationMinutes: 60,
+  notifications: {
+    enable25Percent: true,
+    enableHalfway: true,
+    enable75Percent: true,
+    enableFinalStretch: true,
+    enableCompletion: true
+  }
 });
 ```
 
@@ -119,7 +217,12 @@ await start_timer({
   "timer": {
     "label": "Pomodoro Session",
     "durationMinutes": 25,
-    "status": "running"
+    "status": "running",
+    "notificationConfig": {
+      "halfway": true,
+      "finalStretch": true,
+      "completion": true
+    }
   }
 }
 ```
@@ -261,16 +364,55 @@ export interface TimerState {
   pausedAt: number | null;
   elapsedMs: number;
   status: 'running' | 'paused' | 'completed';
+  
+  // Agent notification settings (NEW!)
+  triggeredIntervals: Set<string>;             // Tracks which intervals already fired
+  notificationPreferences: TimerNotificationPreferences;  // Which intervals to enable
+  agentNotificationsEnabled: boolean;          // User toggle state (default: true)
+}
+
+export interface TimerNotificationPreferences {
+  enable25Percent: boolean;       // Notify at 25% (default: false)
+  enableHalfway: boolean;         // Notify at 50% (default: true)
+  enable75Percent: boolean;       // Notify at 75% (default: false)
+  enableFinalStretch: boolean;    // Notify at <5 min (default: true)
+  enableCompletion: boolean;      // Notify at 100% (default: true)
 }
 ```
+
+**New Fields Explained:**
+
+- **`triggeredIntervals`**: A Set that prevents duplicate notifications. Once "halfway" fires, it won't fire again even if you pause/resume.
+- **`notificationPreferences`**: Agent-configurable intervals (set via `start_timer` tool).
+- **`agentNotificationsEnabled`**: User's toggle preference (controlled via UI toggle button).
 
 ### Component Hierarchy
 
 ```
 App.tsx
+  ├─ Listens for timer.interval and timer.complete events (NEW!)
+  ├─ Sends notifications to agent via sendUserText() (NEW!)
   └─ Timer.tsx (floating overlay, always rendered)
-     └─ Reads from WorkspaceContext
-     └─ Updates every 100ms when running
+     ├─ Reads from WorkspaceContext
+     ├─ Updates every 100ms when running
+     └─ Emits CustomEvents at intervals (NEW!)
+```
+
+**Event Flow (NEW!):**
+```
+Timer.tsx detects interval
+      ↓
+Emits window.dispatchEvent('timer.interval')
+      ↓
+App.tsx event listener catches event
+      ↓
+Formats as [TIMER_HALFWAY: ...]
+      ↓
+sendUserText() → Agent receives notification
+      ↓
+addTranscriptMessage(..., isSystemMessage: true)
+      ↓
+Agent responds (if notifications enabled)
 ```
 
 ### Helper Functions
@@ -312,16 +454,23 @@ useEffect(() => {
 
 Currently implemented in:
 
-- ✅ **Flow Sprints** - Sprint Launcher, Task Logger
-- ✅ **GTD** - Context Guide (deep work sessions)
-- ✅ **12-Week Month** - Execution Coach (execution sprints)
-- ✅ **Joe Hudson** - Simple Orchestrator (work sessions)
+- ✅ **Flow Sprints** - Sprint Launcher, Task Logger | **Notifications:** ✅ Full support
+- ✅ **GTD** - Context Guide (deep work sessions) | **Notifications:** ✅ Full support
+- ✅ **12-Week Month** - Execution Coach (execution sprints) | **Notifications:** ✅ Full support
+- ✅ **Joe Hudson** - Simple Orchestrator (work sessions) | **Notifications:** ✅ Full support
 
-Easy to add to any suite - just follow the 3-step process above!
+All timer-enabled suites now support agent notifications! 🎉
+
+Easy to add to any suite - just follow the 3-step process above, then add timer notification guidelines to agent prompts.
 
 ## Future Enhancements
 
-Potential improvements:
+Implemented:
+- ✅ **Agent notifications at intervals** (November 2025)
+- ✅ **User toggle for agent responsiveness** (November 2025)
+- ✅ **Configurable notification preferences** (November 2025)
+
+Potential future improvements:
 
 1. **Sound notifications** when timer completes
 2. **Multiple concurrent timers** (e.g., break timer + work timer)
@@ -346,6 +495,23 @@ Potential improvements:
 - Timer updates every 100ms - should be smooth
 - Check browser console for JavaScript errors
 - Verify React state is updating (use React DevTools)
+
+### Agent not responding to timer notifications
+- **Check toggle:** Is "Agent Check-ins" set to ON?
+- **Check console:** Look for `[Timer] Interval event:` logs
+- **Check agent prompt:** Does the agent have timer notification guidelines?
+- **Check connection:** Is the agent session active?
+- **Check notifications preference:** Did the agent disable this interval when starting the timer?
+
+### Agent notifications appear in transcript
+- Should NOT happen - notifications are system messages (`isSystemMessage: true`)
+- If visible, check `Transcript.tsx` filtering logic (line ~87)
+- Verify `addTranscriptMessage` is called with correct parameters in `App.tsx`
+
+### Events firing multiple times
+- Should NOT happen - `triggeredIntervals` Set prevents duplicates
+- Check browser console for duplicate logs
+- Verify Set logic in `Timer.tsx` interval detection (lines 120-175)
 
 ## Questions?
 

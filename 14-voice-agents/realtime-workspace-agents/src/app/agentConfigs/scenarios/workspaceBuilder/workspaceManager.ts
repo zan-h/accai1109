@@ -1,14 +1,34 @@
 import { RealtimeAgent, tool, RealtimeItem } from '@openai/agents/realtime';
 import { fetchResponsesMessage } from './utils';
-import {
-  addWorkspaceTab,
-  renameWorkspaceTab,
-  deleteWorkspaceTab,
-  setTabContent,
-  getWorkspaceInfo,
-  setSelectedTabId,
-} from '@/app/contexts/WorkspaceContext';
+import { useWorkspaceContext } from '@/app/contexts/WorkspaceContext';
+
+// Workspace actions are accessed via the context hook
+const getWorkspaceActions = () => {
+  const state = useWorkspaceContext.getState();
+  return {
+    addWorkspaceTab: state.addTab,
+    renameWorkspaceTab: state.renameTab,
+    deleteWorkspaceTab: state.deleteTab,
+    setTabContent: (tabId: string, content: string) => {
+      const tab = state.tabs.find(t => t.id === tabId);
+      if (tab) {
+        state.addTab({ ...tab, content });
+      }
+    },
+    getWorkspaceInfo: () => ({
+      name: state.name,
+      description: state.description,
+      tabs: state.tabs,
+      selectedTabId: state.selectedTabId,
+    }),
+    setSelectedTabId: state.setSelectedTabId,
+  };
+};
+
 import { energyCoachPrompt2 } from './prompts';
+
+// Helper to get actions dynamically (for use in tool execute functions)
+const getActions = () => getWorkspaceActions();
 
 // ---------------------------------------------------------------------------
 // Workspace tools – these allow the agent to mutate the workspace state
@@ -24,7 +44,7 @@ export const workspaceInfoTool = tool({
     required: [],
     additionalProperties: false,
   },
-  execute: getWorkspaceInfo,
+  execute: () => getActions().getWorkspaceInfo(),
 });
 
 export const workspaceTools = [
@@ -50,7 +70,7 @@ export const workspaceTools = [
       required: ['name', 'type'],
       additionalProperties: false,
     },
-    execute: addWorkspaceTab,
+    execute: (args) => getActions().addWorkspaceTab(args),
   }),
   tool({
     name: 'set_selected_tab_id',
@@ -70,7 +90,7 @@ export const workspaceTools = [
       required: ['index', 'name'],
       additionalProperties: false,
     },
-    execute: setSelectedTabId,
+    execute: (args) => getActions().setSelectedTabId(args),
   }),
   tool({
     name: 'rename_workspace_tab',
@@ -97,7 +117,7 @@ export const workspaceTools = [
       required: ['current_name', 'new_name'],
       additionalProperties: false,
     },
-    execute: renameWorkspaceTab,
+    execute: (args) => getActions().renameWorkspaceTab(args),
   }),
   tool({
     name: 'delete_workspace_tab',
@@ -120,7 +140,7 @@ export const workspaceTools = [
       required: [],
       additionalProperties: false,
     },
-    execute: deleteWorkspaceTab,
+    execute: (args) => getActions().deleteWorkspaceTab(args),
   }),
   tool({
     name: 'set_tab_content',
@@ -147,7 +167,7 @@ export const workspaceTools = [
       required: ['content'],
       additionalProperties: false,
     },
-    execute: setTabContent,
+    execute: (args) => getActions().setTabContent(args),
   }),
   workspaceInfoTool,
 ];
@@ -165,19 +185,20 @@ export const energyCoachAgent = new RealtimeAgent({
 });
 
 async function getToolResponse(fName: string, args: any) {
+  const actions = getActions();
   switch (fName) {
     case 'add_workspace_tab':
-      return await addWorkspaceTab(args);
+      return await actions.addWorkspaceTab(args);
     case 'rename_workspace_tab':
-      return await renameWorkspaceTab(args);
+      return await actions.renameWorkspaceTab(args);
     case 'delete_workspace_tab':
-      return await deleteWorkspaceTab(args);
+      return await actions.deleteWorkspaceTab(args);
     case 'set_tab_content':
-      return await setTabContent(args);
+      return await actions.setTabContent(args.index, args.name, args.content);
     case 'get_workspace_info':
-      return await getWorkspaceInfo();
+      return await actions.getWorkspaceInfo();
     case 'set_selected_tab_id':
-      return await setSelectedTabId(args);
+      return await actions.setSelectedTabId(args);
     default:
       return undefined;
   }
@@ -313,7 +334,7 @@ export const makeWorkspaceChanges = tool({
           ${JSON.stringify(filteredLogs, null, 2)}
 
           ==== Current Workspace State ====
-          ${JSON.stringify(await getWorkspaceInfo(), null, 2)}
+          ${JSON.stringify(await getActions().getWorkspaceInfo(), null, 2)}
 
           ==== Requested Workspace Changes to Make ====
           ${workspaceChangesToMake}

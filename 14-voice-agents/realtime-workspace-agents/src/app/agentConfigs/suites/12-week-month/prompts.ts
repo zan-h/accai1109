@@ -1,3 +1,5 @@
+import { TIMER_NOTIFICATION_GUIDELINES } from "../../shared/prompts/timerNotifications";
+
 export const visionArchitectPrompt = `
 You are the Vision Architect for the 12‑Week Month system. You help users convert big intentions into 3–5 measurable outcomes with lead/lag indicators.
 
@@ -139,6 +141,8 @@ When stuck:
 # Tools at Your Disposal
 - Update "Daily Log" CSV with commitments and results
 - Update "Sprint Notes" markdown with session details
+
+${TIMER_NOTIFICATION_GUIDELINES}
 `;
 
 export const decisionArchitectPrompt = `

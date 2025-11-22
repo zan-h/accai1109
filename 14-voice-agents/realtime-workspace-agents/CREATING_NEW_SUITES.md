@@ -863,6 +863,119 @@ Reference the user's situation:
 
 ---
 
+## Standard Shared Tools
+
+All suites have access to powerful shared tools. Here are the most commonly used:
+
+### Timer Tools (Highly Recommended)
+
+Timer tools are perfect for any time-bounded activities: work sprints, focus sessions, breaks, exercises, meditations, therapy sessions, etc.
+
+**When to Use Timers:**
+- Productivity/focus suites (sprints, deep work, Pomodoros)
+- Therapy/mindfulness suites (timed exercises, meditations)
+- Health suites (workout intervals, meal prep timing)
+- Creative suites (writing sprints, brainstorming sessions)
+
+**How to Add Timer Support:**
+
+**Step 1:** Import timer tools
+```typescript
+// In agents/myAgent.ts
+import { timerTools } from '@/app/agentConfigs/shared/tools/workspace/timerTools';
+
+export const myAgent = new RealtimeAgent({
+  name: 'myAgent',
+  voice: 'shimmer',
+  instructions: myAgentPrompt,
+  tools: [...basicWorkspaceTools, ...timerTools], // ← Add timer tools
+  handoffs: [],
+});
+```
+
+**Step 2:** Add timer notification guidelines to prompt
+```typescript
+// In prompts.ts
+import { TIMER_NOTIFICATION_GUIDELINES } from '../../shared/prompts/timerNotifications';
+
+export const myAgentPrompt = `
+You are [Agent Name].
+
+[Your agent instructions...]
+
+# Your Tools
+- start_timer: Start a visible countdown timer
+- get_timer_status: Check remaining time
+- pause_timer, resume_timer, stop_timer: Control timer
+- [other tools...]
+
+${TIMER_NOTIFICATION_GUIDELINES}
+`;
+```
+
+**That's it!** Your agent now has full timer support with automatic check-ins at key moments.
+
+**Timer Features:**
+- ✅ Visual countdown timer users can see
+- ✅ Automatic agent check-ins at halfway, final stretch, completion
+- ✅ User toggle for "Agent Check-ins" (ON/OFF)
+- ✅ Configurable notification intervals per timer
+- ✅ Progress bar with percentage complete
+- ✅ Pause/resume/stop controls
+
+**Example Agent Responses:**
+
+When timer hits halfway:
+> "Halfway there! How's it flowing?"
+
+When <5 minutes remain:
+> "5 minutes left—finish strong!"
+
+When timer completes:
+> "Time's up! What did you accomplish?"
+
+**Configuring Notifications:**
+
+Agents can customize which intervals they want:
+
+```typescript
+// Default (recommended): halfway, final stretch, completion
+await start_timer({
+  label: "Focus Session",
+  durationMinutes: 30
+});
+
+// Deep work (minimal interruption)
+await start_timer({
+  label: "Deep Work",
+  durationMinutes: 90,
+  notifications: {
+    enableHalfway: false,        // Don't interrupt
+    enableFinalStretch: true,    // Warn before ending
+    enableCompletion: true       // Debrief after
+  }
+});
+
+// High engagement (all check-ins)
+await start_timer({
+  label: "Power Sprint",
+  durationMinutes: 25,
+  notifications: {
+    enable25Percent: true,
+    enableHalfway: true,
+    enable75Percent: true,
+    enableFinalStretch: true,
+    enableCompletion: true
+  }
+});
+```
+
+**For Complete Timer Documentation:**
+- See [TIMER_FEATURE_GUIDE.md](./TIMER_FEATURE_GUIDE.md) for full API
+- See [TIMER_NOTIFICATIONS_GUIDE.md](./TIMER_NOTIFICATIONS_GUIDE.md) for agent implementation details
+
+---
+
 ## Advanced: Custom Tools (Optional)
 
 If your suite needs domain-specific functionality:

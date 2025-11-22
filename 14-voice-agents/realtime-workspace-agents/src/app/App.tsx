@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useUser, UserButton } from '@clerk/nextjs';
-// import { v4 as uuidv4 } from "uuid"; // No longer needed - removed automatic "hi" message
+import { v4 as uuidv4 } from "uuid"; // Needed for timer notification message IDs
 
 import Image from "next/image";
 
@@ -100,7 +100,7 @@ function App() {
   // via global codecPatch at module load 
 
   const {
-    // addTranscriptMessage, // No longer needed - removed automatic "hi" message
+    addTranscriptMessage, // Needed for timer system messages
     addTranscriptBreadcrumb,
     currentSessionId,
     setCurrentSession,
@@ -638,6 +638,95 @@ function App() {
       }
     }
   }, [sessionStatus, isAudioPlaybackEnabled]);
+
+  /**
+   * Timer Notification System
+   * 
+   * Listens for CustomEvents from Timer component and forwards them to the agent.
+   * Timer.tsx emits events at intervals (25%, 50%, 75%, <5min, completion).
+   * This hook catches those events, formats them, and sends to agent via sendUserText().
+   * Messages are added to transcript with isSystemMessage=true (invisible to user).
+   * 
+   * Event Flow:
+   * 1. Timer.tsx detects interval → emits window.dispatchEvent('timer.interval')
+   * 2. This handler catches event
+   * 3. formatTimerNotification() creates structured message
+   * 4. sendUserText() sends to agent (agent sees it in conversation)
+   * 5. addTranscriptMessage(..., true) stores with isSystemMessage flag
+   * 6. Agent responds naturally based on TIMER_NOTIFICATION_GUIDELINES in prompt
+   * 
+   * See: TIMER_NOTIFICATIONS_GUIDE.md
+   */
+  useEffect(() => {
+    if (sessionStatus !== 'CONNECTED') return;
+    
+    // Helper to format timer notification messages for agent
+    const formatTimerNotification = (detail: any): string => {
+      const { type, percentComplete, remainingMinutes, label } = detail;
+      
+      switch(type) {
+        case '25_percent':
+          return `[TIMER_25_PERCENT: ${percentComplete}% complete, ${remainingMinutes}m remaining for "${label}"]`;
+        case 'halfway':
+          return `[TIMER_HALFWAY: ${percentComplete}% complete, ${remainingMinutes}m remaining for "${label}"]`;
+        case '75_percent':
+          return `[TIMER_75_PERCENT: ${percentComplete}% complete, ${remainingMinutes}m remaining for "${label}"]`;
+        case 'final_stretch':
+          return `[TIMER_FINAL_STRETCH: Less than 5 minutes remaining for "${label}"]`;
+        case 'complete':
+          return `[TIMER_COMPLETE: "${label}" has finished]`;
+        default:
+          return `[TIMER_UPDATE: ${percentComplete}% complete for "${label}"]`;
+      }
+    };
+    
+    const handleTimerInterval = (e: any) => {
+      const notificationText = formatTimerNotification(e.detail);
+      
+      try {
+        // Send to agent via SDK
+        sendUserText(notificationText);
+        
+        // Add to transcript as system message (invisible to user)
+        const itemId = uuidv4().slice(0, 32);
+        addTranscriptMessage(itemId, 'user', notificationText, false, true);
+        
+        console.log('⏰ Sent timer notification to agent:', notificationText);
+      } catch (err) {
+        console.error('Failed to send timer notification:', err);
+      }
+    };
+    
+    const handleTimerComplete = (e: any) => {
+      const notificationText = formatTimerNotification({
+        type: 'complete',
+        label: e.detail.label,
+      });
+      
+      try {
+        // Send to agent via SDK
+        sendUserText(notificationText);
+        
+        // Add to transcript as system message (invisible to user)
+        const itemId = uuidv4().slice(0, 32);
+        addTranscriptMessage(itemId, 'user', notificationText, false, true);
+        
+        console.log('⏰ Sent timer completion to agent:', notificationText);
+      } catch (err) {
+        console.error('Failed to send timer completion:', err);
+      }
+    };
+    
+    // Register event listeners
+    window.addEventListener('timer.interval', handleTimerInterval);
+    window.addEventListener('timer.complete', handleTimerComplete);
+    
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener('timer.interval', handleTimerInterval);
+      window.removeEventListener('timer.complete', handleTimerComplete);
+    };
+  }, [sessionStatus, sendUserText, addTranscriptMessage]);
 
   useEffect(() => {
     if (!isRecordingEnabled) {

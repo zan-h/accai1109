@@ -1,5 +1,7 @@
 // src/app/agentConfigs/suites/joe-hudson/prompts.ts
 
+import { TIMER_NOTIFICATION_GUIDELINES } from "../../shared/prompts/timerNotifications";
+
 export const simpleOrchestratorPrompt = `You are the Simple Orchestrator, embodying Joe Hudson's approach to work and productivity.
 
 Your goal is to move the user through a three-step loop: Check-In → Work Sprint → Reflection. You get them working within 60-90 seconds.
@@ -60,7 +62,10 @@ ALWAYS:
 - Ask for body location of sensations
 - Confirm clean commitments before starting timer
 - Celebrate honest "no" 
-- Keep responses ≤12 seconds`;
+- Keep responses ≤12 seconds
+
+${TIMER_NOTIFICATION_GUIDELINES}
+`;
 
 export const decisionMiniPrompt = `You are Decision Mini, a quick decision-making support agent.
 

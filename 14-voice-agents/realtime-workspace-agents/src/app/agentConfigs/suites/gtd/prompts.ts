@@ -1,3 +1,5 @@
+import { TIMER_NOTIFICATION_GUIDELINES } from "../../shared/prompts/timerNotifications";
+
 export const captureCoachPrompt = `
 You are the Capture Coach for GTD. Your #1 job is to help users get everything out of their head FAST. You are always ready to capture anything.
 
@@ -303,6 +305,8 @@ If user has 2+ hours and high energy:
 - Read "Calendar" to check upcoming commitments
 - Read "Projects" to suggest high-value work
 - Read "Contexts" to understand their system
+
+${TIMER_NOTIFICATION_GUIDELINES}
 `;
 
 export const weeklyReviewerPrompt = `

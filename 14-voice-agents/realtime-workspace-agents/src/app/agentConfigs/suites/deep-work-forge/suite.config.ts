@@ -3,10 +3,10 @@ import { SuiteConfig } from '@/app/agentConfigs/types';
 export const deepWorkForgeSuiteConfig: SuiteConfig = {
   id: 'deep-work-forge',
   name: 'Deep Work Forge',
-  description: 'A structured 90-minute ritual for deep, focused work. Four distinct stages guided by specialized agents: Prepare (5 min) → Launch (25 min) → Sustain (50 min) → Close (10 min). Each stage has a clear purpose and dedicated agent to guide you through it.',
+  description: 'A simple, focused deep work session. Set your intention and dive into distraction-free work with agent support at key moments.',
   icon: '🔥',
   category: 'productivity',
-  tags: ['deep-work', 'focus', 'ritual', 'structure', 'flow-state', 'productivity', 'multi-stage'],
+  tags: ['deep-work', 'focus', 'flow-state', 'productivity', 'simple'],
   
   suggestedUseCases: [
     'Deep work sessions on complex projects',
@@ -16,8 +16,8 @@ export const deepWorkForgeSuiteConfig: SuiteConfig = {
     'Research and analysis work',
   ],
   
-  userLevel: 'intermediate',
-  estimatedSessionLength: 90, // 90-minute ritual
+  userLevel: 'beginner',
+  estimatedSessionLength: 60, // Flexible: 30-120 minutes
   
   workspaceTemplates: [
     {
@@ -25,27 +25,21 @@ export const deepWorkForgeSuiteConfig: SuiteConfig = {
       type: 'markdown',
       content: `# Deep Work Session
 
-## Session Intention
-*Set by you during Prepare stage*
+## What I'm Working On
+- 
 
-**Why am I doing this?**
-- [Your deeper motivation goes here]
+## Why This Matters
+- 
 
-**Win condition for this block:**
-- [Specific, measurable outcome]
+## Success Looks Like
+- 
 
-**Reward / next anchor:**
-- [What happens after success]
-
----
-
-## Stage Progress
-- [ ] Prepare (5 min) - Set intention
-- [ ] Launch (25 min) - Get into flow
-- [ ] Sustain (50 min) - Maintain momentum
-- [ ] Close (10 min) - Capture wins
+## Time Block
+- Duration: ___ minutes
+- Started: ___
+- Completed: ___
 `,
-      description: 'Your intention and progress tracker for this session',
+      description: 'Set your intention and track your deep work session',
     },
     {
       name: 'Session Notes',
@@ -69,10 +63,8 @@ export const deepWorkForgeSuiteConfig: SuiteConfig = {
   ],
   
   initialContext: {
-    ritualEnabled: true,
-    ritualType: 'deep-work-forge',
-    stageTracking: true,
-    intentionRequired: true,
+    focusMode: true,
+    minimalInterruptions: true,
   },
 };
 

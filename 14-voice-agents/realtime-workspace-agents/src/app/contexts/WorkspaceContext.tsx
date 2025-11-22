@@ -14,11 +14,19 @@ import React, {
   useRef,
 } from "react";
 
-import { v4 as uuidv4 } from "uuid";
 import type { WorkspaceTab } from "@/app/types";
 import { useProjectContext } from "@/app/contexts/ProjectContext";
+import { createTabId, WORKSPACE_TAB_ID_REGEX } from './workspaceUtils';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+export interface TimerNotificationPreferences {
+  enable25Percent: boolean;
+  enableHalfway: boolean;
+  enable75Percent: boolean;
+  enableFinalStretch: boolean;
+  enableCompletion: boolean;
+}
 
 export interface TimerState {
   id: string;
@@ -28,7 +36,31 @@ export interface TimerState {
   pausedAt: number | null;
   elapsedMs: number;
   status: 'running' | 'paused' | 'completed';
+  
+  // Agent notification settings
+  triggeredIntervals: Set<string>;
+  notificationPreferences: TimerNotificationPreferences;
+  agentNotificationsEnabled: boolean;
 }
+
+/**
+ * Default timer notification preferences
+ * 
+ * Smart defaults based on user research:
+ * - 25% and 75%: OFF (too frequent, can distract from flow)
+ * - 50% (halfway): ON (good progress check-in point)
+ * - <5 min (final stretch): ON (motivational push to finish)
+ * - Completion: ON (debrief and celebrate)
+ * 
+ * Agents can override these per-timer via start_timer notifications parameter.
+ */
+const DEFAULT_TIMER_NOTIFICATIONS: TimerNotificationPreferences = {
+  enable25Percent: false,
+  enableHalfway: true,
+  enable75Percent: false,
+  enableFinalStretch: true,
+  enableCompletion: true,
+};
 
 export interface WorkspaceState {
   // Data
@@ -50,39 +82,24 @@ export interface WorkspaceState {
   setSelectedTabId: (id: string) => void;
   
   // Timer mutators
-  startTimer: (label: string, durationMs: number) => void;
+  startTimer: (label: string, durationMs: number, notificationPreferences?: Partial<TimerNotificationPreferences>) => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
   stopTimer: () => void;
   getTimerStatus: () => TimerState | null;
+  toggleTimerNotifications: () => void;
   
   // Manual save trigger
   forceSave: () => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceState | undefined>(undefined);
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-const createTabId = (): string => {
-  if (
-    typeof globalThis !== "undefined" &&
-    globalThis.crypto &&
-    typeof globalThis.crypto.randomUUID === "function"
-  ) {
-    try {
-      return globalThis.crypto.randomUUID();
-    } catch (error) {
-      console.warn("crypto.randomUUID failed, falling back to uuidv4()", error);
-    }
-  }
-  return uuidv4();
-};
 
 const normalizeTabIds = (tabs: WorkspaceTab[]) => {
   const replacements = new Map<string, string>();
 
   const normalizedTabs = tabs.map((tab) => {
-    if (typeof tab.id === "string" && UUID_REGEX.test(tab.id)) {
+    if (typeof tab.id === "string" && WORKSPACE_TAB_ID_REGEX.test(tab.id)) {
       return tab;
     }
 
@@ -371,7 +388,7 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
   // Timer functions
   // -----------------------------------------------------------------------
 
-  const startTimer = useCallback((label: string, durationMs: number) => {
+  const startTimer = useCallback((label: string, durationMs: number, notificationPreferences?: Partial<TimerNotificationPreferences>) => {
     const newTimer: TimerState = {
       id: createTabId(),
       label,
@@ -380,9 +397,16 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
       pausedAt: null,
       elapsedMs: 0,
       status: 'running',
+      // Agent notification settings
+      triggeredIntervals: new Set<string>(),
+      notificationPreferences: {
+        ...DEFAULT_TIMER_NOTIFICATIONS,
+        ...notificationPreferences, // Override defaults with provided preferences
+      },
+      agentNotificationsEnabled: true, // Enabled by default
     };
     setActiveTimer(newTimer);
-    console.log(`⏱️  Timer started: "${label}" for ${durationMs}ms`);
+    console.log(`⏱️  Timer started: "${label}" for ${durationMs}ms (agent notifications: ON)`);
   }, []);
 
   const pauseTimer = useCallback(() => {
@@ -421,6 +445,18 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
   const getTimerStatus = useCallback(() => {
     return activeTimer;
   }, [activeTimer]);
+
+  const toggleTimerNotifications = useCallback(() => {
+    setActiveTimer((prev) => {
+      if (!prev) return null;
+      const newState = !prev.agentNotificationsEnabled;
+      console.log(`⏰ Agent notifications ${newState ? 'ENABLED' : 'DISABLED'}`);
+      return {
+        ...prev,
+        agentNotificationsEnabled: newState,
+      };
+    });
+  }, []);
 
   // Auto-complete timer when time is up
   useEffect(() => {
@@ -480,6 +516,7 @@ export const WorkspaceProvider: FC<PropsWithChildren> = ({ children }) => {
     resumeTimer,
     stopTimer,
     getTimerStatus,
+    toggleTimerNotifications,
     forceSave,
   };
 
@@ -511,217 +548,3 @@ useWorkspaceContext.getState = (): WorkspaceState => {
 
 const WorkspaceProviderState = { current: null as unknown as WorkspaceState };
 
-
-// Resolves a tab ID from a list of tabs and lookup info (id, index, or name).
-function resolveTabId(
-  tabs: WorkspaceTab[],
-  opts: { id?: string; index?: number; name?: string }
-): string | undefined {
-  const { id, index, name } = opts;
-  if (typeof id === 'string' && id) {
-    return id;
-  }
-  // Prefer name over index if both are provided
-  if (typeof name === 'string') {
-    const tabByName = tabs.find((t) => t.name.toLowerCase() === name.toLowerCase());
-    if (tabByName) return tabByName.id;
-  }
-  if (typeof index === 'number' && index >= 0 && index < tabs.length) {
-    return tabs[index]?.id;
-  }
-  return undefined;
-}
-
-// ---------------------------------------------------------------------------
-// Helper functions (used by WorkspaceManager agent tools)
-// ---------------------------------------------------------------------------
-
-export async function setWorkspaceInfo(input: any) {
-  const { name, description } = input as { name?: string; description?: string };
-  const ws = useWorkspaceContext.getState();
-  if (typeof name === 'string') ws.setName(name);
-  if (typeof description === 'string') ws.setDescription(description);
-  return { message: 'Workspace info updated.' };
-}
-
-export async function addWorkspaceTab(input: any) {
-  const { name, type, content } = input as { name?: string; type?: string; content?: string };
-  const ws = useWorkspaceContext.getState();
-  const newTab: WorkspaceTab = {
-    id: createTabId(),
-    name: typeof name === 'string' && name ? name : `Tab ${ws.tabs.length + 1}`,
-    type: typeof type === 'string' && (type === 'markdown' || type === 'csv') ? type : 'markdown',
-    content: typeof content === 'string' && content ? content : '',
-  };
-  ws.setTabs([...ws.tabs, newTab]);
-  ws.setSelectedTabId(newTab.id);
-  return { message: `Tab '${newTab.name}' added.` };
-}
-
-export async function renameWorkspaceTab(input: any) {
-  const { id, index, current_name, new_name } = input as {
-    id?: string;
-    index?: number;
-    current_name?: string;
-    new_name?: string;
-  };
-  const ws = useWorkspaceContext.getState();
-  if (typeof new_name !== 'string' || new_name.trim() === '') {
-    return { message: 'Invalid new_name for rename.' };
-  }
-  const targetId = resolveTabId(ws.tabs, { id, index, name: current_name });
-  if (!targetId) {
-    return { message: 'Unable to locate tab for rename.' };
-  }
-  ws.renameTab(targetId, new_name!);
-  return { message: `Tab renamed to ${new_name}.` };
-}
-
-export async function deleteWorkspaceTab(input: any) {
-  const { id, index, name } = input as { id?: string; index?: number; name?: string };
-  const ws = useWorkspaceContext.getState();
-  const targetId = resolveTabId(ws.tabs, { id, index, name });
-  if (!targetId) {
-    return { message: 'Unable to locate tab for deletion.' };
-  }
-  ws.deleteTab(targetId);
-  return { message: 'Tab deleted.' };
-}
-
-export async function setTabContent(input: any) {
-  const { id, index, name, content } = input as {
-    id?: string;
-    index?: number;
-    name?: string;
-    content?: string;
-  };
-  const ws = useWorkspaceContext.getState();
-  if (typeof content !== 'string') {
-    return { message: 'Content must be a string.' };
-  }
-  const targetId = resolveTabId(ws.tabs, { id, index, name });
-  if (!targetId) {
-    return { message: 'Unable to locate tab for set_tab_content.' };
-  }
-  ws.setTabs(ws.tabs.map((t) => (t.id === targetId ? { ...t, content } : t)));
-  ws.setSelectedTabId(targetId);
-  return { message: 'Tab content updated.' };
-}
-
-export async function setSelectedTabId(input: any) {
-  const { id, index, name } = input as { id?: string; index?: number; name?: string };
-  const ws = useWorkspaceContext.getState();
-  const targetId = resolveTabId(ws.tabs, { id, index, name });
-  if (!targetId) {
-    return { message: 'Unable to locate tab for set_tab_content.' };
-  }
-  ws.setSelectedTabId(targetId);
-  return { message: 'Tab selected.' };
-}
-
-export async function getWorkspaceInfo() {
-  const ws = useWorkspaceContext.getState();
-  return { workspace: ws };
-}
-
-// ---------------------------------------------------------------------------
-// Timer helper functions (used by agent tools)
-// ---------------------------------------------------------------------------
-
-export async function startTimerHelper(input: any) {
-  const { label, durationMinutes } = input as { label?: string; durationMinutes?: number };
-  
-  if (typeof durationMinutes !== 'number' || durationMinutes <= 0) {
-    return { error: 'Invalid duration. Must be a positive number of minutes.' };
-  }
-  
-  const ws = useWorkspaceContext.getState();
-  const timerLabel = typeof label === 'string' && label ? label : `${durationMinutes} min timer`;
-  const durationMs = durationMinutes * 60 * 1000;
-  
-  ws.startTimer(timerLabel, durationMs);
-  
-  return { 
-    message: `Timer started: "${timerLabel}" for ${durationMinutes} minutes`,
-    timer: {
-      label: timerLabel,
-      durationMinutes,
-      status: 'running'
-    }
-  };
-}
-
-export async function pauseTimerHelper() {
-  const ws = useWorkspaceContext.getState();
-  const timer = ws.activeTimer;
-  
-  if (!timer) {
-    return { error: 'No active timer to pause.' };
-  }
-  
-  if (timer.status !== 'running') {
-    return { error: `Timer is ${timer.status}, cannot pause.` };
-  }
-  
-  ws.pauseTimer();
-  return { message: 'Timer paused.' };
-}
-
-export async function resumeTimerHelper() {
-  const ws = useWorkspaceContext.getState();
-  const timer = ws.activeTimer;
-  
-  if (!timer) {
-    return { error: 'No timer to resume.' };
-  }
-  
-  if (timer.status !== 'paused') {
-    return { error: `Timer is ${timer.status}, cannot resume.` };
-  }
-  
-  ws.resumeTimer();
-  return { message: 'Timer resumed.' };
-}
-
-export async function stopTimerHelper() {
-  const ws = useWorkspaceContext.getState();
-  const timer = ws.activeTimer;
-  
-  if (!timer) {
-    return { error: 'No timer to stop.' };
-  }
-  
-  ws.stopTimer();
-  return { message: 'Timer stopped.' };
-}
-
-export async function getTimerStatusHelper() {
-  const ws = useWorkspaceContext.getState();
-  const timer = ws.activeTimer;
-  
-  if (!timer) {
-    return { 
-      status: 'no_timer',
-      message: 'No active timer.'
-    };
-  }
-  
-  const now = Date.now();
-  const elapsed = timer.status === 'running' 
-    ? timer.elapsedMs + (now - timer.startedAt)
-    : timer.elapsedMs;
-  
-  const remaining = Math.max(0, timer.durationMs - elapsed);
-  const remainingMinutes = Math.ceil(remaining / (60 * 1000));
-  const remainingSeconds = Math.ceil(remaining / 1000);
-  
-  return {
-    status: timer.status,
-    label: timer.label,
-    durationMinutes: Math.round(timer.durationMs / (60 * 1000)),
-    elapsedMinutes: Math.floor(elapsed / (60 * 1000)),
-    remainingMinutes,
-    remainingSeconds,
-    percentComplete: Math.round((elapsed / timer.durationMs) * 100),
-  };
-}

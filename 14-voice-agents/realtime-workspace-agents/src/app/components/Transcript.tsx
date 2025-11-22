@@ -424,10 +424,12 @@ function Transcript({
                 timestamp,
                 title = "",
                 isHidden,
+                isSystemMessage,
                 guardrailResult,
               } = item;
 
-            if (isHidden) {
+            // Don't render hidden or system messages
+            if (isHidden || isSystemMessage) {
               return null;
             }
 
