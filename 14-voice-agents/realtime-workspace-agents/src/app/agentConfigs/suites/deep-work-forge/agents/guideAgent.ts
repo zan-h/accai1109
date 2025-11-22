@@ -6,7 +6,7 @@ import { guideAgentPrompt } from '../prompts';
 
 export const guideAgent = new RealtimeAgent({
   name: 'guide',
-  voice: 'alloy', // Steady, focused voice
+  voice: 'echo', // Minimal, subtle voice
   instructions: guideAgentPrompt,
   tools: [...basicWorkspaceTools, ...timerTools, ...journalTools],
   handoffs: [], // Wired in index.ts

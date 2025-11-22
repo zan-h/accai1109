@@ -1,27 +1,23 @@
 import { RealtimeAgent, tool, RealtimeItem } from '@openai/agents/realtime';
 import { fetchResponsesMessage } from './utils';
 import { useWorkspaceContext } from '@/app/contexts/WorkspaceContext';
+import * as workspaceActions from '@/app/contexts/workspaceActions';
 
 // Workspace actions are accessed via the context hook
 const getWorkspaceActions = () => {
   const state = useWorkspaceContext.getState();
   return {
-    addWorkspaceTab: state.addTab,
-    renameWorkspaceTab: state.renameTab,
-    deleteWorkspaceTab: state.deleteTab,
-    setTabContent: (tabId: string, content: string) => {
-      const tab = state.tabs.find(t => t.id === tabId);
-      if (tab) {
-        state.addTab({ ...tab, content });
-      }
-    },
+    addWorkspaceTab: workspaceActions.addWorkspaceTab,
+    renameWorkspaceTab: workspaceActions.renameWorkspaceTab,
+    deleteWorkspaceTab: workspaceActions.deleteWorkspaceTab,
+    setTabContent: workspaceActions.setTabContent,
     getWorkspaceInfo: () => ({
       name: state.name,
       description: state.description,
       tabs: state.tabs,
       selectedTabId: state.selectedTabId,
     }),
-    setSelectedTabId: state.setSelectedTabId,
+    setSelectedTabId: (id: string) => state.setSelectedTabId(id),
   };
 };
 
@@ -70,7 +66,7 @@ export const workspaceTools = [
       required: ['name', 'type'],
       additionalProperties: false,
     },
-    execute: (args) => getActions().addWorkspaceTab(args),
+    execute: (args) => getActions().addWorkspaceTab(args as any),
   }),
   tool({
     name: 'set_selected_tab_id',
@@ -90,7 +86,7 @@ export const workspaceTools = [
       required: ['index', 'name'],
       additionalProperties: false,
     },
-    execute: (args) => getActions().setSelectedTabId(args),
+    execute: (args) => getActions().setSelectedTabId(args as any),
   }),
   tool({
     name: 'rename_workspace_tab',
@@ -117,7 +113,7 @@ export const workspaceTools = [
       required: ['current_name', 'new_name'],
       additionalProperties: false,
     },
-    execute: (args) => getActions().renameWorkspaceTab(args),
+    execute: (args) => getActions().renameWorkspaceTab(args as any),
   }),
   tool({
     name: 'delete_workspace_tab',
@@ -140,7 +136,7 @@ export const workspaceTools = [
       required: [],
       additionalProperties: false,
     },
-    execute: (args) => getActions().deleteWorkspaceTab(args),
+    execute: (args) => getActions().deleteWorkspaceTab(args as any),
   }),
   tool({
     name: 'set_tab_content',
@@ -167,7 +163,7 @@ export const workspaceTools = [
       required: ['content'],
       additionalProperties: false,
     },
-    execute: (args) => getActions().setTabContent(args),
+    execute: (args) => getActions().setTabContent(args as any),
   }),
   workspaceInfoTool,
 ];
@@ -194,11 +190,11 @@ async function getToolResponse(fName: string, args: any) {
     case 'delete_workspace_tab':
       return await actions.deleteWorkspaceTab(args);
     case 'set_tab_content':
-      return await actions.setTabContent(args.index, args.name, args.content);
+      return await actions.setTabContent(args);
     case 'get_workspace_info':
       return await actions.getWorkspaceInfo();
     case 'set_selected_tab_id':
-      return await actions.setSelectedTabId(args);
+      return await actions.setSelectedTabId((args as any).index);
     default:
       return undefined;
   }

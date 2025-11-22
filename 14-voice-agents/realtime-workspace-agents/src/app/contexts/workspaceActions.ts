@@ -20,10 +20,12 @@ export async function setWorkspaceInfo(input: any) {
 export async function addWorkspaceTab(input: any) {
   const { name, type, content } = input as { name?: string; type?: string; content?: string };
   const ws = useWorkspaceContext.getState();
+  const tabType: 'markdown' | 'csv' = 
+    typeof type === 'string' && (type === 'markdown' || type === 'csv') ? type : 'markdown';
   const newTab = {
     id: createTabId(),
     name: typeof name === 'string' && name ? name : `Tab ${ws.tabs.length + 1}`,
-    type: typeof type === 'string' && (type === 'markdown' || type === 'csv') ? type : 'markdown',
+    type: tabType,
     content: typeof content === 'string' && content ? content : '',
   };
   ws.setTabs([...ws.tabs, newTab]);

@@ -8,6 +8,7 @@ export const writingCompanionSuite: SuiteConfig = {
   description: 'Complete writing workflow with web research: from ideation to publication-ready prose',
   icon: '✍️',
   category: 'creativity',
+  disabled: true, // Temporarily disabled
   tags: ['writing', 'editing', 'creativity', 'publishing', 'prose', 'ideation', 'free-writing', 'research', 'fact-checking'],
   
   suggestedUseCases: [

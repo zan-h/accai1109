@@ -30,10 +30,14 @@ export function registerSuite(suite: AgentSuite): void {
 }
 
 /**
- * Get all registered suites
+ * Get all registered suites (excludes disabled suites by default)
  */
-export function getAllSuites(registry: SuiteRegistry): AgentSuite[] {
-  return Object.values(registry);
+export function getAllSuites(registry: SuiteRegistry, includeDisabled = false): AgentSuite[] {
+  const allSuites = Object.values(registry);
+  if (includeDisabled) {
+    return allSuites;
+  }
+  return allSuites.filter(suite => !suite.disabled);
 }
 
 /**
@@ -44,25 +48,25 @@ export function getSuiteById(registry: SuiteRegistry, id: string): AgentSuite | 
 }
 
 /**
- * Get suites by category
+ * Get suites by category (excludes disabled suites by default)
  */
-export function getSuitesByCategory(registry: SuiteRegistry, category: string): AgentSuite[] {
-  return getAllSuites(registry).filter(suite => suite.category === category);
+export function getSuitesByCategory(registry: SuiteRegistry, category: string, includeDisabled = false): AgentSuite[] {
+  return getAllSuites(registry, includeDisabled).filter(suite => suite.category === category);
 }
 
 /**
- * Get suites by tag
+ * Get suites by tag (excludes disabled suites by default)
  */
-export function getSuitesByTag(registry: SuiteRegistry, tag: string): AgentSuite[] {
-  return getAllSuites(registry).filter(suite => suite.tags.includes(tag));
+export function getSuitesByTag(registry: SuiteRegistry, tag: string, includeDisabled = false): AgentSuite[] {
+  return getAllSuites(registry, includeDisabled).filter(suite => suite.tags.includes(tag));
 }
 
 /**
- * Search suites by name, description, or tags
+ * Search suites by name, description, or tags (excludes disabled suites by default)
  */
-export function searchSuites(registry: SuiteRegistry, query: string): AgentSuite[] {
+export function searchSuites(registry: SuiteRegistry, query: string, includeDisabled = false): AgentSuite[] {
   const lowerQuery = query.toLowerCase();
-  return getAllSuites(registry).filter(suite =>
+  return getAllSuites(registry, includeDisabled).filter(suite =>
     suite.name.toLowerCase().includes(lowerQuery) ||
     suite.description.toLowerCase().includes(lowerQuery) ||
     suite.tags.some(tag => tag.toLowerCase().includes(lowerQuery))

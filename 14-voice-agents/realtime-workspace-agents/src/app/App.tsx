@@ -41,7 +41,7 @@ import {
 
 // Suite system
 import { AgentSuite } from '@/app/agentConfigs/types';
-import { findSuiteById } from '@/app/agentConfigs';
+import { findSuiteById, defaultSuiteId } from '@/app/agentConfigs';
 import { initializeWorkspaceWithTemplates, getWorkspaceInfoForContext } from './lib/workspaceInitializer';
 
 // Voice customization
@@ -120,12 +120,39 @@ function App() {
   const [selectedSuiteId, setSelectedSuiteId] = useState<string | null>(() => {
     // Initialize from localStorage on client side only
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('selectedSuiteId');
+      let storedId = localStorage.getItem('selectedSuiteId');
+      
+      // Migrate old suite ID to new one
+      if (storedId === 'energy-focus') {
+        storedId = 'energy-aligned-work';
+        localStorage.setItem('selectedSuiteId', storedId);
+      }
+      if (storedId === 'flow-sprints') {
+        storedId = 'task-sprint';
+        localStorage.setItem('selectedSuiteId', storedId);
+      }
+      if (storedId === 'deep-work-forge') {
+        storedId = 'deep-focus';
+        localStorage.setItem('selectedSuiteId', storedId);
+      }
+      
+      return storedId || defaultSuiteId;
     }
-    return null;
+    return defaultSuiteId;
   });
   const [showSuiteSelector, setShowSuiteSelector] = useState(false);
   const currentSuite = selectedSuiteId ? findSuiteById(selectedSuiteId) : null;
+  
+  // Fallback to default suite if current suite not found
+  useEffect(() => {
+    if (selectedSuiteId && !currentSuite) {
+      console.warn(`⚠️ Suite "${selectedSuiteId}" not found, falling back to default`);
+      setSelectedSuiteId(defaultSuiteId);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('selectedSuiteId', defaultSuiteId);
+      }
+    }
+  }, [selectedSuiteId, currentSuite]);
   
   // Template prompt state
   const [showTemplatePrompt, setShowTemplatePrompt] = useState(false);

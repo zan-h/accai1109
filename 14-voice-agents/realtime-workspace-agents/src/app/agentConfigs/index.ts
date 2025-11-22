@@ -14,6 +14,7 @@ import { registerSuiteManually } from './utils/manualRegistration';
 
 // Import suites
 import energyFocusSuite from './suites/energy-focus';
+import satisfyingWorkSuite from './suites/satisfying-work';
 import babyCareSuite from './suites/baby-care';
 import ifsTherapySuite from './suites/ifs-therapy';
 import joeHudsonSuite from './suites/joe-hudson';
@@ -30,6 +31,7 @@ const suiteRegistry: SuiteRegistry = {};
 
 // Register suites
 registerSuiteManually(suiteRegistry, energyFocusSuite);
+registerSuiteManually(suiteRegistry, satisfyingWorkSuite);
 registerSuiteManually(suiteRegistry, babyCareSuite);
 registerSuiteManually(suiteRegistry, ifsTherapySuite);
 registerSuiteManually(suiteRegistry, joeHudsonSuite);
@@ -72,7 +74,7 @@ export function searchAllSuites(query: string): AgentSuite[] {
 }
 
 // Default suite ID (will be configurable)
-export const defaultSuiteId = 'energy-focus';
+export const defaultSuiteId = 'energy-aligned-work';
 
 // ============================================
 // BACKWARDS COMPATIBILITY

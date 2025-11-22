@@ -1,12 +1,16 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
-import { basicWorkspaceTools } from '@/app/agentConfigs/shared/tools/workspace/workspaceTools';
-import { recordBreakerPrompt } from '../prompts';
+import { advancedWorkspaceTools } from '@/app/agentConfigs/shared/tools/workspace/workspaceTools';
+import { timerTools} from '@/app/agentConfigs/shared/tools/workspace/timerTools';
+import { journalTools } from '@/app/agentConfigs/shared/tools/journal';
+import { celebrationMasterPrompt } from '../prompts-new';
 
-export const recordBreakerAgent = new RealtimeAgent({
-  name: 'recordBreaker',
-  voice: 'echo', // Analytical but celebratory voice
-  instructions: recordBreakerPrompt,
-  tools: basicWorkspaceTools,
-  handoffs: [], // Wired in index.ts
+export const celebrationMasterAgent = new RealtimeAgent({
+  name: 'celebrationMaster',
+  voice: 'shimmer',
+  instructions: celebrationMasterPrompt,
+  tools: [...advancedWorkspaceTools, ...timerTools, ...journalTools],
+  handoffs: [], // wired up in index.ts
 });
 
+// Export with old name for backwards compatibility
+export const recordBreakerAgent = celebrationMasterAgent;

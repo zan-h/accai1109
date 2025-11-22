@@ -1,14 +1,17 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
-import { basicWorkspaceTools } from '@/app/agentConfigs/shared/tools/workspace/workspaceTools';
-import { bodyDoublingPrompt2 } from '../../../scenarios/workspaceBuilder/prompts';
+import { advancedWorkspaceTools } from '@/app/agentConfigs/shared/tools/workspace/workspaceTools';
+import { launchPartnerPrompt } from '../prompts';
 
-export const bodyDoublingAgent = new RealtimeAgent({
-  name: 'bodyDoubling',
-  voice: 'verse',
-  instructions: bodyDoublingPrompt2,
-  tools: basicWorkspaceTools,
+export const launchPartnerAgent = new RealtimeAgent({
+  name: 'launchPartner',
+  voice: 'alloy',
+  instructions: launchPartnerPrompt,
+  tools: advancedWorkspaceTools,
   handoffs: [], // wired up in index.ts to avoid circular dependencies
 });
+
+// Export with old name for backwards compatibility during transition
+export const bodyDoublingAgent = launchPartnerAgent;
 
 
 

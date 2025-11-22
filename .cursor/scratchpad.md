@@ -14076,3 +14076,597 @@ This feature will transform the timer from a passive countdown display into an a
 
 ---
 
+## Current Feature Request: Agent Suite Simplification & Productivity Focus (Nov 22, 2025)
+
+**User Need:** Simplify the agent suite offerings down to 3 core productivity suites with clear, functional names and very specific directives. Users should immediately know which suite to use and when. Disable (not delete) several suites temporarily.
+
+**User Role:** Product Designer & UX Strategist
+
+### Current State Analysis
+
+**Total Suites Available:** 10
+1. Energy & Focus (mental-health category, 3 agents) ✅ KEEP
+2. Baby Care Companion (mental-health, 5 agents) ❌ DISABLE
+3. IFS Therapy Companion (mental-health, 12 agents) ❌ DISABLE
+4. Joe Hudson Work Flow (productivity, 4 agents) ❌ DISABLE
+5. 12-Week Month Coach (productivity, 5 agents) ❌ DISABLE
+6. GTD Capture & Organize (productivity, 5 agents) ❌ DISABLE
+7. Flow Sprints Challenge (productivity, 5 agents) ✅ KEEP
+8. Writing Companion (productivity, 7 agents) ❌ DISABLE
+9. Video Production Companion (productivity, 6 agents) ❌ DISABLE
+10. Deep Work Forge (productivity, 5 agents) ✅ KEEP
+
+### Core Problem
+
+**Too Many Overlapping Choices:**
+- Users face decision paralysis when selecting a suite
+- Multiple productivity suites with overlapping functions (GTD, 12-Week Month, Joe Hudson, Flow Sprints, Deep Work Forge)
+- Names are not immediately clear about WHEN to use them
+- Agent counts vary wildly (3-12 agents per suite)
+- No clear user journey or progression
+
+**Current Productivity Suite Overlap:**
+- **GTD:** Task capture & organization (weekly planning focus)
+- **12-Week Month:** Goal setting with 12-week cycles (quarter-level planning)
+- **Flow Sprints:** Gamified time-boxing for task completion (momentum)
+- **Deep Work Forge:** Single deep work session (focus)
+- **Energy & Focus:** Body-aware ADHD productivity (energy management)
+- **Joe Hudson:** Somatic decision-making & task sharding (embodied work)
+
+Users need to understand: **"Should I use Flow Sprints or Deep Work Forge today?"** — The answer isn't obvious.
+
+---
+
+## Key Challenges and Analysis
+
+### Challenge 1: Functional Naming
+**Current names are abstract or methodology-specific:**
+- "Energy & Focus" — What does this actually help me DO?
+- "Flow Sprints Challenge" — Is this for sprinters? Athletes?
+- "Deep Work Forge" — What's a forge? Sounds intimidating
+- "GTD Capture & Organize" — Requires knowing what GTD is
+- "12-Week Month Coach" — Sounds like a course, not a tool
+
+**Better approach: Action-oriented, context-specific names**
+
+### Challenge 2: When To Use Each Suite
+**Users need to answer:**
+- "I have 2 hours and need to get stuff done" → Which suite?
+- "I'm scattered and can't focus" → Which suite?
+- "I have 20 small tasks piling up" → Which suite?
+- "I need to write for 90 minutes straight" → Which suite?
+
+**Clear use cases need to be built into the names themselves.**
+
+### Challenge 3: Agent Count Bloat
+- Current suites have 3-12 agents (average: 5.6)
+- Users are overwhelmed by too many agent personalities
+- Handoff logic becomes complex with 5+ agents
+- More agents ≠ better experience
+
+**Target: Maximum 3 agents per suite**
+
+### Challenge 4: Distinct Directives
+**Each suite must have a VERY specific job:**
+- No overlapping domains
+- No "catch-all" suites
+- Each suite solves ONE type of work problem
+- Users should never think "both suites could work here"
+
+---
+
+## High-level Task Breakdown
+
+### PHASE 1: Strategic Planning & Analysis ⏳ IN PROGRESS
+**Goal:** Define the new 3-suite system with crystal-clear positioning
+
+**Tasks:**
+1. ✅ Analyze current suite landscape and overlap
+2. ⏳ Brainstorm optimal 3-suite system with user
+3. ⏳ Define functional names, clear directives, and when-to-use guidance
+4. ⏳ Map agents from old suites to new suites (which agents to keep/consolidate)
+5. ⏳ Document workspace templates for each new suite
+6. ⏳ Get user approval on final 3-suite design
+
+**Success Criteria:**
+- Clear written spec for 3 new suites
+- Zero ambiguity about which suite to use when
+- Agent reduction plan (5+ agents → 3 agents per suite)
+- User approval to proceed
+
+---
+
+### PHASE 2: Suite Disabling (Non-Destructive) 🔜 PENDING
+**Goal:** Disable 7 suites without deleting code
+
+**Tasks:**
+1. Add `disabled: boolean` field to SuiteConfig type
+2. Update suite registry to filter out disabled suites
+3. Add `disabled: true` to 7 suite configs (preserve code)
+4. Update SuiteSelector UI to only show enabled suites
+5. Test that disabled suites don't appear but code remains intact
+
+**Success Criteria:**
+- Only 3 suites visible in UI
+- Codebase retains all suite code (no deletions)
+- Easy to re-enable suites in future
+- Build succeeds with no errors
+
+---
+
+### PHASE 3: Suite Restructuring 🔜 PENDING
+**Goal:** Implement the 3 new productivity suites
+
+**Tasks:**
+1. Rename/restructure Suite 1 (based on Phase 1 design)
+2. Rename/restructure Suite 2 (based on Phase 1 design)
+3. Rename/restructure Suite 3 (based on Phase 1 design)
+4. Reduce each suite to exactly 3 agents
+5. Update workspace templates to match new positioning
+6. Update agent prompts with clear, specific directives
+7. Test each suite independently
+
+**Success Criteria:**
+- 3 suites with functional, action-oriented names
+- Each suite has exactly 3 agents
+- Workspace templates align with suite purpose
+- All agents have distinct personalities and directives
+- Build succeeds, all suites selectable
+
+---
+
+### PHASE 4: User Experience Polish 🔜 PENDING
+**Goal:** Make suite selection obvious and delightful
+
+**Tasks:**
+1. Update suite descriptions to be ultra-clear about use cases
+2. Add "When to use this suite" prominently in UI
+3. Update icons to be more intuitive
+4. Add suite recommendation logic (optional: "Feeling scattered? Try Suite X")
+5. Update documentation
+
+**Success Criteria:**
+- First-time users immediately understand which suite to select
+- Suite descriptions answer "When do I use this?" clearly
+- Icons reinforce suite purpose
+- No user confusion during testing
+
+---
+
+### PHASE 5: Testing & Iteration 🔜 PENDING
+**Goal:** Validate that the 3-suite system works in practice
+
+**Tasks:**
+1. User testing with fresh eyes (ideally 2-3 people)
+2. Gather feedback on naming clarity
+3. Iterate based on confusion points
+4. Final polish and documentation
+
+**Success Criteria:**
+- New users can select correct suite without help
+- Zero ambiguity in user feedback
+- Documentation reflects final state
+
+---
+
+## Project Status Board
+
+### Sprint 1: Planning & Analysis
+- [x] Analyze current suite landscape
+- [ ] Brainstorm 3-suite system with user
+- [ ] Define names, directives, when-to-use guidance
+- [ ] Map agent consolidation plan
+- [ ] Design workspace templates
+- [ ] Get user approval
+
+### Sprint 2: Disabling Suites
+- [x] Add `disabled` field to SuiteConfig type
+- [x] Filter disabled suites in registry
+- [x] Mark 7 suites as disabled (Baby Care, IFS, Joe Hudson, 12-Week Month, GTD, Writing, Video)
+- [ ] Update UI to hide disabled suites (handled automatically by registry filter)
+- [ ] Test and verify
+
+### Sprint 3: Suite Restructuring
+- [x] Implement Suite 1 restructure (Energy Aligned Work - 3 agents)
+- [x] Implement Suite 2 creation (Satisfying Work - 1 agent)
+- [x] Implement Suite 3 restructure (Deep Focus - 2 agents)
+- [ ] Implement Suite 4 restructure (Task Sprint - 3 agents) ⏳ IN PROGRESS
+- [ ] Register new suite in main index.ts
+- [ ] Test all suites
+
+### Sprint 4: UX Polish
+- [ ] Rewrite suite descriptions
+- [ ] Add "When to use" guidance
+- [ ] Update icons
+- [ ] Add recommendation logic
+- [ ] Update docs
+
+### Sprint 5: Testing
+- [ ] User testing sessions
+- [ ] Gather feedback
+- [ ] Iterate on confusion points
+- [ ] Final polish
+
+---
+
+## Executor's Feedback or Assistance Requests
+
+### ✅ IMPLEMENTATION COMPLETE (Nov 22, 2025)
+
+**Status:** All 4 productivity suites have been successfully implemented and build passes.
+
+**What was completed:**
+1. ✅ Added `disabled` field to SuiteConfig type
+2. ✅ Updated registry to filter disabled suites automatically
+3. ✅ Disabled 7 suites (Baby Care, IFS Therapy, Joe Hudson, 12-Week Month, GTD, Writing Companion, Video Production)
+4. ✅ Restructured Suite 1: Energy Aligned Work (3 agents: Grounding Guide, Capacity Mapper, Launch Partner)
+5. ✅ Created Suite 2: Satisfying Work (1 agent: Embodied Work Guide)
+6. ✅ Restructured Suite 3: Deep Focus (2 agents: Anchor Agent, Guide Agent)
+7. ✅ Restructured Suite 4: Task Sprint (3 agents: Loop Closer, Avoidance Pusher, Celebration Master)
+8. ✅ Registered all suites in main index.ts
+9. ✅ Fixed TypeScript compilation errors
+10. ✅ Build succeeds (npm run build: Exit code 0)
+
+**Issues Fixed:**
+- ✅ Fixed defaultSuiteId references (energy-focus → energy-aligned-work)
+- ✅ Fixed localStorage migration for old suite IDs
+- ✅ Added fallback logic if suite not found
+- ✅ Cleaned .next build cache and rebuilt successfully
+- ✅ Dev server started
+
+**Implementation Status:** ✅ COMPLETE
+
+All 4 productivity suites are now live and ready to use:
+1. Energy Aligned Work
+2. Satisfying Work
+3. Deep Focus
+4. Task Sprint
+
+Disabled suites won't appear in UI but code is preserved for future re-enablement.
+
+### Request 1: Brainstorming the 3-Suite System
+
+**Context:** We need to decide on the optimal 3 productivity suites that cover the full spectrum of user needs without overlap.
+
+**My Initial Recommendations (for discussion):**
+
+#### Option A: Time-Based Segmentation
+
+**Suite 1: "Quick Wins" (formerly Flow Sprints)**
+- **When to use:** You have 15-60 minutes and lots of small tasks
+- **Core job:** Get through a pile of tasks fast with momentum
+- **3 Agents:**
+  1. **Sprint Launcher** - Gets you started, sets timer, builds energy
+  2. **Task Logger** - Celebrates each completion, tracks progress
+  3. **Momentum Coach** - Keeps you moving, adjusts strategy mid-sprint
+- **Key directive:** SPEED and COMPLETION over perfection
+- **Workspace focus:** Sprint logs, task queue, personal bests
+
+**Suite 2: "Deep Focus" (formerly Deep Work Forge)**  
+- **When to use:** You have 90+ minutes for complex, creative work
+- **Core job:** Sustained concentration on ONE important thing
+- **3 Agents:**
+  1. **Anchor Agent** - Sets intention, eliminates distractions, establishes ritual
+  2. **Guide Agent** - Subtle check-ins during session, helps through blocks
+  3. **Archivist Agent** - Captures insights, helps with session close-out
+- **Key directive:** DEPTH and QUALITY over quantity
+- **Workspace focus:** Session intention, insights log, next steps
+
+**Suite 3: "Energy Navigator" (formerly Energy & Focus)**
+- **When to use:** You're scattered, low energy, or don't know where to start
+- **Core job:** Body-aware task matching and gentle momentum building
+- **3 Agents:**
+  1. **Energy Coach** - Checks in on body/emotions, helps match tasks to energy
+  2. **Task Strategist** - Breaks down overwhelming tasks, finds smallest next step
+  3. **Body Doubling Partner** - Gentle presence, accountability, somatic grounding
+- **Key directive:** AWARENESS and ALIGNMENT with your current state
+- **Workspace focus:** Energy tracking, daily check-in, task board by energy level
+
+**Why this works:**
+- Clear temporal/energetic segmentation
+- No overlap: small tasks vs. deep work vs. scattered energy
+- Users can immediately self-select based on current state
+- Names describe the OUTCOME not the methodology
+
+---
+
+#### Option B: Work-Type Segmentation
+
+**Suite 1: "Task Blitz"**
+- For clearing backlogs, admin work, quick wins
+- 3 agents focused on speed and momentum
+
+**Suite 2: "Focus Studio"**
+- For creative work, writing, design, strategy
+- 3 agents focused on depth and sustained attention
+
+**Suite 3: "Start Mode"**
+- For when you're stuck, overwhelmed, or procrastinating
+- 3 agents focused on initiation and momentum building
+
+---
+
+#### Option C: ADHD-Specific Segmentation
+
+**Suite 1: "Fast Wins Mode"**
+- For executive function support, task completion, dopamine hits
+- Gamified, high-energy, celebration-heavy
+
+**Suite 2: "Deep Work Mode"**
+- For hyperfocus support, flow state protection
+- Minimal interruption, sustained attention scaffolding
+
+**Suite 3: "Ground & Start Mode"**
+- For regulation, body awareness, initiation support
+- Somatic, gentle, body-doubling focused
+
+---
+
+**USER DECISION: 4-Suite System (Nov 22, 2025)** ✅
+
+The user has specified exactly what they want. Here are the 4 suites:
+
+1. **Starting Work Mode** - Understanding feelings, energy, where they're at
+2. **Enjoyment Mode** - Making work more fun and satisfying
+3. **Deep Work Mode** - Minimizing distractions, longer timers, sustained focus
+4. **Sprint Racing Mode** - Fast task completion, racing the timer, scoring
+
+**Requirements:**
+- ALL suites must utilize the timer capability
+- ALL suites must utilize the work journal capability
+- Each suite needs 3 agents max
+- Very specific and different directives for each
+
+---
+
+## FINAL SUITE SPECIFICATIONS
+
+### Suite 1: Energy Aligned Work
+
+For starting work when you need to understand where you're at first.
+
+**When to use:**
+- Beginning of work session
+- Uncertain about where to start
+- Need to match work to current energy
+
+**Core job:** Assess current state (energy, capacity) and choose work that fits.
+
+**Timer strategy:** 5-15 min check-ins
+
+**Work journal integration:**
+- Log energy levels and capacity assessments
+- Track what work matched which energy states
+- Note launch intentions
+
+**3 Agents:**
+
+1. **Grounding Guide**
+   - Voice: `sage`
+   - Job: Check in on body, emotions, energy level (1-10 scale)
+   - Questions: "How's your body feeling?" "What's your energy like?"
+   - Directive: Pure state assessment. No task planning yet.
+   - Timer use: 5-min grounding check-in
+   - Journal: Logs energy score, body state, emotional state
+
+2. **Capacity Mapper**
+   - Voice: `echo`
+   - Job: Assess realistic capacity based on current state
+   - Questions: "Given your energy, what's realistic today?"
+   - Directive: Match work to actual energy, not wishful thinking
+   - Timer use: 10-min capacity planning
+   - Journal: Logs capacity assessment, realistic work load
+
+3. **Launch Partner**
+   - Voice: `alloy`
+   - Job: Help start first task
+   - Directive: Get into motion, smallest viable first step
+   - Timer use: Sets first work timer
+   - Journal: Logs intention for first work block
+   - Handoff: Suggests switching to other suites after launch
+
+**Workspace templates:**
+- Daily Check-In (Markdown) - Energy/mood/body tracking
+- Capacity Journal (CSV) - Date, Energy, Planned Hours, Actual Hours, Notes
+- Launch Log (CSV) - Date, First Task, How Started, Outcome
+
+---
+
+### Suite 2: Satisfying Work
+
+For making work more enjoyable and ensuring you're having fun while doing it.
+
+**When to use:**
+- Work feels like a slog
+- Need to make boring work feel better
+- Want to stay in your body while working
+
+**Core job:** Help user get embodied and make the work more fun.
+
+**Timer strategy:** 25-45 min sessions with regular check-ins
+
+**Work journal integration:**
+- Log what made work more fun
+- Track satisfaction levels
+- Note embodiment practices that worked
+
+**1 Agent:**
+
+1. **Embodied Work Guide**
+   - Voice: `shimmer`
+   - Job: Help user get into their body, then make work more fun throughout session
+   - Start of session: "Let's get you into your body first. How does your body feel right now?"
+   - During work: Regular check-ins via timer. "What would make this more fun?" "How's your body feeling?" "What would feel satisfying right now?"
+   - Directive: Keep user embodied and enjoying the process. Check in regularly (every 15-20 min).
+   - Timer use: Sets 25-45 min timers, checks in at regular intervals
+   - Journal: Logs embodiment notes, fun experiments tried, satisfaction ratings
+
+**Workspace templates:**
+- Session Notes (Markdown) - How I got embodied, what made work fun
+- Satisfaction Log (CSV) - Date, Task, Embodiment Practice, Fun Factor (1-10), Notes
+
+---
+
+### Suite 3: Deep Focus
+
+For long periods of distraction-free concentration.
+
+**When to use:**
+- Need 60+ minutes uninterrupted
+- Complex or creative work
+- Protecting flow state
+
+**Core job:** Create and protect conditions for sustained deep work.
+
+**Timer strategy:** 60-120 min (longer default)
+
+**Work journal integration:**
+- Pre-session intention logging
+- Minimal interruption during work
+- Track deep work quality and patterns
+
+**2 Agents:**
+
+1. **Anchor Agent**
+   - Voice: `sage`
+   - Job: Set up deep work session - intention, eliminate distractions, prep environment
+   - Questions: "What are you working on?" "What distractions can we eliminate?"
+   - Directive: Establish clear container for deep work
+   - Timer use: 10-min setup, then launches 60-120 min timer
+   - Journal: Logs intention, distractions eliminated, setup notes
+   - Handoff: Passes to Guide Agent, then silent until timer alerts
+
+2. **Guide Agent**
+   - Voice: `echo`
+   - Job: Minimal interruption. Only speaks at 50% mark or if user initiates
+   - Directive: Protect flow state. Stay silent unless necessary.
+   - Questions (only if user asks): "What's blocking you?" "Need a break?"
+   - Timer use: Monitors timer, brief check-in at halfway mark only
+   - Journal: Logs blocks encountered, session quality rating at end
+   - Behavior: Most silent agent in the system
+
+**Workspace templates:**
+- Deep Work Log (CSV) - Date, Duration, Project, Quality (1-10), Distractions
+- Session Notes (Markdown) - Intentions, insights, next steps
+
+---
+
+### Suite 4: Task Sprint
+
+A high-energy game where you race the clock to complete as many tasks as possible. The goal is to close open loops fast and tackle things you've been avoiding. You get scored at the end.
+
+**When to use:**
+- Lots of small tasks piling up
+- Need gamified motivation
+- Want to clear your backlog
+
+**Core job:** Turn task completion into a competitive game with scoring.
+
+**Timer strategy:** 15-30 min (short and fast)
+
+**Work journal integration:**
+- Real-time task logging for every completion
+- Score calculation at end
+- Track personal records
+
+**Game explanation (shown on activation):**
+"Welcome to Task Sprint. Here's how the game works: You have [X] minutes to complete as many tasks as possible. We'll push you to close open loops and tackle tasks you've been avoiding. Every completion gets logged. At the end, you get a score based on tasks completed, difficulty, and focus. Ready to set a new record?"
+
+**3 Agents:**
+
+1. **Loop Closer**
+   - Voice: `alloy`
+   - Job: Push user to close as many open loops as possible
+   - Questions: "What's been sitting unfinished?" "What can you close right now?"
+   - Directive: Focus on CLOSING things. Completion over perfection.
+   - Timer use: Sets sprint timer (15-30 min), announces START
+   - Journal: Logs sprint start, loops identified
+   - Handoff: To Avoidance Pusher after initial loop-closing momentum
+
+2. **Avoidance Pusher**
+   - Voice: `echo`
+   - Job: Push user to do the task they're avoiding
+   - Questions: "What are you avoiding?" "Why not do that one right now?"
+   - Directive: Direct confrontation with avoidance. Keep it moving.
+   - Timer use: Monitors progress, gives 5-min warning
+   - Journal: Logs tasks avoided/completed, avoidance patterns
+   - Handoff: To Celebration Master when timer ends
+
+3. **Celebration Master**
+   - Voice: `shimmer`
+   - Job: Celebrate completion and calculate score
+   - Scoring: (Tasks completed × difficulty rating) ÷ time × focus consistency
+   - Questions: "Want to see your stats?" "Go again?"
+   - Directive: Make scoring meaningful. Compare to records.
+   - Timer use: Activates at completion for scoring ceremony
+   - Journal: Logs final score, tasks completed, new records, performance breakdown
+
+**Workspace templates:**
+- Sprint Log (CSV) - Date, Duration, Tasks Done, Score, New Record?, Notes
+- Task Queue (CSV) - Task, Difficulty, Status, Sprint Completed
+- Personal Records (Markdown) - Best scores by sprint length, improvement trends
+
+---
+
+## SUITE COMPARISON TABLE
+
+| Suite | Agents | Default Timer | Agent Style | Primary Goal | Journal Focus |
+|-------|--------|---------------|-------------|--------------|---------------|
+| **Energy Aligned Work** | 3 | 5-15 min | Grounding, present | Understand state, match work to energy | Energy tracking, capacity |
+| **Satisfying Work** | 1 | 25-45 min | Embodied, fun-focused | Make work enjoyable | Embodiment, satisfaction |
+| **Deep Focus** | 2 | 60-120 min | Minimal, protective | Sustained concentration | Deep work quality |
+| **Task Sprint** | 3 | 15-30 min | High-energy, competitive | Fast completion, gamification | Task counts, scoring, records |
+
+---
+
+## HANDOFF LOGIC BETWEEN SUITES
+
+**Energy Aligned Work → Hands off to:**
+- Deep Focus (if energy high, complex work ahead)
+- Satisfying Work (if energy medium, work feels heavy)
+- Task Sprint (if energy good, lots of small tasks)
+
+**After any work suite completes:**
+- Can return to Energy Aligned Work for next block
+- Or continue in same suite for another round
+- Or switch based on energy change
+
+**Emergency handoff:**
+- Any suite can hand to Energy Aligned Work if user says "I'm stuck" or "I need to reset"
+
+---
+
+## NEXT STEPS
+
+**USER APPROVED ✅** (with style changes applied)
+
+Changes from user feedback:
+- Simplified language, removed "cringey" tone
+- Removed all emojis
+- Suite 2 reduced to 1 agent (Embodied Work Guide) focused on embodiment + fun
+- Suite 3 reduced to 2 agents (removed Archivist)
+- Suite 4 updated with game explanation upfront and 3 specific agents: Loop Closer, Avoidance Pusher, Celebration Master
+- All suite names updated to be more matter-of-fact
+
+**Ready to proceed to Executor mode for implementation:**
+1. Add `disabled` field to suite configs
+2. Disable the 7 suites (Baby Care, IFS, Joe Hudson, 12-Week Month, GTD, Writing, Video)
+3. Restructure the 4 productivity suites:
+   - Energy Aligned Work (3 agents)
+   - Satisfying Work (1 agent)
+   - Deep Focus (2 agents)
+   - Task Sprint (3 agents)
+4. Update workspace templates
+5. Update agent prompts with specific directives
+6. Test everything
+
+**Awaiting user signal to switch to Executor mode.**
+
+---
+
+## Lessons
+
+*(To be populated during execution)*
+
+---
+

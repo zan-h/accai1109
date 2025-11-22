@@ -8,6 +8,7 @@ export const joeHudsonSuiteConfig: SuiteConfig = {
   description: 'Body-aware, curiosity-driven productivity. Get into focused work within 60-90 seconds with gentle support from Joe Hudson\'s teachings.',
   icon: '🎯',
   category: 'productivity',
+  disabled: true, // Temporarily disabled
   tags: [
     'work',
     'productivity',

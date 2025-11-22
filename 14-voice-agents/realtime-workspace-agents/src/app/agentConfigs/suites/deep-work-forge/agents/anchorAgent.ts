@@ -6,7 +6,7 @@ import { anchorAgentPrompt } from '../prompts';
 
 export const anchorAgent = new RealtimeAgent({
   name: 'anchor',
-  voice: 'echo', // Calm, grounded voice
+  voice: 'sage', // Calm, focused voice
   instructions: anchorAgentPrompt,
   tools: [...basicWorkspaceTools, ...timerTools, ...journalTools],
   handoffs: [], // Wired in index.ts

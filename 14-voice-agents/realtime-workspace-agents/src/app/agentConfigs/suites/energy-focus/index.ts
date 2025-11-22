@@ -2,27 +2,27 @@
 
 import { AgentSuite } from '@/app/agentConfigs/types';
 import { energyFocusSuiteConfig } from './suite.config';
-import { energyCoachAgent } from './agents/energyCoach';
-import { taskStrategistAgent } from './agents/taskStrategist';
-import { bodyDoublingAgent } from './agents/bodyDoubling';
+import { groundingGuideAgent } from './agents/energyCoach';
+import { capacityMapperAgent } from './agents/taskStrategist';
+import { launchPartnerAgent } from './agents/bodyDoubling';
 import { createModerationGuardrail } from '@/app/agentConfigs/shared/guardrails';
 
-// Wire up handoffs (mutual connections)
-(energyCoachAgent.handoffs as any).push(taskStrategistAgent, bodyDoublingAgent);
-(taskStrategistAgent.handoffs as any).push(bodyDoublingAgent, energyCoachAgent);
-(bodyDoublingAgent.handoffs as any).push(energyCoachAgent, taskStrategistAgent);
+// Wire up handoffs - linear flow: Grounding → Capacity → Launch
+(groundingGuideAgent.handoffs as any).push(capacityMapperAgent);
+(capacityMapperAgent.handoffs as any).push(launchPartnerAgent);
+(launchPartnerAgent.handoffs as any).push(groundingGuideAgent); // Can return to start
 
 // Export suite
-const energyFocusSuite: AgentSuite = {
+const energyAlignedWorkSuite: AgentSuite = {
   ...energyFocusSuiteConfig,
-  agents: [energyCoachAgent, taskStrategistAgent, bodyDoublingAgent],
-  rootAgent: energyCoachAgent,
+  agents: [groundingGuideAgent, capacityMapperAgent, launchPartnerAgent],
+  rootAgent: groundingGuideAgent,
   guardrails: [
-    createModerationGuardrail('Energy & Focus Suite'),
+    createModerationGuardrail('Energy Aligned Work Suite'),
   ],
 };
 
-export default energyFocusSuite;
+export default energyAlignedWorkSuite;
 
 
 

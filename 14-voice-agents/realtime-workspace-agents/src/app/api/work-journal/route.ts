@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createServiceClient } from '@/app/lib/supabase/service';
+import { getOrCreateSupabaseUser } from '@/app/lib/users/getOrCreateSupabaseUser';
 
 /**
  * POST /api/work-journal
@@ -27,6 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
+    const supabaseUser = await getOrCreateSupabaseUser(supabase, userId);
 
     // 2. Parse and validate request body
     const body = await request.json();
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
         .from('projects')
         .select('name')
         .eq('id', projectId)
-        .eq('user_id', userId)
+        .eq('user_id', supabaseUser.id)
         .single();
 
       if (project) {

@@ -6,6 +6,7 @@ export const twelveWeekMonthSuiteConfig: SuiteConfig = {
   description: 'A focused, voice‑driven system that turns 12 weeks into a high‑leverage "year" with specialized agents for vision, planning, execution, decisions, and reviews.',
   icon: '⏱️',
   category: 'productivity',
+  disabled: true, // Temporarily disabled
   tags: ['12WY', 'planning', 'focus', 'review', 'scorecards', 'execution', 'accountability'],
   
   suggestedUseCases: [

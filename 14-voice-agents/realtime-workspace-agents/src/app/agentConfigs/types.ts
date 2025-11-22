@@ -36,6 +36,7 @@ export interface SuiteConfig {
   tags: string[];
   
   // Optional metadata
+  disabled?: boolean; // If true, suite won't appear in UI
   suggestedUseCases?: string[];
   userLevel?: UserLevel;
   estimatedSessionLength?: number; // minutes

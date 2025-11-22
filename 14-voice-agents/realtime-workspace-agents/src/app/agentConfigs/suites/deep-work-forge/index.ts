@@ -1,20 +1,23 @@
 import { AgentSuite } from '@/app/agentConfigs/types';
 import { deepWorkForgeSuiteConfig } from './suite.config';
-import { deepWorkCoach } from './agents/deepWorkCoach';
+import { anchorAgent } from './agents/anchorAgent';
+import { guideAgent } from './agents/guideAgent';
 import { createModerationGuardrail } from '@/app/agentConfigs/shared/guardrails';
 
-// Simple single-agent setup
-const agents = [deepWorkCoach];
+// Wire up handoffs - Anchor sets up, then hands to Guide
+(anchorAgent.handoffs as any).push(guideAgent);
+// Guide can return to Anchor if user wants to start a new session
+(guideAgent.handoffs as any).push(anchorAgent);
 
 // Export suite
-const deepWorkForgeSuite: AgentSuite = {
+const deepFocusSuite: AgentSuite = {
   ...deepWorkForgeSuiteConfig,
-  agents,
-  rootAgent: deepWorkCoach,
+  agents: [anchorAgent, guideAgent],
+  rootAgent: anchorAgent,
   guardrails: [
-    createModerationGuardrail('Deep Work Forge'),
+    createModerationGuardrail('Deep Focus Suite'),
   ],
 };
 
-export default deepWorkForgeSuite;
+export default deepFocusSuite;
 

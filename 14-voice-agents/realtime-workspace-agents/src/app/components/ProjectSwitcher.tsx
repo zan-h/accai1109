@@ -154,8 +154,8 @@ export default function ProjectSwitcher({ isOpen, onClose, sessionStatus = "DISC
       try {
         // Get current suite ID from localStorage or use default
         const suiteId = typeof window !== 'undefined' 
-          ? localStorage.getItem('selectedSuiteId') || 'energy-focus'
-          : 'energy-focus';
+          ? localStorage.getItem('selectedSuiteId') || 'energy-aligned-work'
+          : 'energy-aligned-work';
         
         await createProject(name, suiteId);
         onClose();

@@ -1,70 +1,58 @@
 import { SuiteConfig } from '@/app/agentConfigs/types';
 
 export const deepWorkForgeSuiteConfig: SuiteConfig = {
-  id: 'deep-work-forge',
-  name: 'Deep Work Forge',
-  description: 'A simple, focused deep work session. Set your intention and dive into distraction-free work with agent support at key moments.',
-  icon: '🔥',
+  id: 'deep-focus',
+  name: 'Deep Focus',
+  description: 'Sustained concentration for complex work. Minimal interruptions, long timers, protected flow state.',
+  icon: '🎯',
   category: 'productivity',
-  tags: ['deep-work', 'focus', 'flow-state', 'productivity', 'simple'],
+  tags: ['deep-work', 'focus', 'flow-state', 'concentration', 'minimal-interruption'],
   
   suggestedUseCases: [
-    'Deep work sessions on complex projects',
-    'Writing and creative work',
-    'Problem-solving and strategic thinking',
-    'Learning and skill development',
-    'Research and analysis work',
+    'Need 60+ minutes uninterrupted',
+    'Complex or creative work',
+    'Protecting flow state',
+    'Deep thinking time',
   ],
   
   userLevel: 'beginner',
-  estimatedSessionLength: 60, // Flexible: 30-120 minutes
+  estimatedSessionLength: 90, // 60-120 minutes
   
   workspaceTemplates: [
     {
-      name: 'Session Intention',
-      type: 'markdown',
-      content: `# Deep Work Session
-
-## What I'm Working On
-- 
-
-## Why This Matters
-- 
-
-## Success Looks Like
-- 
-
-## Time Block
-- Duration: ___ minutes
-- Started: ___
-- Completed: ___
-`,
-      description: 'Set your intention and track your deep work session',
+      name: 'Deep Work Log',
+      type: 'csv',
+      content: 'Date|Duration (min)|Project|Quality (1-10)|Distractions|Notes\n',
+      description: 'Track deep work sessions over time',
     },
     {
       name: 'Session Notes',
       type: 'markdown',
-      content: `# Session Notes
+      content: `# Deep Work Session
 
-## Key Insights
-- 
+## Intention
+What I'm working on:
 
-## Blockers Encountered
-- 
+## Setup
+Distractions eliminated:
+
+## Insights
+Key learnings or breakthroughs:
 
 ## Next Steps
-- 
+What to do next:
 
-## Reflection
-*What worked well? What would I do differently next time?*
+## Quality Rating
+__ / 10
 `,
-      description: 'Capture insights and learnings during the session',
+      description: 'Session intentions, insights, and next steps',
     },
   ],
   
   initialContext: {
     focusMode: true,
     minimalInterruptions: true,
+    defaultTimerMinutes: 90,
   },
 };
 

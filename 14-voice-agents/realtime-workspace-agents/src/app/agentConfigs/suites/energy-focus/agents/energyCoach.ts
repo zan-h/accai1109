@@ -1,14 +1,17 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
 import { advancedWorkspaceTools } from '@/app/agentConfigs/shared/tools/workspace/workspaceTools';
-import { energyCoachPrompt2 } from '../../../scenarios/workspaceBuilder/prompts';
+import { groundingGuidePrompt } from '../prompts';
 
-export const energyCoachAgent = new RealtimeAgent({
-  name: 'energyCoach',
+export const groundingGuideAgent = new RealtimeAgent({
+  name: 'groundingGuide',
   voice: 'sage',
-  instructions: energyCoachPrompt2,
+  instructions: groundingGuidePrompt,
   tools: advancedWorkspaceTools,
   handoffs: [], // wired up in index.ts to avoid circular dependencies
 });
+
+// Export with old name for backwards compatibility during transition
+export const energyCoachAgent = groundingGuideAgent;
 
 
 

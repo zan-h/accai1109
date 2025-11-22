@@ -192,8 +192,8 @@ export const ProjectProvider: FC<PropsWithChildren> = ({ children }) => {
         const defaultName = 'My Workspace';
         const suiteId =
           typeof window !== 'undefined'
-            ? localStorage.getItem('selectedSuiteId') || 'energy-focus'
-            : 'energy-focus';
+            ? localStorage.getItem('selectedSuiteId') || 'energy-aligned-work'
+            : 'energy-aligned-work';
 
         await createProject(defaultName, suiteId);
         console.log('✅ Created default project for new user');

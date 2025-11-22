@@ -1,36 +1,24 @@
 import { AgentSuite } from '@/app/agentConfigs/types';
 import { flowSprintsSuiteConfig } from './suite.config';
-import { sprintLauncherAgent } from './agents/sprintLauncher';
-import { taskLoggerAgent } from './agents/taskLogger';
-import { recordBreakerAgent } from './agents/recordBreaker';
-import { momentumCoachAgent } from './agents/momentumCoach';
-import { challengeMasterAgent } from './agents/challengeMaster';
+import { loopCloserAgent } from './agents/sprintLauncher';
+import { avoidancePusherAgent } from './agents/momentumCoach';
+import { celebrationMasterAgent } from './agents/recordBreaker';
 import { createModerationGuardrail } from '@/app/agentConfigs/shared/guardrails';
 
-// Wire up handoffs - all agents can reach each other for flexible flow
-const agents = [
-  sprintLauncherAgent,
-  taskLoggerAgent,
-  recordBreakerAgent,
-  momentumCoachAgent,
-  challengeMasterAgent,
-];
-
-// Each agent can handoff to any other agent
-agents.forEach(agent => {
-  const otherAgents = agents.filter(a => a !== agent);
-  (agent.handoffs as any).push(...otherAgents);
-});
+// Wire up handoffs - linear flow: Loop Closer → Avoidance Pusher → Celebration Master
+(loopCloserAgent.handoffs as any).push(avoidancePusherAgent);
+(avoidancePusherAgent.handoffs as any).push(celebrationMasterAgent);
+(celebrationMasterAgent.handoffs as any).push(loopCloserAgent); // Can start new sprint
 
 // Export suite
-const flowSprintsSuite: AgentSuite = {
+const taskSprintSuite: AgentSuite = {
   ...flowSprintsSuiteConfig,
-  agents,
-  rootAgent: sprintLauncherAgent, // Start with launching a sprint
+  agents: [loopCloserAgent, avoidancePusherAgent, celebrationMasterAgent],
+  rootAgent: loopCloserAgent,
   guardrails: [
-    createModerationGuardrail('Flow Sprints Challenge'),
+    createModerationGuardrail('Task Sprint Suite'),
   ],
 };
 
-export default flowSprintsSuite;
+export default taskSprintSuite;
 

@@ -1,13 +1,16 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
-import { basicWorkspaceTools } from '@/app/agentConfigs/shared/tools/workspace/workspaceTools';
+import { advancedWorkspaceTools } from '@/app/agentConfigs/shared/tools/workspace/workspaceTools';
 import { timerTools } from '@/app/agentConfigs/shared/tools/workspace/timerTools';
-import { sprintLauncherPrompt } from '../prompts';
+import { journalTools } from '@/app/agentConfigs/shared/tools/journal';
+import { loopCloserPrompt } from '../prompts-new';
 
-export const sprintLauncherAgent = new RealtimeAgent({
-  name: 'sprintLauncher',
-  voice: 'shimmer', // Energetic, hyped voice
-  instructions: sprintLauncherPrompt,
-  tools: [...basicWorkspaceTools, ...timerTools],
-  handoffs: [], // Wired in index.ts
+export const loopCloserAgent = new RealtimeAgent({
+  name: 'loopCloser',
+  voice: 'alloy',
+  instructions: loopCloserPrompt,
+  tools: [...advancedWorkspaceTools, ...timerTools, ...journalTools],
+  handoffs: [], // wired up in index.ts
 });
 
+// Export with old name for backwards compatibility
+export const sprintLauncherAgent = loopCloserAgent;

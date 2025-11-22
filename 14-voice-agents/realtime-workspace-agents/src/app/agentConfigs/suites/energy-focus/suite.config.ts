@@ -3,77 +3,70 @@
 import { SuiteConfig } from '@/app/agentConfigs/types';
 
 export const energyFocusSuiteConfig: SuiteConfig = {
-  id: 'energy-focus',
-  name: 'Energy & Focus',
-  description: 'Body-aware, ADHD-friendly productivity support for managing energy and maintaining focus',
-  icon: '🧘',
-  category: 'mental-health',
+  id: 'energy-aligned-work',
+  name: 'Energy Aligned Work',
+  description: 'Start your work by understanding where you\'re at. Match tasks to your actual energy and capacity.',
+  icon: '⚡',
+  category: 'productivity',
   tags: [
-    'adhd',
-    'neurodivergent',
     'energy',
-    'focus',
     'body-awareness',
-    'productivity',
+    'capacity',
+    'grounding',
+    'starting-work',
+    'adhd',
     'executive-function'
   ],
   
   suggestedUseCases: [
-    'Feeling scattered or overwhelmed',
-    'Need help starting tasks',
-    'Want body-aware productivity support',
-    'Working with ADHD or executive function challenges',
-    'Need gentle accountability',
+    'Beginning of work session',
+    'Uncertain about where to start',
+    'Need to match work to current energy',
+    'Want to understand your state first',
+    'Scattered or unclear about capacity',
   ],
   
   userLevel: 'beginner',
-  estimatedSessionLength: 45,
+  estimatedSessionLength: 15,
   
   workspaceTemplates: [
     {
-      name: 'Daily Check-in',
+      name: 'Daily Check-In',
       type: 'markdown',
-      content: `# Daily Check-in
+      content: `# Daily Check-In
 
-## Energy Level
-Scale 1-10:
+## Energy Level (1-10)
+___ / 10
 
-## Body Awareness
+## Body State
 How does my body feel right now?
 
 ## Emotional State
 What am I feeling?
 
-## Intentions for Today
-What matters most today?
+## Today's Capacity
+Given my current state, what feels realistic?
 `,
-      description: 'Track your daily energy and body awareness',
+      description: 'Track energy, body, and emotional state',
     },
     {
-      name: 'Task Board',
+      name: 'Capacity Journal',
       type: 'csv',
-      content: 'Task|Energy Required|Time Estimate|Status|Notes\n',
-      description: 'Organize tasks by energy requirements',
+      content: 'Date|Energy (1-10)|Planned Hours|Actual Hours|Notes\n',
+      description: 'Track realistic capacity over time',
     },
     {
-      name: 'Energy Journal',
-      type: 'markdown',
-      content: `# Energy Journal
-
-## Patterns I'm Noticing
-
-## What Supports My Energy
-
-## What Drains My Energy
-`,
-      description: 'Track energy patterns over time',
+      name: 'Launch Log',
+      type: 'csv',
+      content: 'Date|First Task|How Started|Outcome|Notes\n',
+      description: 'Track how you launched into work',
     },
   ],
   
   initialContext: {
-    focusArea: 'energy-management',
-    supportStyle: 'gentle',
-    checkInFrequency: 'high',
+    focusArea: 'energy-alignment',
+    supportStyle: 'grounding',
+    checkInFrequency: 'session-start',
   },
 };
 
