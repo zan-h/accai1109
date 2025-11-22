@@ -18,6 +18,7 @@ import SuiteTemplatePrompt from "./components/SuiteTemplatePrompt";
 import SaveStatusIndicator from "./components/SaveStatusIndicator";
 import Timer from "./components/Timer";
 import VoiceSettingsModal from "./components/settings/VoiceSettingsModal";
+import OnboardingWelcome from "./components/OnboardingWelcome";
 import { BottomNav, MobileTab } from "./components/mobile/BottomNav";
 import { useResponsive } from "./components/layouts/ResponsiveLayout";
 
@@ -141,6 +142,11 @@ function App() {
     return defaultSuiteId;
   });
   const [showSuiteSelector, setShowSuiteSelector] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    // Only show onboarding for first-time users
+    if (typeof window === 'undefined') return false;
+    return !localStorage.getItem('hasCompletedOnboarding');
+  });
   const currentSuite = selectedSuiteId ? findSuiteById(selectedSuiteId) : null;
   
   // Fallback to default suite if current suite not found
@@ -826,6 +832,16 @@ function App() {
     };
   }, []);
 
+  // First connection celebration
+  useEffect(() => {
+    if (sessionStatus === 'CONNECTED' && !localStorage.getItem('hasSeenFirstConnection')) {
+      // Show celebration message in transcript
+      addTranscriptBreadcrumb("🎉 Connected! Try saying: 'Help me figure out what to work on'");
+      localStorage.setItem('hasSeenFirstConnection', 'true');
+      console.log('🎉 First connection celebration shown');
+    }
+  }, [sessionStatus, addTranscriptBreadcrumb]);
+
   // Single-agent app; no scenario key needed
 
   const [isTranscriptVisible, setIsTranscriptVisible] = useState(true);
@@ -876,7 +892,16 @@ function App() {
       window.history.replaceState({}, '', newUrl);
     }
     
-    // Check for stored suite
+    // Check for onboarding status
+    const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
+    
+    if (!hasCompletedOnboarding) {
+      // First-time user - show onboarding (which will then show suite selector)
+      setShowOnboarding(true);
+      return;
+    }
+    
+    // Returning user - check for stored suite
     const storedSuiteId = localStorage.getItem('selectedSuiteId');
     if (storedSuiteId && findSuiteById(storedSuiteId)) {
       const suite = findSuiteById(storedSuiteId);
@@ -892,6 +917,13 @@ function App() {
   // Handle suite selection (with template prompt)
   const handleSelectSuite = async (suite: AgentSuite) => {
     console.log('📦 Selected suite:', suite.name);
+    
+    // Mark onboarding as complete (for first-time users)
+    if (!localStorage.getItem('hasCompletedOnboarding')) {
+      localStorage.setItem('hasCompletedOnboarding', 'true');
+      localStorage.setItem('onboardingCompletedAt', new Date().toISOString());
+      console.log('✅ Onboarding completed');
+    }
     
     // Save suite selection
     setSelectedSuiteId(suite.id);
@@ -1102,6 +1134,23 @@ function App() {
     <div className="text-base flex flex-col h-screen bg-bg-primary text-text-primary relative">
       {/* Save Status Indicator */}
       <SaveStatusIndicator />
+      
+      {/* Onboarding Welcome Screen (First-time users only) */}
+      {showOnboarding && (
+        <OnboardingWelcome
+          onComplete={() => {
+            setShowOnboarding(false);
+            setShowSuiteSelector(true);
+          }}
+          onSkip={() => {
+            localStorage.setItem('hasCompletedOnboarding', 'true');
+            localStorage.setItem('onboardingDismissedAt', new Date().toISOString());
+            setShowOnboarding(false);
+            setShowSuiteSelector(true);
+            console.log('⏭️  Onboarding skipped');
+          }}
+        />
+      )}
       
       {/* Suite Selector Modal */}
       <SuiteSelector

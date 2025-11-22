@@ -361,3 +361,53 @@ body {
 .transition-opacity-smooth {
   transition: opacity 0.3s ease;
 }
+
+/* ───────────────────────────────
+   Onboarding Welcome Animations
+   ─────────────────────────────── */
+
+/* Fade in background overlay */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Scale in modal */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-out;
+}
+
+/* Icon pulse animation */
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.85;
+  }
+}
+
+.animate-iconPulse {
+  animation: iconPulse 1.5s ease-in-out infinite;
+}
