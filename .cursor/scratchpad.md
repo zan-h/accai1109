@@ -1,5 +1,350 @@
 Background and Motivation
 
+## Current Feature Request: Production UI/UX Design Specification (Nov 23, 2025)
+
+**User Need:** Transform the current functional prototype into a production-ready, visually striking enterprise-grade web application that pushes the boundaries of web technology while maintaining conversion effectiveness.
+
+**User Role:** Design & User Experience Expert, Creative Technologist specializing in shader-based animations and cutting-edge web experiences
+
+**Core Requirements:**
+1. **Visual Excellence:** WebGL shaders, particle systems, smooth scroll animations, glassmorphism effects
+2. **Developer Mode:** Move all technical features (logs, codec selector, recording) behind a settings toggle
+3. **Enterprise Credibility:** Professional polish, accessibility compliance (WCAG 2.1 AAA), trust signals
+4. **Conversion Optimization:** Balance aesthetic impact with clear CTAs and guided user journeys
+5. **Performance:** 60fps animations, <3s time to interactive, reduced motion support
+6. **Cutting-Edge Tech:** Three.js particle fields, GSAP ScrollTrigger, Locomotive Scroll, Framer Motion
+
+**Current State:**
+- ✅ Functional app with dark terminal aesthetic and cyan accents
+- ✅ Basic glassmorphism in some components
+- ✅ Simple animations (fade, pulse)
+- ✅ Mobile responsive layout
+- ❌ NO advanced shader animations or particle systems
+- ❌ NO smooth scroll or parallax effects
+- ❌ NO developer mode toggle (technical features exposed in main UI)
+- ❌ NO micro-interactions or haptic feedback simulations
+- ❌ NO hero/conversion-focused landing elements
+- ❌ Limited animation sophistication
+
+**Design Philosophy:**
+- **Push the Limits:** Use cutting-edge web technologies (WebGL, shaders, advanced CSS)
+- **Enterprise-Grade:** Professional, polished, accessible, performant
+- **Conversion-Focused:** Clear value props, social proof, frictionless onboarding
+- **Progressive Disclosure:** Hide complexity, reveal power gradually
+- **Voice-First:** Emphasize the core voice interaction as the hero feature
+
+**Deliverables:**
+1. ✅ **Comprehensive Design Specification** (`.cursor/PRODUCTION_UI_DESIGN_SPEC.md`)
+   - Complete design system with tokens, colors, motion rules
+   - Component-by-component redesign specs
+   - WebGL particle field implementation
+   - Glassmorphism + neon aesthetic system
+   - Smooth scroll and parallax setup
+   - Developer mode settings panel
+   - Micro-interactions catalog
+   - Conversion-optimized elements (hero, trust badges)
+   - 8-phase implementation roadmap
+   - Performance optimization guidelines
+   - Accessibility compliance checklist
+   - Success metrics and QA testing plan
+
+2. ⏳ **Implementation** (For Executor Agent)
+   - Install dependencies (framer-motion, three.js, gsap, locomotive-scroll)
+   - Build new components according to spec
+   - Migrate existing components to new design system
+   - Add smooth scroll and parallax
+   - Create settings panel for developer features
+   - Performance testing and optimization
+   - Accessibility audit and fixes
+
+**Target Architecture:**
+1. **Background Ambient System**
+   - WebGL particle field (2000+ particles with mouse parallax)
+   - Animated gradient mesh (slowly morphing)
+   - Layered depth system
+
+2. **Component Enhancements**
+   - Header: Glassmorphism with scroll-based reveal, neon accent line
+   - Workspace: Glass panels with 3D hover lift, animated tab slider
+   - Transcript: Message bubbles with entrance animations, typing indicator
+   - Push-to-Talk: Hero button with ripple effects, voice waveform viz
+   - Timer: Circular progress ring with neon glow, confetti celebration
+
+3. **Settings Panel (Developer Mode)**
+   - Tabbed interface: General / Voice / Developer
+   - All technical features behind "Developer" tab
+   - Keyboard shortcut (Cmd+,)
+   - Warning indicators for advanced settings
+
+4. **Scroll Animations**
+   - GSAP ScrollTrigger for parallax layers
+   - Locomotive Scroll for smooth scrolling
+   - Fade-in, scale, stagger effects
+   - Scroll-triggered reveals
+
+5. **Micro-Interactions**
+   - Button hover with neon glow pulse
+   - Card 3D lift on hover
+   - Input focus with animated borders
+   - Ripple effects on click
+   - Loading state animations
+
+**Success Criteria:**
+- [ ] Spec document completed and reviewed ✅
+- [ ] Phase 1: Foundation (dependencies, tokens, base classes)
+- [ ] Phase 2: Core components redesigned
+- [ ] Phase 3: Settings panel with developer mode
+- [ ] Phase 4: Scroll animations implemented
+- [ ] Phase 5: Micro-interactions added
+- [ ] Phase 6: Conversion elements (if expanding to landing)
+- [ ] Phase 7: Performance optimization
+- [ ] Phase 8: Testing and launch
+- [ ] Lighthouse Performance > 90
+- [ ] Lighthouse Accessibility = 100
+- [ ] 60fps maintained during animations
+- [ ] WCAG 2.1 AAA compliance verified
+
+**Design References:**
+- Full specification: `.cursor/PRODUCTION_UI_DESIGN_SPEC.md`
+- Current design tokens: `globals.css`, `tailwind.config.ts`
+- Existing components: `src/app/components/`
+
+**Estimated Timeline:** 8 weeks (2 developers, 320-400 hours)
+
+**Next Steps:**
+1. Human review and approval of design spec ✅ (awaiting human approval)
+2. Set up project tracking for implementation phases
+3. Executor agent begins Phase 1 implementation
+4. Regular design reviews at end of each phase
+
+---
+
+## High-level Task Breakdown (Production UI/UX Design)
+
+### Phase 1: Foundation & Setup (Week 1)
+**Success Criteria:** Dependencies installed, design tokens established, base styles ready
+- [ ] Install NPM packages (framer-motion, three.js, gsap, locomotive-scroll, canvas-confetti)
+- [ ] Create new color token system (`colors.ts`) with glassmorphism palette
+- [ ] Update `globals.css` with glassmorphism utilities (.glass-panel, .neon-border-cyan)
+- [ ] Add motion design tokens (`motion.ts`) with spring configs and easing curves
+- [ ] Set up Three.js canvas wrapper component
+- [ ] Test basic imports and setup
+
+### Phase 2: Background Ambient System (Week 1-2)
+**Success Criteria:** WebGL particle field and gradient mesh rendering smoothly at 60fps
+- [ ] Implement `ParticleField.tsx` component with Three.js
+- [ ] Configure 2000+ particles with mouse parallax
+- [ ] Add connection lines between nearby particles
+- [ ] Implement `GradientMesh.tsx` with animated morphing
+- [ ] Add performance monitoring for particle count
+- [ ] Test on low-end devices and reduce particle count if needed
+- [ ] Implement reduced motion support (disable on prefers-reduced-motion)
+
+### Phase 3: Core Component Redesign (Week 2-3)
+**Success Criteria:** Header, Workspace, Transcript redesigned with new visual system
+- [ ] Redesign Header component with glassmorphism and scroll effects
+- [ ] Add neon accent line to header (animated on scroll)
+- [ ] Enhance Workspace panel with glass morphism card design
+- [ ] Implement animated tab slider with layoutId
+- [ ] Add mouse-follow glow effect to Workspace
+- [ ] Redesign Transcript messages with entrance animations
+- [ ] Add stagger effect to message list (0.05s delay per message)
+- [ ] Implement typing indicator with animated dots
+
+### Phase 4: Push-to-Talk Button Enhancement (Week 3)
+**Success Criteria:** Hero button with ripple effects, haptic feedback, voice waveform
+- [ ] Redesign PTT button as large hero element (w-32 h-32)
+- [ ] Add ripple effect on press (expanding circles)
+- [ ] Implement haptic feedback simulation (scale + shadow)
+- [ ] Add voice waveform visualization when speaking
+- [ ] Create pulsing outer ring animation for active state
+- [ ] Test spacebar keyboard shortcut with new animations
+- [ ] Ensure touch-friendly on mobile (larger hit area)
+
+### Phase 5: Timer Component Cinematic (Week 3-4)
+**Success Criteria:** Circular progress ring with neon glow and celebration effects
+- [ ] Redesign Timer as circular SVG progress ring
+- [ ] Add neon glow filter to progress path
+- [ ] Implement smooth animation (0.5s linear transition)
+- [ ] Add confetti celebration on completion (canvas-confetti)
+- [ ] Create rotation animation (360deg) on completion
+- [ ] Add gradient definition for progress ring
+- [ ] Test with different durations and labels
+
+### Phase 6: Settings Panel & Developer Mode (Week 4)
+**Success Criteria:** All technical features moved behind settings modal
+- [ ] Create `SettingsModal.tsx` with tabbed interface
+- [ ] Implement General tab (audio playback, reduced motion, theme)
+- [ ] Implement Voice tab (voice model, speech speed)
+- [ ] Implement Developer tab (logs, codec, recording, memory)
+- [ ] Add warning banner to Developer tab
+- [ ] Move Event logs toggle to Developer settings
+- [ ] Move Codec selector to Developer settings
+- [ ] Move Audio recording controls to Developer settings
+- [ ] Add keyboard shortcut (Cmd+,) to open settings
+- [ ] Update BottomToolbar to hide developer features
+- [ ] Test settings persistence (localStorage)
+
+### Phase 7: Scroll Animations & Parallax (Week 4-5)
+**Success Criteria:** Smooth scroll and parallax working on all panels
+- [ ] Install and configure GSAP ScrollTrigger
+- [ ] Install and configure Locomotive Scroll
+- [ ] Create `scrollAnimations.ts` utility module
+- [ ] Implement parallax layers (.parallax-slow, .parallax-fast)
+- [ ] Add fade-in on scroll (.fade-in-scroll)
+- [ ] Add scale on scroll (.scale-in-scroll)
+- [ ] Add stagger children (.stagger-children)
+- [ ] Initialize smooth scroll on app mount
+- [ ] Test scroll performance (should maintain 60fps)
+- [ ] Disable on mobile if performance issues
+
+### Phase 8: Micro-Interactions (Week 5)
+**Success Criteria:** All interactive elements have smooth hover/focus states
+- [ ] Create `NeonButton.tsx` with advanced hover effects
+- [ ] Add shine effect on button hover
+- [ ] Create `HoverCard.tsx` with 3D lift effect
+- [ ] Implement input focus animations (.input-neon)
+- [ ] Add floating label animation (.input-floating-label)
+- [ ] Add loading state animations (spinner, skeleton screens)
+- [ ] Test all interactions on touch devices
+- [ ] Ensure keyboard navigation still works
+
+### Phase 9: Conversion Elements (Week 6) [Optional - if expanding to landing]
+**Success Criteria:** Hero section and trust badges rendering
+- [ ] Create `Hero.tsx` component with animated headline
+- [ ] Add particle background to hero
+- [ ] Implement CTA buttons with hover effects
+- [ ] Add scroll indicator animation
+- [ ] Create `TrustBadges.tsx` component
+- [ ] Add 4 security badges (SOC 2, HIPAA, GDPR, Uptime)
+- [ ] Implement badge hover animations
+- [ ] Test on various screen sizes
+
+### Phase 10: Performance Optimization (Week 7)
+**Success Criteria:** Lighthouse scores >90, accessibility 100, 60fps maintained
+- [ ] Implement `useReducedMotion` hook
+- [ ] Disable animations when prefers-reduced-motion is set
+- [ ] Add lazy loading for heavy components (Suspense + lazy())
+- [ ] Apply GPU acceleration (.gpu-accelerated) to animated elements
+- [ ] Reduce particle count on mobile (<1000)
+- [ ] Optimize bundle size (code splitting)
+- [ ] Run Lighthouse audit and fix issues
+- [ ] Test on low-end devices (throttle CPU 4x in DevTools)
+
+### Phase 11: Accessibility & Testing (Week 7-8)
+**Success Criteria:** WCAG 2.1 AAA compliance verified
+- [ ] Audit color contrast (all text meets 7:1 ratio)
+- [ ] Test keyboard navigation (Tab, Enter, Escape)
+- [ ] Add proper ARIA labels to all interactive elements
+- [ ] Test with screen reader (VoiceOver, NVDA)
+- [ ] Ensure focus indicators are visible
+- [ ] Test text resizing (200% zoom)
+- [ ] Add error prevention to forms
+- [ ] Cross-browser testing (Chrome, Firefox, Safari, Edge)
+- [ ] Mobile browser testing (Safari iOS, Chrome Android)
+- [ ] Run automated accessibility audit (axe DevTools)
+
+### Phase 12: Launch Preparation (Week 8)
+**Success Criteria:** Production-ready deployment
+- [ ] Final visual QA (pixel-perfect review)
+- [ ] Performance benchmarks documented
+- [ ] User testing sessions (5+ users)
+- [ ] Bug fixes from testing
+- [ ] Update documentation
+- [ ] Create release notes
+- [ ] Deploy to staging environment
+- [ ] Stakeholder approval
+- [ ] Deploy to production
+
+---
+
+## Project Status Board (Production UI/UX Design)
+
+**Current Phase:** Planning Complete, Awaiting Human Approval
+
+### To Do
+- [ ] **Phase 1:** Foundation & Setup (install dependencies, design tokens, base styles)
+- [ ] **Phase 2:** Background Ambient System (particle field, gradient mesh)
+- [ ] **Phase 3:** Core Component Redesign (header, workspace, transcript)
+- [ ] **Phase 4:** Push-to-Talk Enhancement (hero button with effects)
+- [ ] **Phase 5:** Timer Component (circular progress with confetti)
+- [ ] **Phase 6:** Settings Panel (developer mode toggle)
+- [ ] **Phase 7:** Scroll Animations (GSAP, Locomotive Scroll)
+- [ ] **Phase 8:** Micro-Interactions (hover states, focus animations)
+- [ ] **Phase 9:** Conversion Elements [Optional] (hero, trust badges)
+- [ ] **Phase 10:** Performance Optimization (reduced motion, lazy loading)
+- [ ] **Phase 11:** Accessibility & Testing (WCAG 2.1 AAA)
+- [ ] **Phase 12:** Launch Preparation (QA, deployment)
+
+### In Progress
+- Nothing currently in progress (awaiting human approval to proceed)
+
+### Completed
+- [x] ✅ Design specification document created (`.cursor/PRODUCTION_UI_DESIGN_SPEC.md`)
+- [x] ✅ Comprehensive visual system defined (colors, motion, glassmorphism)
+- [x] ✅ Component redesign specs written (all 14 sections)
+- [x] ✅ Implementation roadmap created (12 phases, 8 weeks)
+- [x] ✅ Success metrics defined (Lighthouse, accessibility, performance)
+- [x] ✅ Dependencies list prepared (framer-motion, three.js, gsap, etc.)
+
+### Blocked
+- Waiting for human approval to begin implementation
+
+---
+
+## Executor's Feedback or Assistance Requests (Production UI/UX Design)
+
+### Questions for Human User:
+1. **Scope Confirmation:** Should we implement all phases (1-12) or prioritize certain phases first? Phase 9 (Conversion Elements) is marked optional - do you need a landing page or is this just for the authenticated app?
+
+2. **Timeline:** The spec estimates 8 weeks with 2 developers (320-400 hours). Is this timeline acceptable, or do you need a faster MVP?
+
+3. **Dependencies Budget:** The spec adds several heavy dependencies (three.js, gsap, locomotive-scroll). Are you comfortable with the bundle size increase (~200KB core JS)?
+
+4. **Particle Performance:** The WebGL particle field is visually stunning but performance-intensive. Should we make it optional via settings, or only show it on desktop?
+
+5. **Landing Page:** Do you want to expand the app to include a public marketing landing page (Hero, Trust Badges, etc.), or keep it as an authenticated-only application?
+
+6. **Phased Rollout:** Would you prefer to release this design incrementally (e.g., Phase 1-6 first, then 7-12) or wait for full completion?
+
+### Technical Clarifications Needed:
+- Should the ParticleField component be always-on, or triggered by user preference?
+- Do you want analytics/tracking on animation performance (FPS monitoring)?
+- Should we create a Storybook or similar component documentation for the new design system?
+
+### Ready to Proceed When:
+- [x] Design spec reviewed by human
+- [ ] Scope questions answered
+- [ ] Human gives explicit approval to start Phase 1
+- [ ] Project tracking set up (if needed)
+
+---
+
+## Lessons (Production UI/UX Design)
+
+### Design Decisions Made:
+1. **Glassmorphism over solid backgrounds:** Creates depth and modern aesthetic while maintaining readability
+2. **WebGL particles for ambient motion:** Provides immersive experience without being distracting
+3. **Developer mode hidden by default:** Prioritizes clean UI for end users, reveals power features for technical users
+4. **Framer Motion over CSS animations:** Better performance, spring physics, declarative API
+5. **GSAP ScrollTrigger + Locomotive Scroll:** Industry-standard tools for smooth scroll and parallax
+6. **WCAG 2.1 AAA compliance:** Not just AA - pushing for highest accessibility standard
+
+### Technical Trade-offs:
+1. **Bundle Size:** Adding heavy dependencies (three.js ~500KB, gsap ~40KB) - justified by visual impact and no alternatives for WebGL
+2. **Performance:** Target 60fps for all animations - may need to reduce particle count on low-end devices
+3. **Browser Support:** Modern browsers only (Chrome 90+, Safari 14+) - acceptable for enterprise B2B SaaS
+4. **Reduced Motion:** All animations must have fallback for accessibility - adds code complexity but non-negotiable
+
+### Implementation Guidelines:
+1. **Always test with prefers-reduced-motion** before committing animation code
+2. **Use `transform` and `opacity` for animations** (GPU-accelerated, no layout thrashing)
+3. **Lazy load heavy components** (ParticleField, SettingsModal) to improve initial load
+4. **Monitor FPS in development** - aim for steady 60fps, throttle animations if dropping below 50fps
+5. **Test on real mobile devices** - DevTools throttling doesn't always catch issues
+
+---
+
 ## Current Project State
 The current repo contains a Next.js demo of multi-agent realtime voice interactions using the OpenAI Realtime SDK. Scenarios include real estate, customer service retail, a chat supervisor pattern, a workspace builder, and a simple handoff. The goal is to generalize this into "various agents that support a user to do great, embodied work," shifting from vertical demos to a reusable multi-agent substrate (voice-first, tool-using, handoff-capable, guardrail-aware) that can be specialized per domain.
 
