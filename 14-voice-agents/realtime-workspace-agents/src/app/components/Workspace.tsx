@@ -182,7 +182,11 @@ function Workspace({ sessionStatus = "DISCONNECTED", onOpenProjectSwitcher }: Wo
           <>
             {/* Sidebar - collapsible, narrower */}
             {!isSidebarCollapsed && (
-              <div className="w-40 border-r border-white/10 overflow-y-auto flex-shrink-0 bg-bg-secondary/30" data-lenis-prevent>
+              <div 
+                className="w-40 border-r border-white/10 overflow-y-auto flex-shrink-0 bg-bg-secondary/30" 
+                data-lenis-prevent
+                id="tour-work-journal"
+              >
                 <Sidebar
                   tabs={tabs}
                   selectedTabId={selectedTabId}

@@ -3,11 +3,14 @@
 ## Background and Motivation
 The goal is to transform the current functional voice-agent application into a visually striking, enterprise-grade web experience using cutting-edge web technologies (WebGL shaders, glassmorphism, smooth scroll, advanced animations) while maintaining 60fps performance, WCAG 2.1 AAA accessibility, and production-ready code quality. The current app is functional but lacks the visual polish and immersive experience required for a high-end product.
 
+The user now requires a comprehensive onboarding experience (Product Tour) to walk users through the UI, ensuring they fully understand the system. This should be available during initial onboarding and accessible later via settings.
+
 ## Key Challenges and Analysis
 - **Performance vs. Visuals**: Implementing heavy visual effects (particles, blurs, animations) without compromising the 60fps target, especially on mobile devices.
 - **Accessibility**: Achieving WCAG 2.1 AAA compliance while using complex visual effects. This requires careful color contrast management, reduced motion support, and full keyboard navigation.
 - **Integration**: Integrating new visual systems without breaking existing functionality (voice agents, transcripts, timers).
 - **Scope Management**: The project is divided into 11 phases. Keeping strict adherence to the phase order and success criteria is crucial to avoid regressions.
+- **Tour Implementation**: Creating a tour that feels native to the high-end UI (glassmorphism, animations) rather than using a generic library. Needs to handle dynamic elements (mobile drawer, modals).
 
 ## High-level Task Breakdown
 1.  **Phase 1: Foundation & Setup** - Establish design tokens, install dependencies, and set up the base styling. (Completed)
@@ -22,12 +25,23 @@ The goal is to transform the current functional voice-agent application into a v
 10. **Phase 10: Performance Optimization** - Ensure 60fps, fast load times, and accessibility. (Completed)
 11. **Phase 11: Accessibility & Testing** - Achieve WCAG 2.1 AAA compliance and cross-browser compatibility. (Completed)
 12. **Phase 12: Launch Preparation** - Final QA, user testing, and production deployment. (Completed)
+13. **Phase 13: Product Tour & Onboarding** - Implement an interactive walkthrough of the UI. (Completed)
 
 ## Project Status Board
 
 **Current Phase: Completed**
 
 **Completed Phases:**
+
+**Phase 13: Product Tour & Onboarding**
+- [x] Design `TourContext` to manage tour state (active, current step, completed) and refs.
+- [x] Create `TourOverlay` component using `framer-motion` for spotlight/highlight effects.
+- [x] Create `TourTooltip` component (integrated into Overlay) for the explanatory text.
+- [x] Define Tour Steps configuration (Project, PTT, Transcript, Settings, Feedback, Work Journal).
+- [x] Integrate Tour into `App.tsx` and trigger after `OnboardingWelcome` & Suite Selection.
+- [x] Add "Restart Tour" button to Settings.
+- [x] Ensure mobile compatibility (fallback to centered modal if target hidden).
+- [x] Add Work Journal step to tour.
 
 **Phase 12: Launch Preparation**
 - [x] Final QA (Passed production build).
@@ -93,57 +107,16 @@ The goal is to transform the current functional voice-agent application into a v
 - [x] Create Design Tokens.
 - [x] Update Tailwind Config.
 
-## Current Task: User Feedback Feature
+## Current Task: Completed
 
-**Goal**: Implement a simple, low-friction feedback button for users to report annoyances and suggest improvements.
-
-**Tasks**:
-- [x] Create Supabase migration for `feedback` table (008_feedback_table.sql)
-- [x] Create rollback migration for safety (008_rollback.sql)
-- [x] Create `/api/feedback/route.ts` endpoint
-- [x] Create `FeedbackButton` component with modal
-- [x] Integrate into main App.tsx
-- [x] Create comprehensive setup documentation (FEEDBACK_FEATURE_SETUP.md)
-- [x] Enhanced error handling with detailed messages
-- [x] Run database migration ✅ COMPLETED
-- [ ] Test the complete flow (IN PROGRESS)
-
-**Success Criteria**:
-- User can click feedback button from anywhere in app
-- Simple form: text area + optional type selection
-- Auto-captures context (suite, session, timestamp)
-- Shows success toast after submission
-- Data stored in Supabase
-
-**Implementation Summary**:
-- ✅ Created `feedback` table schema with RLS policies
-- ✅ Built API endpoint with authentication and validation
-- ✅ Designed glassmorphic feedback button with pulse animation
-- ✅ Modal includes: type selection (bug/idea/annoyance/other), text area, auto-context capture
-- ✅ Integrated with ToastContext for user feedback
-- ✅ Fixed runtime error: Used `useProjectContext()` instead of non-existent `useProject()`
-- ✅ No linter errors
-
-**Files Created/Modified**:
-- `supabase/migrations/008_feedback_table.sql` - Database schema
-- `supabase/migrations/008_rollback.sql` - Rollback migration
-- `src/app/api/feedback/route.ts` - API endpoint
-- `src/app/components/FeedbackButton.tsx` - UI component
-- `src/app/App.tsx` - Integration
-- `FEEDBACK_FEATURE_SETUP.md` - Complete setup guide
-
-**Feature Details**:
-- **UI**: Floating 💭 button in bottom-right corner with pulse animation
-- **Modal**: Glassmorphic design with type selection (Bug/Idea/Annoyance/Other) + text area
-- **Auto-capture**: Project ID, session ID, suite ID, page URL, user agent, timestamp
-- **Feedback**: Success toast: "Thanks! Your feedback helps us improve 💙"
-- **Security**: RLS policies, user authentication via Clerk
-- **Accessibility**: Keyboard navigation, ESC to close, ARIA labels
-
-**Next Steps** (Ready for User):
-1. Apply migration via Supabase dashboard (instructions in FEEDBACK_FEATURE_SETUP.md)
-2. Test the feedback flow by clicking the 💭 button
-3. Verify feedback is saved in the database
+**Summary**:
+Implemented a high-fidelity Product Tour feature.
+- **Context**: `TourContext` manages step state.
+- **Visuals**: `TourOverlay` creates a glassmorphic spotlight effect with smooth transitions.
+- **Flow**: Automatically triggers after new user onboarding + suite selection.
+- **Access**: "Restart Tour" button available in Settings > General.
+- **Robustness**: Gracefully handles missing targets (e.g. on mobile) by centering the tooltip.
+- **Update**: Included "Work Journal" in the tour steps.
 
 ## Lessons
 
@@ -152,10 +125,7 @@ The goal is to transform the current functional voice-agent application into a v
 - **Always verify context hook names**: When integrating with existing contexts, check the actual exported hook name in the context file before using it.
 - **RLS with Clerk vs Supabase Auth**: When using Clerk for authentication instead of Supabase Auth, the default RLS policies that check `auth.uid()` will fail. Solution: Use `createServiceClient()` in API routes (which already handle Clerk auth) to bypass RLS. The API route is the security boundary, not the database RLS.
 - **Service Role Client Pattern**: For API routes that use Clerk authentication, use `createServiceClient()` from `@/app/lib/supabase/service` instead of `createClient()` to bypass RLS policies designed for Supabase Auth.
+- **Tour Implementation**: Use IDs for targeting to decouple the Tour configuration from the component hierarchy. Handle missing targets (e.g., responsive differences) by falling back to a centered modal to avoid breaking the flow.
 
 ## Executor's Feedback or Assistance Requests
-- **Status**: ✅ IMPLEMENTATION COMPLETE & TESTED
-- **Ready for**: User testing after migration is applied
-- **Documentation**: See `FEEDBACK_FEATURE_SETUP.md` for complete setup instructions
-- **Milestone**: Simple, low-friction feedback mechanism implemented with auto-context capture
-- **Bug Fixed**: Runtime error resolved - used correct `useProjectContext()` hook
+- **Status**: ✅ FEATURE COMPLETE

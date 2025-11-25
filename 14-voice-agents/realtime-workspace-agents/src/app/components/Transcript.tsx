@@ -259,6 +259,7 @@ function Transcript({
 
   return (
     <div
+      id="tour-transcript"
       className={
         (isVisible 
           ? isMobile 
@@ -293,6 +294,7 @@ function Transcript({
 
               <div className="flex-1 flex justify-center">
                 <PushToTalkButton
+                  id="tour-ptt-button"
                   isConnected={sessionStatus === "CONNECTED"}
                   isPTTActive={isPTTActive}
                   onToggle={setIsPTTActive}
@@ -321,6 +323,7 @@ function Transcript({
           <div className="sticky top-0 z-10 border-b border-white/10 bg-bg-secondary/50">
             <div className="px-3 py-2">
               <PushToTalkButton
+                id="tour-ptt-button"
                 isConnected={sessionStatus === "CONNECTED"}
                 isPTTActive={isPTTActive}
                 onToggle={setIsPTTActive}

@@ -9,9 +9,10 @@ import { useProjectContext } from '@/app/contexts/ProjectContext';
 interface FeedbackButtonProps {
   currentSuiteId?: string;
   currentSessionId?: string;
+  id?: string;
 }
 
-export function FeedbackButton({ currentSuiteId, currentSessionId }: FeedbackButtonProps) {
+export function FeedbackButton({ currentSuiteId, currentSessionId, id }: FeedbackButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackType, setFeedbackType] = useState<'bug' | 'idea' | 'annoyance' | 'other'>('other');
@@ -79,6 +80,7 @@ export function FeedbackButton({ currentSuiteId, currentSessionId }: FeedbackBut
     <>
       {/* Floating Feedback Button */}
       <motion.button
+        id={id}
         className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full glass-panel-heavy flex items-center justify-center hover:neon-border-cyan shadow-xl shadow-black/30 group"
         onClick={() => setIsOpen(true)}
         whileHover={{ scale: 1.1 }}

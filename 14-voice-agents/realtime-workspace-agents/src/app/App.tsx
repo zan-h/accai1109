@@ -22,6 +22,8 @@ import OnboardingWelcome from "./components/OnboardingWelcome";
 import { BottomNav, MobileTab } from "./components/mobile/BottomNav";
 import { useResponsive } from "./components/layouts/ResponsiveLayout";
 import { ToastProvider } from "@/app/contexts/ToastContext";
+import { TourProvider, useTour } from "@/app/contexts/TourContext";
+import TourOverlay from "@/app/components/tour/TourOverlay";
 
     // Ambient Background
     import { GradientMesh } from "./components/ambient/GradientMesh";
@@ -79,9 +81,10 @@ const MEDICAL_RESEARCH_VERSION = 'medical_research_v1';
 
 import { motion, useScroll, useTransform } from 'framer-motion';
 
-function App() {
+function AppContent() {
   const searchParams = useSearchParams()!;
   const { user, isLoaded } = useUser();
+  const { startTour } = useTour();
   const { scrollY } = useScroll();
   const headerOpacity = useTransform(scrollY, [0, 100], [0.8, 0.95]);
   const borderGlow = useTransform(scrollY, [0, 100], [0.3, 0.6]);
@@ -265,6 +268,8 @@ function App() {
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   // Ref to identify whether the latest agent switch came from an automatic handoff
   const handoffTriggeredRef = useRef(false);
+  // Ref to track if we just finished onboarding to trigger tour
+  const justFinishedOnboardingRef = useRef(false);
   // Ref to track which project the agent is connected to (for auto-disconnect on project switch)
   const connectedProjectIdRef = useRef<string | null>(null);
 
@@ -1051,6 +1056,12 @@ function App() {
     if (!hasTemplates) {
       // No templates, just connect
       addTranscriptBreadcrumb(`📦 Suite selected: ${suite.name}`);
+      
+      // Trigger tour if just finished onboarding
+      if (justFinishedOnboardingRef.current) {
+        setTimeout(() => startTour(), 1000);
+        justFinishedOnboardingRef.current = false;
+      }
       return;
     }
     
@@ -1067,6 +1078,12 @@ function App() {
       } catch (err) {
         console.error('Failed to initialize workspace templates:', err);
       }
+      
+      // Trigger tour if just finished onboarding
+      if (justFinishedOnboardingRef.current) {
+        setTimeout(() => startTour(), 1000);
+        justFinishedOnboardingRef.current = false;
+      }
       return;
     }
     
@@ -1074,6 +1091,12 @@ function App() {
       // User previously chose to skip templates
       console.log('🚫 Skipping templates (user preference)');
       addTranscriptBreadcrumb(`📦 Suite selected: ${suite.name}`);
+      
+      // Trigger tour if just finished onboarding
+      if (justFinishedOnboardingRef.current) {
+        setTimeout(() => startTour(), 1000);
+        justFinishedOnboardingRef.current = false;
+      }
       return;
     }
     
@@ -1101,6 +1124,12 @@ function App() {
     }
     
     setPendingSuite(null);
+
+    // Trigger tour if just finished onboarding
+    if (justFinishedOnboardingRef.current) {
+      setTimeout(() => startTour(), 1000);
+      justFinishedOnboardingRef.current = false;
+    }
   };
   
   // Handle template prompt - Skip templates
@@ -1117,6 +1146,12 @@ function App() {
     }
     
     setPendingSuite(null);
+
+    // Trigger tour if just finished onboarding
+    if (justFinishedOnboardingRef.current) {
+      setTimeout(() => startTour(), 1000);
+      justFinishedOnboardingRef.current = false;
+    }
   };
   
   // Save template preference to project
@@ -1265,6 +1300,7 @@ function App() {
           onComplete={() => {
             setShowOnboarding(false);
             setShowSuiteSelector(true);
+            justFinishedOnboardingRef.current = true;
           }}
           onSkip={() => {
             localStorage.setItem('hasCompletedOnboarding', 'true');
@@ -1299,6 +1335,7 @@ function App() {
           {/* Mobile Drawer Toggle */}
           {isMobile && (
             <button 
+              id="tour-project-switcher"
               onClick={() => setIsDrawerOpen(true)}
               className="p-3 -ml-2 text-white/70 hover:text-white active:bg-white/10 rounded-lg transition-colors"
             >
@@ -1375,6 +1412,7 @@ function App() {
           {currentSuite && (
             <div className="hidden lg:block">
               <SuiteIndicator
+                id="tour-project-switcher"
                 currentSuite={currentSuite}
                 onChangeSuite={handleChangeSuite}
               />
@@ -1383,6 +1421,7 @@ function App() {
           
           {/* Settings Button (Desktop) */}
           <motion.button
+            id="tour-settings"
             onClick={() => setShowSettings(true)}
             className="hidden lg:flex p-2 glass-panel rounded-lg hover:neon-border-cyan text-text-secondary hover:text-white transition-all"
             whileHover={{ scale: 1.05 }}
@@ -1504,6 +1543,7 @@ function App() {
       
       {/* Feedback Button - floating */}
       <FeedbackButton 
+        id="tour-feedback"
         currentSuiteId={currentSuite?.id}
         currentSessionId={currentSessionId}
       />
@@ -1557,10 +1597,22 @@ function App() {
           onClose={() => setShowSettings(false)}
           settings={settings}
           onUpdateSetting={handleUpdateSetting}
+          onRestartTour={startTour}
         />
       </React.Suspense>
+      
+      {/* Product Tour Overlay */}
+      <TourOverlay />
       </div>
     </ToastProvider>
+  );
+}
+
+function App() {
+  return (
+    <TourProvider>
+      <AppContent />
+    </TourProvider>
   );
 }
 

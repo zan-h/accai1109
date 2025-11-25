@@ -22,9 +22,10 @@ export interface SettingsModalProps {
     speechSpeed: number;
   };
   onUpdateSetting: (key: string, value: any) => void;
+  onRestartTour?: () => void;
 }
 
-export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting, onRestartTour }: SettingsModalProps) {
   const [activeSection, setActiveSection] = useState<'general' | 'developer' | 'voice'>('general');
   
   // Close on Escape
@@ -167,6 +168,26 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting }: Se
                         value={settings.particlesEnabled}
                         onChange={(v) => onUpdateSetting('particlesEnabled', v)}
                       />
+                      
+                      {onRestartTour && (
+                        <div className="flex items-center justify-between p-4 glass-panel rounded-xl hover:bg-white/5 transition-colors border border-white/5">
+                          <div className="flex-1 pr-4 md:pr-8">
+                            <div className="font-mono text-sm text-white mb-1 font-semibold">Product Tour</div>
+                            <div className="font-mono text-xs text-text-tertiary leading-relaxed">Restart the guided walkthrough</div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <button
+                              onClick={() => {
+                                onRestartTour();
+                                onClose();
+                              }}
+                              className="px-4 py-2 bg-accent-primary/10 border border-accent-primary/30 text-accent-primary hover:bg-accent-primary/20 rounded-lg font-mono text-xs uppercase tracking-wider transition-colors"
+                            >
+                              Restart Tour
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </motion.div>
                   )}
                   

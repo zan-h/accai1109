@@ -12,6 +12,7 @@ export interface PushToTalkButtonProps {
   isSpeaking: boolean;
   onPressDown: () => void;
   onPressUp: () => void;
+  id?: string;
 }
 
 export function PushToTalkButton({ 
@@ -20,7 +21,8 @@ export function PushToTalkButton({
   onToggle,
   isSpeaking, 
   onPressDown, 
-  onPressUp 
+  onPressUp,
+  id
 }: PushToTalkButtonProps) {
   const controls = useAnimation();
   const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
@@ -119,6 +121,7 @@ export function PushToTalkButton({
       
       {/* Main button */}
       <motion.button
+        id={id}
         className={`relative rounded-full flex items-center justify-center overflow-hidden transition-all duration-300 ${
           isConnected ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
         } ${isMobile ? 'w-16 h-16' : 'w-24 h-24'}`}

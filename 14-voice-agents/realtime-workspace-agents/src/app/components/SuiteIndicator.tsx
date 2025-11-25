@@ -6,13 +6,15 @@ import { AgentSuite } from '@/app/agentConfigs/types';
 interface SuiteIndicatorProps {
   currentSuite: AgentSuite | null;
   onChangeSuite: () => void;
+  id?: string;
 }
 
-export default function SuiteIndicator({ currentSuite, onChangeSuite }: SuiteIndicatorProps) {
+export default function SuiteIndicator({ currentSuite, onChangeSuite, id }: SuiteIndicatorProps) {
   if (!currentSuite) return null;
   
   return (
     <div 
+      id={id}
       onClick={onChangeSuite}
       className="flex items-center gap-2 px-3 py-2 border border-border-primary bg-bg-secondary hover:border-accent-primary cursor-pointer transition-all group"
       role="button"
