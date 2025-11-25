@@ -31,6 +31,7 @@ import { ToastProvider } from "@/app/contexts/ToastContext";
 
 import { MobileLayout } from "./components/layouts/MobileLayout";
 import { MobileDrawer } from "./components/mobile/MobileDrawer";
+import { FeedbackButton } from "./components/FeedbackButton";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -1500,6 +1501,12 @@ function App() {
 
       {/* Timer - floating overlay */}
       <Timer />
+      
+      {/* Feedback Button - floating */}
+      <FeedbackButton 
+        currentSuiteId={currentSuite?.id}
+        currentSessionId={currentSessionId}
+      />
 
       {/* Project Switcher Modal */}
       <ProjectSwitcher
