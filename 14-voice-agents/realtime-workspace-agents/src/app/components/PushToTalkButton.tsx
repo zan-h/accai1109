@@ -1,7 +1,9 @@
+// PushToTalkButton.tsx - Hero CTA with advanced interactions
 "use client";
 
-import React from "react";
-import { useResponsive } from "./layouts/ResponsiveLayout";
+import { motion, useAnimation } from 'framer-motion';
+import { useState } from 'react';
+import { useResponsive } from './layouts/ResponsiveLayout';
 
 export interface PushToTalkButtonProps {
   isConnected: boolean;
@@ -12,143 +14,219 @@ export interface PushToTalkButtonProps {
   onPressUp: () => void;
 }
 
-export function PushToTalkButton({
-  isConnected,
+export function PushToTalkButton({ 
+  isConnected, 
   isPTTActive,
   onToggle,
-  isSpeaking,
-  onPressDown,
-  onPressUp,
+  isSpeaking, 
+  onPressDown, 
+  onPressUp 
 }: PushToTalkButtonProps) {
+  const controls = useAnimation();
+  const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const { isMobile } = useResponsive();
-  const [isHoldingButton, setIsHoldingButton] = React.useState(false);
-
-  // Determine button state and styling
-  const getButtonClasses = () => {
-    const baseClasses = "flex items-center justify-center gap-x-2 font-mono uppercase tracking-wider transition-all border-2 touch-manipulation";
+  
+  // Ripple effect on press
+  const handlePress = (e: React.MouseEvent) => {
+    if (!isConnected) return;
     
-    // Mobile: full-width, larger touch target
-    const sizeClasses = isMobile 
-      ? "w-full min-h-[48px] px-4 py-3 text-sm" 
-      : "px-4 py-2 text-xs";
-
-    if (!isConnected) {
-      // Disabled (not connected)
-      return `${baseClasses} ${sizeClasses} opacity-30 cursor-not-allowed border-border-primary bg-bg-tertiary text-text-tertiary`;
+    // Toggle mode if clicking
+    if (!isPTTActive) {
+      onToggle(true);
+      return;
     }
 
-    if (isSpeaking) {
-      // Speaking (user talking) - pulsing glow
-      return `${baseClasses} ${sizeClasses} bg-accent-primary text-bg-primary border-accent-primary shadow-glow-cyan animate-pulse-glow cursor-pointer`;
-    }
-
-    if (isPTTActive) {
-      // Active (PTT on, ready) - border glow
-      return `${baseClasses} ${sizeClasses} border-accent-primary bg-bg-tertiary text-accent-primary shadow-glow-cyan-subtle animate-pulse-border cursor-pointer hover:shadow-glow-cyan`;
-    }
-
-    // Enabled (PTT off)
-    return `${baseClasses} ${sizeClasses} border-border-primary bg-bg-tertiary text-text-primary hover:border-accent-primary hover:shadow-glow-cyan cursor-pointer`;
-  };
-
-  const getButtonLabel = () => {
-    if (!isConnected) return "Push to Talk";
-    if (isSpeaking) return "Speaking...";
-    if (isPTTActive) return isMobile ? "Push to Talk" : "Press Space";
-    return "Push to Talk";
-  };
-
-  const getButtonIcon = () => {
-    return (
-      <svg
-        className={`w-4 h-4 ${isSpeaking ? 'animate-pulse' : ''}`}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-        />
-      </svg>
-    );
-  };
-
-  const handleClick = () => {
-    // Only toggle mode if not holding the button
-    if (isConnected && !isHoldingButton) {
-      onToggle(!isPTTActive);
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isConnected || !isPTTActive) return;
-    
-    // Prevent click event from firing
-    e.preventDefault();
-    
-    setIsHoldingButton(true);
     onPressDown();
-  };
-
-  const handleMouseUp = () => {
-    if (!isConnected || !isPTTActive || !isHoldingButton) return;
     
-    setIsHoldingButton(false);
+    // Create ripple effect
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const newRipple = { id: Date.now(), x, y };
+    setRipples(prev => [...prev, newRipple]);
+    
+    // Remove ripple after animation
+    setTimeout(() => {
+      setRipples(prev => prev.filter(r => r.id !== newRipple.id));
+    }, 600);
+    
+    // Haptic animation
+    controls.start({
+      scale: 0.95,
+      transition: { duration: 0.1 },
+    });
+  };
+  
+  const handleRelease = () => {
+    if (!isConnected || !isPTTActive) return;
     onPressUp();
+    controls.start({
+      scale: 1,
+      transition: { type: 'spring', stiffness: 400, damping: 20 },
+    });
   };
 
+  // Mobile touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isConnected || !isPTTActive) return;
-    
-    e.preventDefault();
-    
-    setIsHoldingButton(true);
-    onPressDown();
-  };
-
-  const handleTouchEnd = () => {
-    if (!isConnected || !isPTTActive || !isHoldingButton) return;
-    
-    setIsHoldingButton(false);
-    onPressUp();
-  };
-
-  // Clean up if user moves mouse away while holding
-  const handleMouseLeave = () => {
-    if (isHoldingButton) {
-      setIsHoldingButton(false);
-      onPressUp();
+    if (!isConnected) return;
+    if (!isPTTActive) {
+      onToggle(true);
+      return;
     }
+    e.preventDefault();
+    onPressDown();
+    controls.start({ scale: 0.95 });
   };
 
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isConnected || !isPTTActive) return;
+    e.preventDefault();
+    onPressUp();
+    controls.start({ scale: 1 });
+  };
+  
   return (
-    <button
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      disabled={!isConnected}
-      className={getButtonClasses()}
-      title={
-        !isConnected
-          ? "Connect to enable push-to-talk"
-          : isPTTActive
-          ? "Hold to speak, or press spacebar"
-          : "Click to enable push-to-talk mode"
-      }
-      aria-label={getButtonLabel()}
-      aria-pressed={isPTTActive}
-    >
-      {getButtonIcon()}
-      <span>{getButtonLabel()}</span>
-    </button>
+    <div className="relative flex flex-col items-center gap-4">
+      {/* Voice waveform visualization (when speaking) */}
+      {isSpeaking && (
+        <motion.div 
+          className="absolute -top-24 flex items-end gap-1 h-16 pointer-events-none"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+        >
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="w-1 bg-accent-primary rounded-full shadow-[0_0_10px_rgba(0,217,255,0.5)]"
+              animate={{
+                height: [
+                  Math.random() * 40 + 10,
+                  Math.random() * 40 + 10,
+                  Math.random() * 40 + 10,
+                ],
+              }}
+              transition={{
+                duration: 0.2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                repeatType: "reverse"
+              }}
+            />
+          ))}
+        </motion.div>
+      )}
+      
+      {/* Main button */}
+      <motion.button
+        className={`relative rounded-full flex items-center justify-center overflow-hidden transition-all duration-300 ${
+          isConnected ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+        } ${isMobile ? 'w-16 h-16' : 'w-24 h-24'}`}
+        animate={controls}
+        onMouseDown={isConnected ? handlePress : undefined}
+        onMouseUp={isConnected ? handleRelease : undefined}
+        onMouseLeave={isConnected ? handleRelease : undefined}
+        onTouchStart={isConnected ? handleTouchStart : undefined}
+        onTouchEnd={isConnected ? handleTouchEnd : undefined}
+        whileHover={isConnected ? { scale: 1.05 } : {}}
+        disabled={!isConnected}
+        aria-label={isSpeaking ? "Release to send" : "Hold to speak"}
+        aria-pressed={isSpeaking}
+      >
+        {/* Background glow */}
+        <div className={`absolute inset-0 rounded-full transition-colors duration-300 ${
+          isSpeaking 
+            ? 'bg-accent-primary animate-pulse shadow-[0_0_50px_rgba(0,217,255,0.6)]' 
+            : isPTTActive 
+              ? 'bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 border-2 border-accent-primary shadow-[0_0_20px_rgba(0,217,255,0.2)]'
+              : 'bg-white/5 border-2 border-white/10'
+        }`} />
+        
+        {/* Glass layer */}
+        <div className="absolute inset-2 rounded-full glass-panel border-white/10" />
+        
+        {/* Ripple effects */}
+        {ripples.map(ripple => (
+          <motion.div
+            key={ripple.id}
+            className="absolute rounded-full border-2 border-accent-primary"
+            initial={{ 
+              width: 0, 
+              height: 0, 
+              left: ripple.x, 
+              top: ripple.y,
+              opacity: 1,
+            }}
+            animate={{ 
+              width: 300, 
+              height: 300, 
+              left: ripple.x - 150, 
+              top: ripple.y - 150,
+              opacity: 0,
+            }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          />
+        ))}
+        
+        {/* Icon */}
+        <motion.div 
+          className="relative z-10"
+          animate={isSpeaking ? {
+            scale: [1, 1.2, 1],
+          } : {}}
+          transition={isSpeaking ? {
+            duration: 0.5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          } : {}}
+        >
+          <svg 
+            className={`w-12 h-12 transition-colors duration-300 ${
+              isSpeaking || isPTTActive ? 'text-accent-primary' : 'text-text-secondary'
+            }`} 
+            fill="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+        </motion.div>
+        
+        {/* Pulsing outer ring (when active) */}
+        {isSpeaking && (
+          <motion.div 
+            className="absolute inset-0 rounded-full border-4 border-accent-primary"
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.8, 0.0, 0.8],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        )}
+      </motion.button>
+      
+      {/* Label */}
+      <motion.div 
+        className="text-center pointer-events-none"
+        animate={{ opacity: isConnected ? 1 : 0.5 }}
+      >
+        <div className="font-mono text-sm text-text-primary mb-1 font-bold tracking-wide">
+          {isSpeaking ? 'LISTENING...' : isPTTActive ? 'HOLD TO TALK' : 'PUSH TO TALK'}
+        </div>
+        <div className="font-mono text-xs text-text-tertiary">
+          {!isConnected 
+            ? 'Connect to start' 
+            : isPTTActive 
+              ? (isMobile ? 'Press & hold button' : 'Press & hold or Spacebar') 
+              : 'Click to enable'}
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
 export default PushToTalkButton;
-

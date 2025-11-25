@@ -1,0 +1,16 @@
+{
+  "name": "Accai Realtime Agent",
+  "short_name": "Accai",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/openai-logomark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
+

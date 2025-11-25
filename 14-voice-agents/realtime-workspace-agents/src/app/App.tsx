@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useUser, UserButton } from '@clerk/nextjs';
 import { v4 as uuidv4 } from "uuid"; // Needed for timer notification message IDs
 
-import Image from "next/image";
+import { ImageOptimized } from "./components/ui/ImageOptimized";
 
 // UI components
 import Transcript from "./components/Transcript";
@@ -12,7 +12,7 @@ import Events from "./components/Events";
 import BottomToolbar from "./components/BottomToolbar";
 import Workspace from "./components/Workspace";
 import ProjectSwitcher from "./components/ProjectSwitcher";
-import SuiteSelector from "./components/SuiteSelector";
+// import SuiteSelector from "./components/SuiteSelector"; // Lazy loaded now
 import SuiteIndicator from "./components/SuiteIndicator";
 import SuiteTemplatePrompt from "./components/SuiteTemplatePrompt";
 import SaveStatusIndicator from "./components/SaveStatusIndicator";
@@ -21,6 +21,16 @@ import VoiceSettingsModal from "./components/settings/VoiceSettingsModal";
 import OnboardingWelcome from "./components/OnboardingWelcome";
 import { BottomNav, MobileTab } from "./components/mobile/BottomNav";
 import { useResponsive } from "./components/layouts/ResponsiveLayout";
+import { ToastProvider } from "@/app/contexts/ToastContext";
+
+    // Ambient Background
+    import { GradientMesh } from "./components/ambient/GradientMesh";
+    const ParticleField = React.lazy(() => import("./components/ambient/ParticleField"));
+    const SettingsModal = React.lazy(() => import("./components/SettingsModal").then(module => ({ default: module.SettingsModal })));
+    const SuiteSelector = React.lazy(() => import("./components/SuiteSelector"));
+
+import { MobileLayout } from "./components/layouts/MobileLayout";
+import { MobileDrawer } from "./components/mobile/MobileDrawer";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -66,9 +76,14 @@ import { enableMemoryMonitoring } from './lib/memoryMonitor';
 const WORKSPACE_VERSION_KEY = 'workspace_version';
 const MEDICAL_RESEARCH_VERSION = 'medical_research_v1';
 
+import { motion, useScroll, useTransform } from 'framer-motion';
+
 function App() {
   const searchParams = useSearchParams()!;
   const { user, isLoaded } = useUser();
+  const { scrollY } = useScroll();
+  const headerOpacity = useTransform(scrollY, [0, 100], [0.8, 0.95]);
+  const borderGlow = useTransform(scrollY, [0, 100], [0.3, 0.6]);
 
   // One-time migration: when scenario is workspaceBuilder (investment research) ensure workspace state is versioned.
   React.useEffect(() => {
@@ -167,6 +182,84 @@ function App() {
   // Voice preferences state
   const [voicePreferences, setVoicePreferences] = useState<VoicePreferences | null>(null);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Settings state
+  const [settings, setSettings] = useState({
+    audioPlayback: true,
+    reducedMotion: false,
+    particlesEnabled: true,
+    showEventLogs: true,
+    codec: 'opus',
+    recordAudio: false,
+    memoryMonitoring: false,
+    performanceOverlay: false,
+    voiceModel: 'Alloy',
+    speechSpeed: 1.0,
+  });
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedSettings = localStorage.getItem('appSettings');
+      if (savedSettings) {
+        setSettings(prev => ({ ...prev, ...JSON.parse(savedSettings) }));
+      }
+      
+      // Sync individual legacy items if not in bulk settings
+      const particles = localStorage.getItem('particlesEnabled');
+      if (particles) setSettings(prev => ({ ...prev, particlesEnabled: particles !== 'false' }));
+      
+      const logs = localStorage.getItem('logsExpanded');
+      if (logs) setSettings(prev => ({ ...prev, showEventLogs: logs === 'true' }));
+      
+      const playback = localStorage.getItem('audioPlaybackEnabled');
+      if (playback) setSettings(prev => ({ ...prev, audioPlayback: playback === 'true' }));
+    }
+  }, []);
+
+  // Save settings to localStorage on change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('appSettings', JSON.stringify(settings));
+      // Sync back to individual keys for legacy compatibility
+      localStorage.setItem('particlesEnabled', settings.particlesEnabled.toString());
+      localStorage.setItem('logsExpanded', settings.showEventLogs.toString());
+      localStorage.setItem('audioPlaybackEnabled', settings.audioPlayback.toString());
+    }
+    
+    // Apply side effects
+    setIsEventsPaneExpanded(settings.showEventLogs);
+    setIsAudioPlaybackEnabled(settings.audioPlayback);
+    setParticlesEnabled(settings.particlesEnabled);
+    
+    // Handle codec change (reload if changed)
+    if (settings.codec !== urlCodec) {
+      handleCodecChange(settings.codec);
+    }
+    
+    // Handle recording toggle
+    if (settings.recordAudio !== isRecordingEnabled) {
+      setIsRecordingEnabled(settings.recordAudio);
+    }
+    
+  }, [settings, urlCodec]);
+
+  const handleUpdateSetting = (key: string, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Keyboard shortcut for settings (Cmd+,)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+        e.preventDefault();
+        setShowSettings(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   // Ref to identify whether the latest agent switch came from an automatic handoff
@@ -229,6 +322,26 @@ function App() {
       return stored ? stored === 'true' : true;
     },
   );
+  
+  // Ambient background state
+  const [particlesEnabled, setParticlesEnabled] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const stored = localStorage.getItem('particlesEnabled');
+    // Default to true unless explicitly disabled
+    return stored !== 'false';
+  });
+  
+  // Persist particle setting
+  useEffect(() => {
+    localStorage.setItem('particlesEnabled', particlesEnabled.toString());
+  }, [particlesEnabled]);
+
+  // Expose setter to window for debugging/toggle until Settings UI is built
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).toggleParticles = () => setParticlesEnabled((prev: boolean) => !prev);
+    }
+  }, []);
 
   // Initialize the recording hook.
   const { startRecording, stopRecording, downloadRecording, isRecording } =
@@ -877,6 +990,7 @@ function App() {
 
   // Project Switcher state
   const [isProjectSwitcherOpen, setIsProjectSwitcherOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Initialize suite on mount
   useEffect(() => {
@@ -1131,7 +1245,16 @@ function App() {
   }
 
   return (
-    <div className="text-base flex flex-col h-screen bg-bg-primary text-text-primary relative">
+    <ToastProvider>
+      <div className="text-base flex flex-col h-screen bg-bg-primary text-text-primary relative overflow-hidden">
+        {/* Background Ambient System */}
+      <GradientMesh />
+      {particlesEnabled && (
+        <React.Suspense fallback={null}>
+          <ParticleField />
+        </React.Suspense>
+      )}
+
       {/* Save Status Indicator */}
       <SaveStatusIndicator />
       
@@ -1153,36 +1276,57 @@ function App() {
       )}
       
       {/* Suite Selector Modal */}
-      <SuiteSelector
-        isOpen={showSuiteSelector}
-        onSelectSuite={handleSelectSuite}
-        onClose={() => {
-          // Only allow closing if a suite is already selected
-          if (selectedSuiteId) {
-            setShowSuiteSelector(false);
-          }
-        }}
-      />
+      <React.Suspense fallback={null}>
+        <SuiteSelector
+          isOpen={showSuiteSelector}
+          onSelectSuite={handleSelectSuite}
+          onClose={() => {
+            // Only allow closing if a suite is already selected
+            if (selectedSuiteId) {
+              setShowSuiteSelector(false);
+            }
+          }}
+        />
+      </React.Suspense>
 
       {/* Header - mobile-optimized: compact and clean */}
-      <div className={`flex justify-between items-center ${isMobile ? 'p-3 text-base' : 'p-5 text-lg'} font-semibold`}>
-        <div
-          className="flex items-center cursor-pointer"
-          onClick={() => window.location.reload()}
-        >
-          <div>
-            <Image
-              src="/openai-logomark.svg"
-              alt="OpenAI Logo"
-              width={isMobile ? 16 : 20}
-              height={isMobile ? 16 : 20}
-              className="mr-2"
-            />
-          </div>
-          <div className={isMobile ? 'text-sm' : ''}>
-            accai <span className="text-text-secondary">Agent</span>
+      <motion.div 
+        className={`flex justify-between items-center sticky top-0 z-50 glass-panel ${isMobile ? 'p-3 pl-2 text-base' : 'p-5 text-lg'} font-semibold`}
+        style={{ opacity: headerOpacity }}
+      >
+        <div className="flex items-center gap-3">
+          {/* Mobile Drawer Toggle */}
+          {isMobile && (
+            <button 
+              onClick={() => setIsDrawerOpen(true)}
+              className="p-3 -ml-2 text-white/70 hover:text-white active:bg-white/10 rounded-lg transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
+
+          <div
+            className="flex items-center cursor-pointer group"
+            onClick={() => window.location.reload()}
+          >
+            <div className="relative">
+              <div className="absolute inset-0 bg-accent-glow rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <ImageOptimized
+                src="/openai-logomark.svg"
+                alt="OpenAI Logo"
+                width={isMobile ? 16 : 20}
+                height={isMobile ? 16 : 20}
+                className="mr-2 relative z-10"
+              />
+            </div>
+            <div className={isMobile ? 'text-sm' : ''}>
+              accai <span className="text-text-secondary">Agent</span>
+            </div>
           </div>
         </div>
+
         <div className="flex items-center gap-3">
           {/* User Info - hide email on mobile, keep avatar */}
           {isLoaded && user && (
@@ -1191,10 +1335,14 @@ function App() {
               <span className="text-text-secondary text-sm font-mono hidden lg:inline">
                 {user.emailAddresses[0]?.emailAddress}
               </span>
+              {/* On mobile, we might want to hide UserButton if it's in the drawer, 
+                  but Clerk's UserButton is good for Account settings. 
+                  Let's keep it but maybe smaller or relying on Drawer for other things. 
+              */}
               <UserButton afterSignOutUrl="/">
                 <UserButton.MenuItems>
-                  {/* Switch Suite - especially useful on mobile where suite indicator is hidden */}
-                  {currentSuite && (
+                  {/* Switch Suite - show in dropdown on desktop, but mobile has drawer */}
+                  {!isMobile && currentSuite && (
                     <UserButton.Action
                       label={`Suite: ${currentSuite.name}`}
                       labelIcon={
@@ -1205,15 +1353,18 @@ function App() {
                       onClick={handleChangeSuite}
                     />
                   )}
-                  <UserButton.Action
-                    label="Voice Settings"
-                    labelIcon={
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                      </svg>
-                    }
-                    onClick={() => setShowVoiceSettings(true)}
-                  />
+                  {!isMobile && (
+                    <UserButton.Action
+                      label="Settings"
+                      labelIcon={
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      }
+                      onClick={() => setShowSettings(true)}
+                    />
+                  )}
                 </UserButton.MenuItems>
               </UserButton>
             </div>
@@ -1228,6 +1379,20 @@ function App() {
               />
             </div>
           )}
+          
+          {/* Settings Button (Desktop) */}
+          <motion.button
+            onClick={() => setShowSettings(true)}
+            className="hidden lg:flex p-2 glass-panel rounded-lg hover:neon-border-cyan text-text-secondary hover:text-white transition-all"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Settings (Cmd+,)"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </motion.button>
           
           {/* Fallback: Old scenario selector (for backwards compatibility) - hide on mobile */}
           {!currentSuite && (
@@ -1255,12 +1420,18 @@ function App() {
             </div>
           )}
         </div>
-      </div>
+        
+        {/* Neon accent line */}
+        <motion.div 
+          className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-accent-primary to-transparent"
+          style={{ opacity: borderGlow }}
+        />
+      </motion.div>
 
       <div className={`flex flex-1 overflow-hidden relative ${isMobile ? 'px-0 gap-0' : 'px-2 gap-2'}`} style={{ marginBottom: isMobile ? '56px' : '0' }}>
-        {/* MOBILE: Show only one panel at a time based on tab */}
+        {/* MOBILE: Show only one panel at a time based on tab, wrapped in MobileLayout for gestures */}
         {isMobile ? (
-          <>
+          <MobileLayout onOpenDrawer={() => setIsDrawerOpen(true)}>
             {mobileTab === 'workspace' && (currentSuite || (typeof window !== 'undefined' && new URL(window.location.href).searchParams.get('agentConfig') === 'workspaceBuilder')) && (
               <Workspace 
                 sessionStatus={sessionStatus}
@@ -1281,7 +1452,7 @@ function App() {
                 handleTalkButtonUp={handleTalkButtonUp}
               />
             )}
-          </>
+          </MobileLayout>
         ) : (
           /* DESKTOP/TABLET: Show workspace + transcript side-by-side */
           <>
@@ -1320,15 +1491,8 @@ function App() {
       <BottomToolbar
         sessionStatus={sessionStatus}
         onToggleConnection={onToggleConnection}
-        isEventsPaneExpanded={isEventsPaneExpanded}
-        setIsEventsPaneExpanded={setIsEventsPaneExpanded}
         isAudioPlaybackEnabled={isAudioPlaybackEnabled}
         setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
-        isRecordingEnabled={isRecordingEnabled}
-        setIsRecordingEnabled={setIsRecordingEnabled}
-        isRecordingActive={isRecording}
-        codec={urlCodec}
-        onCodecChange={handleCodecChange}
         isTranscriptVisible={isTranscriptVisible}
         setIsTranscriptVisible={setIsTranscriptVisible}
         currentProjectName={getCurrentProject()?.name}
@@ -1357,19 +1521,39 @@ function App() {
         />
       )}
       
-      {/* Voice Settings Modal */}
+      {/* Voice Settings Modal - keeping for backward compatibility if needed, but preferring SettingsModal */}
       <VoiceSettingsModal
         isOpen={showVoiceSettings}
         onClose={() => {
           setShowVoiceSettings(false);
-          // Reload preferences after closing modal to update state
           fetchVoicePreferences().then((prefs) => {
             setVoicePreferences(prefs);
           });
         }}
         sessionStatus={sessionStatus}
       />
-    </div>
+      
+      {/* Mobile Drawer */}
+      <MobileDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        currentSuite={currentSuite || null}
+        onSelectSuite={handleChangeSuite}
+        onOpenSettings={() => setShowSettings(true)}
+        onOpenProjects={() => setIsProjectSwitcherOpen(true)}
+      />
+
+      {/* Main Settings Modal */}
+      <React.Suspense fallback={null}>
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          settings={settings}
+          onUpdateSetting={handleUpdateSetting}
+        />
+      </React.Suspense>
+      </div>
+    </ToastProvider>
   );
 }
 

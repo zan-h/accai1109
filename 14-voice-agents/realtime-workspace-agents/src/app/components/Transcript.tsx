@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { TranscriptItem } from "@/app/types";
-import Image from "next/image";
+import { ImageOptimized } from "./ui/ImageOptimized";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { GuardrailChip } from "./GuardrailChip";
 import { useResponsive } from "./layouts/ResponsiveLayout";
@@ -12,13 +12,13 @@ import SessionMenu from "./SessionMenu";
 import PushToTalkButton from "./PushToTalkButton";
 import type { VoiceSessionWithMetadata } from "@/app/lib/supabase/types";
 import { SessionStatus } from "@/app/types";
+import { motion } from "framer-motion";
 
 export interface TranscriptProps {
   onSendMessage: (message: string) => void;
   canSend: boolean;
   downloadRecording: () => void;
   isVisible?: boolean;
-  // Push-to-talk props
   sessionStatus: SessionStatus;
   isPTTActive: boolean;
   setIsPTTActive: (active: boolean) => void;
@@ -94,8 +94,6 @@ function Transcript({
   // Spacebar keyboard shortcut for PTT
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only activate if PTT is enabled and not already speaking
-      // Don't trigger if user is typing in an input/textarea
       if (
         e.code === 'Space' &&
         isPTTActive &&
@@ -109,7 +107,6 @@ function Transcript({
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      // Release PTT when spacebar released
       if (
         e.code === 'Space' &&
         isPTTActive &&
@@ -172,7 +169,6 @@ function Transcript({
     
     setLoadingSessions(true);
     try {
-      // Only fetch saved sessions (is_saved=true)
       const response = await fetch(`/api/sessions?projectId=${currentProjectId}&saved=true&limit=20`);
       if (response.ok) {
         const { sessions: fetchedSessions } = await response.json();
@@ -186,7 +182,6 @@ function Transcript({
   };
 
   const handleOpenSaveDialog = () => {
-    // Generate default title with current date/time
     const now = new Date();
     const defaultTitle = `Session ${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}`;
     setSessionTitle(defaultTitle);
@@ -201,7 +196,6 @@ function Transcript({
       await saveSessionWithTitle(sessionTitle);
       setShowSaveDialog(false);
       setSessionTitle('');
-      // Refresh session list to show the new saved session
       fetchSessions();
     } catch (error) {
       console.error('Failed to save session:', error);
@@ -271,16 +265,14 @@ function Transcript({
             ? "w-full overflow-auto" 
             : "flex-1 min-w-[400px] overflow-auto" 
           : "w-0 overflow-hidden opacity-0") +
-        " transition-all duration-200 ease-in-out flex-col bg-bg-secondary border border-border-primary min-h-0 flex"
+        " transition-all duration-200 ease-in-out flex-col glass-panel border-0 min-h-0 flex"
       }
     >
       <div className="flex flex-col flex-1 min-h-0">
         {/* Header - responsive layout */}
         {!isMobile && (
-          <div className="sticky top-0 z-10 border-b border-border-primary bg-bg-secondary">
-            {/* Desktop: Horizontal layout */}
+          <div className="sticky top-0 z-10 border-b border-white/10 bg-bg-secondary/50">
             <div className="flex items-center justify-between px-6 py-3 gap-x-4">
-              {/* Left: Label and status */}
               <div className="flex items-center gap-x-3">
                 <span className="font-semibold uppercase tracking-widest text-base">Session</span>
                 {isViewingHistoricalSession && (
@@ -299,7 +291,6 @@ function Transcript({
                 )}
               </div>
 
-              {/* Center: Push-to-Talk Button */}
               <div className="flex-1 flex justify-center">
                 <PushToTalkButton
                   isConnected={sessionStatus === "CONNECTED"}
@@ -311,7 +302,6 @@ function Transcript({
                 />
               </div>
 
-              {/* Right: Menu */}
               <SessionMenu
                 onViewHistory={() => setShowSessionHistory(!showSessionHistory)}
                 showHistoryDropdown={showSessionHistory}
@@ -327,10 +317,8 @@ function Transcript({
           </div>
         )}
 
-        {/* Mobile: Show PTT button and menu in tab content */}
         {isMobile && (
-          <div className="sticky top-0 z-10 border-b border-border-primary bg-bg-secondary">
-            {/* Mobile PTT button - full width */}
+          <div className="sticky top-0 z-10 border-b border-white/10 bg-bg-secondary/50">
             <div className="px-3 py-2">
               <PushToTalkButton
                 isConnected={sessionStatus === "CONNECTED"}
@@ -341,7 +329,6 @@ function Transcript({
                 onPressUp={handleTalkButtonUp}
               />
             </div>
-            {/* Mobile menu and status */}
             <div className="flex items-center justify-between px-3 pb-2">
               <div className="flex items-center gap-x-2 text-xs">
                 {isViewingHistoricalSession && (
@@ -366,13 +353,12 @@ function Transcript({
           </div>
         )}
 
-        {/* Session History Dropdown - appears when triggered from menu */}
         {showSessionHistory && !isMobile && (
           <div 
             ref={sessionHistoryRef}
-            className="absolute right-6 top-14 w-80 max-h-96 overflow-y-auto border border-border-primary bg-bg-tertiary shadow-lg z-20"
+            className="absolute right-6 top-14 w-80 max-h-96 overflow-y-auto border border-white/20 glass-panel-heavy shadow-lg z-20 rounded-xl"
           >
-            <div className="p-3 border-b border-border-primary">
+            <div className="p-3 border-b border-white/10">
               <span className="text-xs font-semibold uppercase tracking-wide text-text-primary">Saved Sessions</span>
             </div>
             {loadingSessions ? (
@@ -380,12 +366,12 @@ function Transcript({
             ) : sessions.length === 0 ? (
               <div className="p-4 text-center text-text-tertiary text-sm font-mono">No saved sessions yet</div>
             ) : (
-              <div className="divide-y divide-border-primary">
+              <div className="divide-y divide-white/10">
                 {sessions.map((session) => (
                   <button
                     key={session.id}
                     onClick={() => handleLoadSession(session.id)}
-                    className="w-full px-3 py-2 hover:bg-bg-secondary text-left transition-colors"
+                    className="w-full px-3 py-2 hover:bg-white/5 text-left transition-colors"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -407,10 +393,10 @@ function Transcript({
           </div>
         )}
 
-        {/* Transcript Content - less padding on mobile */}
         <div
           ref={transcriptRef}
           className={`overflow-auto flex flex-col gap-y-4 h-full ${isMobile ? 'p-2' : 'p-4'}`}
+          data-lenis-prevent
         >
           {[...transcriptItems]
             .sort((a, b) => a.createdAtMs - b.createdAtMs)
@@ -428,7 +414,6 @@ function Transcript({
                 guardrailResult,
               } = item;
 
-            // Don't render hidden or system messages
             if (isHidden || isSystemMessage) {
               return null;
             }
@@ -438,8 +423,10 @@ function Transcript({
               const containerClasses = `flex justify-end flex-col ${
                 isUser ? "items-end" : "items-start"
               }`;
-              const bubbleBase = `max-w-lg p-3 border ${
-                isUser ? "bg-bg-tertiary text-text-primary border-border-primary" : "bg-bg-secondary text-text-primary border-accent-primary"
+              const bubbleBase = `max-w-lg p-3 rounded-2xl relative group ${
+                isUser 
+                  ? "bg-gradient-to-br from-accent-primary/20 to-accent-primary/10 border border-accent-primary/30 text-text-primary" 
+                  : "glass-panel text-text-primary border border-white/20"
               }`;
               const isBracketedMessage =
                 title.startsWith("[") && title.endsWith("]");
@@ -451,37 +438,59 @@ function Transcript({
                 : title;
 
               return (
-                <div key={itemId} className={containerClasses}>
-                  <div className="max-w-lg">
+                <motion.div 
+                  key={itemId} 
+                  className={containerClasses}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{
+                    duration: 0.4,
+                    ease: 'easeOut',
+                  }}
+                >
+                  <motion.div 
+                    className="max-w-lg"
+                    whileHover={{ scale: 1.02 }}
+                  >
                     <div
-                      className={`${bubbleBase} rounded-t-xl ${
-                        guardrailResult ? "" : "rounded-b-xl"
+                      className={`${bubbleBase} ${
+                        guardrailResult ? "rounded-b-none" : ""
                       }`}
                     >
                       <div
                         className={`text-xs ${
-                          isUser ? "text-text-tertiary" : "text-text-secondary"
-                        } font-mono`}
+                          isUser ? "text-accent-primary/70" : "text-text-secondary"
+                        } font-mono mb-1`}
                       >
                         {timestamp}
                       </div>
                       <div className={`whitespace-pre-wrap ${messageStyle}`}>
                         <ReactMarkdown>{displayTitle}</ReactMarkdown>
                       </div>
+                      
+                      <div 
+                        className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${
+                          isUser ? 'bg-accent-primary/5' : 'bg-white/5'
+                        }`}
+                      />
                     </div>
                     {guardrailResult && (
-                      <div className="bg-bg-tertiary border border-border-primary px-3 py-2">
+                      <div className="bg-bg-tertiary border border-border-primary px-3 py-2 rounded-b-xl">
                         <GuardrailChip guardrailResult={guardrailResult} />
                       </div>
                     )}
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
               );
             } else if (type === "BREADCRUMB") {
               return (
-                <div
+                <motion.div
                   key={itemId}
                   className="flex flex-col justify-start items-start text-text-secondary text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
                 >
                   <span className="text-xs font-mono">{timestamp}</span>
                   <div
@@ -508,10 +517,9 @@ function Transcript({
                       </pre>
                     </div>
                   )}
-                </div>
+                </motion.div>
               );
             } else {
-              // Fallback if type is neither MESSAGE nor BREADCRUMB
               return (
                 <div
                   key={itemId}
@@ -531,7 +539,7 @@ function Transcript({
       {/* Save Session Dialog */}
       {showSaveDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-bg-tertiary border border-border-primary p-6 max-w-md w-full mx-4">
+          <div className="bg-bg-tertiary border border-border-primary p-6 max-w-md w-full mx-4 rounded-xl glass-panel-heavy">
             <h3 className="text-text-primary font-mono font-semibold mb-4 uppercase tracking-wide">
               Save Session
             </h3>
@@ -542,7 +550,7 @@ function Transcript({
               type="text"
               value={sessionTitle}
               onChange={(e) => setSessionTitle(e.target.value)}
-              className="w-full bg-bg-primary border border-border-primary text-text-primary px-3 py-2 font-mono focus:outline-none focus:border-accent-primary mb-4"
+              className="w-full bg-bg-primary border border-white/20 text-text-primary px-3 py-2 font-mono focus:outline-none focus:border-accent-primary mb-4 rounded-lg"
               placeholder="e.g., Project Planning Discussion"
               autoFocus
               onKeyDown={(e) => {
@@ -557,14 +565,14 @@ function Transcript({
               <button
                 onClick={() => setShowSaveDialog(false)}
                 disabled={isSaving}
-                className="px-4 py-2 border border-border-primary text-text-primary font-mono uppercase tracking-wide text-sm hover:border-accent-secondary transition-colors disabled:opacity-30"
+                className="px-4 py-2 border border-white/20 text-text-primary font-mono uppercase tracking-wide text-sm hover:border-accent-secondary transition-colors disabled:opacity-30 rounded-lg"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveSession}
                 disabled={!sessionTitle.trim() || isSaving}
-                className="px-4 py-2 bg-accent-primary text-bg-primary font-mono uppercase tracking-wide text-sm hover:bg-accent-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-accent-primary text-bg-primary font-mono uppercase tracking-wide text-sm hover:bg-accent-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed rounded-lg"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
@@ -615,7 +623,7 @@ const TranscriptInput = React.memo(function TranscriptInput({
 
   return (
     <div
-      className={`flex items-center gap-x-2 flex-shrink-0 border-t border-border-primary bg-bg-tertiary ${
+      className={`flex items-center gap-x-2 flex-shrink-0 border-t border-white/10 bg-bg-tertiary ${
         isMobile ? "p-2" : "p-4"
       }`}
     >
@@ -630,7 +638,7 @@ const TranscriptInput = React.memo(function TranscriptInput({
             handleSubmit();
           }
         }}
-        className={`flex-1 bg-bg-primary border border-border-primary text-text-primary focus:outline-none focus:border-accent-primary font-mono transition-colors placeholder:text-text-tertiary resize-none overflow-y-auto min-h-[40px] max-h-[200px] ${
+        className={`flex-1 bg-bg-primary border border-white/10 text-text-primary focus:outline-none focus:border-accent-primary font-mono transition-colors placeholder:text-text-tertiary resize-none overflow-y-auto min-h-[40px] max-h-[200px] rounded-lg ${
           isMobile ? "px-2 py-1 text-sm" : "px-4 py-2"
         }`}
         placeholder={
@@ -640,11 +648,11 @@ const TranscriptInput = React.memo(function TranscriptInput({
       <button
         onClick={handleSubmit}
         disabled={!canSend || !value.trim()}
-        className={`bg-accent-primary text-bg-primary hover:bg-accent-secondary active:bg-accent-secondary rounded-full disabled:opacity-30 transition-all shadow-glow-cyan touch-manipulation ${
+        className={`bg-accent-primary text-bg-primary hover:bg-accent-secondary active:bg-accent-secondary rounded-full disabled:opacity-30 transition-all shadow-[0_0_10px_rgba(0,217,255,0.3)] touch-manipulation flex items-center justify-center ${
           isMobile ? "p-2" : "px-2 py-2"
         }`}
       >
-        <Image src="arrow.svg" alt="Send" width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} />
+        <ImageOptimized src="/arrow.svg" alt="Send" width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} />
       </button>
     </div>
   );

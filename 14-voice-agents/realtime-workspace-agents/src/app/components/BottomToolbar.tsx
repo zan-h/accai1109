@@ -1,18 +1,12 @@
+// BottomToolbar.tsx - Cleaned up control bar
 import React from "react";
 import { SessionStatus } from "@/app/types";
 
 interface BottomToolbarProps {
   sessionStatus: SessionStatus;
   onToggleConnection: () => void;
-  isEventsPaneExpanded: boolean;
-  setIsEventsPaneExpanded: (val: boolean) => void;
   isAudioPlaybackEnabled: boolean;
   setIsAudioPlaybackEnabled: (val: boolean) => void;
-  isRecordingEnabled: boolean;
-  setIsRecordingEnabled: (val: boolean) => void;
-  isRecordingActive: boolean;
-  codec: string;
-  onCodecChange: (newCodec: string) => void;
   isTranscriptVisible: boolean;
   setIsTranscriptVisible: (val: boolean) => void;
   currentProjectName?: string;
@@ -21,26 +15,14 @@ interface BottomToolbarProps {
 function BottomToolbar({
   sessionStatus,
   onToggleConnection,
-  isEventsPaneExpanded,
-  setIsEventsPaneExpanded,
   isAudioPlaybackEnabled,
   setIsAudioPlaybackEnabled,
-  isRecordingEnabled,
-  setIsRecordingEnabled,
-  isRecordingActive,
-  codec,
-  onCodecChange,
   isTranscriptVisible,
   setIsTranscriptVisible,
   currentProjectName,
 }: BottomToolbarProps) {
   const isConnected = sessionStatus === "CONNECTED";
   const isConnecting = sessionStatus === "CONNECTING";
-
-  const handleCodecChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCodec = e.target.value;
-    onCodecChange(newCodec);
-  };
 
   function getConnectionButtonLabel() {
     if (isConnected) return "Disconnect";
@@ -50,21 +32,18 @@ function BottomToolbar({
   }
 
   function getConnectionButtonClasses() {
-    // Mobile-first: full-width with min-height, desktop: inline with other controls
-    const baseClasses = "text-base p-2 px-6 font-mono uppercase tracking-wider transition-all border-2 touch-manipulation";
-    const mobileClasses = "w-full min-h-[48px] lg:w-auto lg:h-full"; // Full-width on mobile, auto on desktop
+    const baseClasses = "text-base p-2 px-6 font-mono uppercase tracking-wider transition-all border-2 touch-manipulation rounded-lg";
+    const mobileClasses = "w-full min-h-[48px] lg:w-auto lg:h-full";
     const cursorClass = isConnecting ? "cursor-not-allowed" : "cursor-pointer";
 
     if (isConnected) {
-      // Connected -> label "Disconnect" -> dark with red border
-      return `bg-bg-secondary text-status-error border-status-error hover:bg-status-error active:bg-status-error hover:text-bg-primary active:text-bg-primary hover:shadow-glow-error ${cursorClass} ${baseClasses} ${mobileClasses}`;
+      return `bg-bg-secondary text-status-error border-status-error hover:bg-status-error/10 active:bg-status-error/20 ${cursorClass} ${baseClasses} ${mobileClasses}`;
     }
-    // Disconnected or connecting -> label is either "Connect" or "Connecting"
-    return `bg-bg-secondary text-accent-primary border-accent-primary hover:bg-accent-primary active:bg-accent-primary hover:text-bg-primary active:text-bg-primary hover:shadow-glow-cyan ${cursorClass} ${baseClasses} ${mobileClasses}`;
+    return `bg-accent-primary/10 text-accent-primary border-accent-primary hover:bg-accent-primary hover:text-bg-primary hover:shadow-glow-cyan ${cursorClass} ${baseClasses} ${mobileClasses}`;
   }
 
   return (
-    <div className="p-4 flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-x-8 bg-bg-secondary border-t border-border-primary">
+    <div className="p-4 flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-x-8 bg-bg-secondary border-t border-white/10 glass-panel-heavy relative z-20">
       <button
         onClick={onToggleConnection}
         className={getConnectionButtonClasses()}
@@ -80,7 +59,7 @@ function BottomToolbar({
           checked={isAudioPlaybackEnabled}
           onChange={(e) => setIsAudioPlaybackEnabled(e.target.checked)}
           disabled={!isConnected}
-          className="w-4 h-4 bg-bg-tertiary border border-border-primary checked:bg-accent-primary checked:border-accent-primary focus:ring-accent-primary accent-accent-primary cursor-pointer disabled:opacity-30"
+          className="w-4 h-4 bg-bg-tertiary border border-white/20 checked:bg-accent-primary checked:border-accent-primary focus:ring-accent-primary accent-accent-primary cursor-pointer disabled:opacity-30 rounded"
         />
         <label
           htmlFor="audio-playback"
@@ -90,80 +69,17 @@ function BottomToolbar({
         </label>
       </div>
 
-      {/* Hide recording controls on mobile - advanced feature */}
-      <div className="hidden lg:flex flex-row items-center gap-2">
-        <input
-          id="record-audio"
-          type="checkbox"
-          checked={isRecordingEnabled}
-          onChange={(e) => setIsRecordingEnabled(e.target.checked)}
-          disabled={!isConnected}
-          className="w-4 h-4 bg-bg-tertiary border border-border-primary checked:bg-accent-primary checked:border-accent-primary focus:ring-accent-primary accent-accent-primary cursor-pointer disabled:opacity-30"
-        />
-        <label
-          htmlFor="record-audio"
-          className="flex items-center cursor-pointer text-text-secondary font-mono text-sm"
-        >
-          Record audio
-        </label>
-        {isRecordingEnabled && (
-          <span
-            className={`text-xs font-mono uppercase tracking-wide ${
-              isRecordingActive ? "text-status-success" : "text-text-tertiary"
-            }`}
-          >
-            {isRecordingActive ? "Recording..." : "Waiting..."}
-          </span>
-        )}
-      </div>
-
-      {/* Hide logs toggle on mobile - developer feature */}
-      <div className="hidden lg:flex flex-row items-center gap-2">
-        <input
-          id="logs"
-          type="checkbox"
-          checked={isEventsPaneExpanded}
-          onChange={(e) => setIsEventsPaneExpanded(e.target.checked)}
-          className="w-4 h-4 bg-bg-tertiary border border-border-primary checked:bg-accent-primary checked:border-accent-primary focus:ring-accent-primary accent-accent-primary cursor-pointer"
-        />
-        <label htmlFor="logs" className="flex items-center cursor-pointer text-text-secondary font-mono text-sm">
-          Logs
-        </label>
-      </div>
       <div className="flex flex-row items-center gap-2">
         <input
           id="transcript"
           type="checkbox"
           checked={isTranscriptVisible}
           onChange={(e) => setIsTranscriptVisible(e.target.checked)}
-          className="w-4 h-4 bg-bg-tertiary border border-border-primary checked:bg-accent-primary checked:border-accent-primary focus:ring-accent-primary accent-accent-primary cursor-pointer"
+          className="w-4 h-4 bg-bg-tertiary border border-white/20 checked:bg-accent-primary checked:border-accent-primary focus:ring-accent-primary accent-accent-primary cursor-pointer rounded"
         />
         <label htmlFor="transcript" className="flex items-center cursor-pointer text-text-secondary font-mono text-sm">
           Session
         </label>
-      </div>
-
-      {/* Hide codec selector on mobile - developer/testing feature */}
-      <div className="hidden lg:flex flex-row items-center gap-2">
-        <div className="text-text-secondary font-mono text-sm uppercase tracking-wide">Codec:</div>
-        {/*
-          Codec selector – Lets you force the WebRTC track to use 8 kHz 
-          PCMU/PCMA so you can preview how the agent will sound 
-          (and how ASR/VAD will perform) when accessed via a 
-          phone network.  Selecting a codec reloads the page with ?codec=...
-          which our App-level logic picks up and applies via a WebRTC monkey
-          patch (see codecPatch.ts).
-        */}
-        <select
-          id="codec-select"
-          value={codec}
-          onChange={handleCodecChange}
-          className="border border-border-primary bg-bg-tertiary text-text-primary px-2 py-1 focus:outline-none focus:border-accent-primary cursor-pointer font-mono text-sm transition-colors"
-        >
-          <option value="opus">Opus (48 kHz)</option>
-          <option value="pcmu">PCMU (8 kHz)</option>
-          <option value="pcma">PCMA (8 kHz)</option>
-        </select>
       </div>
     </div>
   );

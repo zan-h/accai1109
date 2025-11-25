@@ -55,6 +55,18 @@ export default {
           secondary: 'rgba(0, 217, 255, 0.4)',
           grid: 'rgba(0, 217, 255, 0.15)',
         },
+        // New Design System Tokens
+        glass: {
+          light: 'rgba(255, 255, 255, 0.05)',
+          medium: 'rgba(255, 255, 255, 0.1)',
+          heavy: 'rgba(255, 255, 255, 0.15)',
+          border: 'rgba(255, 255, 255, 0.2)',
+        },
+        neon: {
+          cyan: '#00d9ff',
+          magenta: '#ff00e5',
+          green: '#00ff88',
+        },
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'Fira Code', 'Courier New', 'Consolas', 'Monaco', 'monospace'],
@@ -66,6 +78,10 @@ export default {
         'glow-success': '0 0 10px rgba(0, 255, 136, 0.3)',
         'glow-error': '0 0 10px rgba(255, 68, 68, 0.3)',
         'glow-warning': '0 0 10px rgba(255, 170, 0, 0.3)',
+        // New Neon Shadows
+        'neon-cyan': '0 0 10px rgba(0, 217, 255, 0.5), 0 0 20px rgba(0, 217, 255, 0.3)',
+        'neon-magenta': '0 0 10px rgba(255, 0, 229, 0.5), 0 0 20px rgba(255, 0, 229, 0.3)',
+        'neon-green': '0 0 10px rgba(0, 255, 136, 0.5), 0 0 20px rgba(0, 255, 136, 0.3)',
       },
       letterSpacing: {
         widest: '0.1em',
