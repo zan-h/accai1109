@@ -8,6 +8,7 @@ export const energyFocusSuiteConfig: SuiteConfig = {
   description: 'Start your work by understanding where you\'re at. Match tasks to your actual energy and capacity.',
   icon: '⚡',
   category: 'productivity',
+  disabled: false,
   tags: [
     'energy',
     'body-awareness',

@@ -74,6 +74,16 @@ body {
   overscroll-behavior-y: none; /* Prevent rubber-banding */
 }
 
+/* Utility: Hide scrollbars while keeping scroll behavior */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;

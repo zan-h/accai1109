@@ -5,7 +5,7 @@ export const ifsTherapySuiteConfig: SuiteConfig = {
   name: 'IFS Therapy Companion',
   description: 'Internal Family Systems guided sessions - meet your parts, unblend, witness exiles, and build Self-led healing',
   icon: '🧘',
-  category: 'mental-health',
+  category: 'emotional-regulation',
   disabled: true, // Temporarily disabled
   tags: [
     'ifs',

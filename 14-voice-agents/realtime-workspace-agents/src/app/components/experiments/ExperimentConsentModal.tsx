@@ -9,7 +9,7 @@ const INFO_URL = 'https://docs.google.com/document/d/1auA42890XrsMVqL61s-kGKLIPA
 const SURVEY_URL_EXP2 = 'https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=8l9CbGVo30Kk245q9jSBPefPE1UEnRFNhWiGNiCok5xUMUtTWEJRRTc4VFU2RVo1RFBaS1FPSDRSVS4u';
 
 export function ExperimentConsentModal() {
-  const { stage, type, startExperiment, completeExperiment, resetExperiment } = useExperimentStore();
+  const { stage, type, startExperiment, resetExperiment } = useExperimentStore();
 
   if (stage !== 'instructions') return null;
 

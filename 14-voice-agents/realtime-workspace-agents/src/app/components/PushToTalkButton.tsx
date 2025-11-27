@@ -88,7 +88,7 @@ export function PushToTalkButton({
   };
   
   return (
-    <div className="relative flex flex-col items-center gap-4">
+    <div id={id} className="relative flex flex-col items-center gap-4">
       {/* Voice waveform visualization (when speaking) */}
       {isSpeaking && (
         <motion.div 
@@ -121,7 +121,6 @@ export function PushToTalkButton({
       
       {/* Main button */}
       <motion.button
-        id={id}
         className={`relative rounded-full flex items-center justify-center overflow-hidden transition-all duration-300 ${
           isConnected ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
         } ${isMobile ? 'w-16 h-16' : 'w-24 h-24'}`}

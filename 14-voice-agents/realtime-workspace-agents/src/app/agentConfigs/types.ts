@@ -11,11 +11,8 @@ export type { RealtimeAgent, FunctionTool } from '@openai/agents/realtime';
 
 export type SuiteCategory = 
   | 'productivity'
-  | 'mental-health' 
-  | 'planning'
-  | 'coaching'
-  | 'learning'
-  | 'creativity';
+  | 'complex-work'
+  | 'emotional-regulation';
 
 export type UserLevel = 'beginner' | 'intermediate' | 'advanced';
 

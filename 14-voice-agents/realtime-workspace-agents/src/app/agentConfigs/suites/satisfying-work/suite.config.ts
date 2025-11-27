@@ -6,6 +6,7 @@ export const satisfyingWorkSuiteConfig: SuiteConfig = {
   description: 'Make work more enjoyable and stay in your body while doing it.',
   icon: '✨',
   category: 'productivity',
+  disabled: false,
   tags: [
     'enjoyment',
     'embodiment',

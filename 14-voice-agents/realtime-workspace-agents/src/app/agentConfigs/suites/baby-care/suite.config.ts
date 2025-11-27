@@ -5,7 +5,7 @@ export const babyCareSuiteConfig: SuiteConfig = {
   name: 'Baby Care Companion',
   description: 'Expert support for infant care - feeding, sleep, development, and health monitoring',
   icon: '👶',
-  category: 'mental-health', // Caregiving support
+  category: 'emotional-regulation', // Caregiving support
   disabled: true, // Temporarily disabled
   tags: [
     'baby',

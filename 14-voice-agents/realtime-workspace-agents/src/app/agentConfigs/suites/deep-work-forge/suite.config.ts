@@ -6,6 +6,7 @@ export const deepWorkForgeSuiteConfig: SuiteConfig = {
   description: 'Sustained concentration for complex work. Minimal interruptions, long timers, protected flow state.',
   icon: '🎯',
   category: 'productivity',
+  disabled: false,
   tags: ['deep-work', 'focus', 'flow-state', 'concentration', 'minimal-interruption'],
   
   suggestedUseCases: [

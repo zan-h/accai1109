@@ -1,10 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useTour } from '../../contexts/TourContext';
 
 export default function TourOverlay() {
   const { isActive, steps, currentStepIndex, nextStep, prevStep, endTour } = useTour();
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [targetRadius, setTargetRadius] = useState<number>(10);
+  const [tooltipSize, setTooltipSize] = useState<{ width: number; height: number }>({ width: 320, height: 200 });
+  const tooltipRef = React.useRef<HTMLDivElement>(null);
   const currentStep = steps[currentStepIndex];
   
   // Update target position
@@ -16,6 +19,11 @@ export default function TourOverlay() {
       if (element) {
         const rect = element.getBoundingClientRect();
         setTargetRect(rect);
+        
+        const computedStyle = window.getComputedStyle(element);
+        const radiusValue = parseFloat(computedStyle.borderRadius || '0') || 0;
+        const inferredRadius = Math.min(rect.width, rect.height) / 4;
+        setTargetRadius(radiusValue > 0 ? radiusValue : Math.max(8, Math.min(20, inferredRadius)));
         
         // Scroll if needed
         element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
@@ -44,26 +52,90 @@ export default function TourOverlay() {
 
   // Calculate tooltip position
   const tooltipPadding = 16;
-  let tooltipX = 0;
-  let tooltipY = 0;
+  const tooltipWidth = tooltipSize.width || 320;
+  const tooltipHeight = tooltipSize.height || 200;
+  let tooltipStyle: React.CSSProperties = {};
   let isCentered = false;
 
   if (targetRect) {
-      tooltipX = targetRect.left + targetRect.width / 2; // Default center horizontally
-      tooltipY = targetRect.bottom + tooltipPadding; // Default bottom
+    const centerX = targetRect.left + targetRect.width / 2;
+    const centerY = targetRect.top + targetRect.height / 2;
+    const clampedX = Math.max(tooltipPadding, Math.min(window.innerWidth - tooltipPadding, centerX));
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
 
-      // Simple positioning logic
-      if (currentStep.position === 'top') {
-        tooltipY = targetRect.top - tooltipPadding;
-      } else if (currentStep.position === 'left') {
-        tooltipX = targetRect.left - tooltipPadding;
-        tooltipY = targetRect.top + targetRect.height / 2;
-      } else if (currentStep.position === 'right') {
-        tooltipX = targetRect.right + tooltipPadding;
-        tooltipY = targetRect.top + targetRect.height / 2;
+    // Decide placement with fallback to keep tooltip in view
+    let placement: 'top' | 'bottom' | 'left' | 'right' = currentStep.position || 'bottom';
+
+    if (placement === 'top' && targetRect.top - tooltipPadding - tooltipHeight < tooltipPadding) {
+      placement = 'bottom';
+    } else if (
+      placement === 'bottom' &&
+      targetRect.bottom + tooltipPadding + tooltipHeight > viewportHeight - tooltipPadding &&
+      targetRect.top - tooltipPadding - tooltipHeight >= tooltipPadding
+    ) {
+      placement = 'top';
+    }
+
+    if (placement === 'left' && (targetRect.left - tooltipPadding - tooltipWidth < tooltipPadding) &&
+        (targetRect.right + tooltipPadding + tooltipWidth <= viewportWidth - tooltipPadding)) {
+      placement = 'right';
+    } else if (placement === 'right' && (targetRect.right + tooltipPadding + tooltipWidth > viewportWidth - tooltipPadding) &&
+      (targetRect.left - tooltipPadding - tooltipWidth >= tooltipPadding)) {
+      placement = 'left';
+    }
+
+    switch (placement) {
+      case 'top': {
+        const top = Math.max(
+          tooltipPadding,
+          targetRect.top - tooltipPadding - tooltipHeight
+        );
+        const left = Math.max(
+          tooltipPadding,
+          Math.min(viewportWidth - tooltipWidth - tooltipPadding, clampedX - tooltipWidth / 2)
+        );
+        tooltipStyle = { top, left };
+        break;
       }
+      case 'bottom': {
+        const top = Math.min(
+          viewportHeight - tooltipHeight - tooltipPadding,
+          targetRect.bottom + tooltipPadding
+        );
+        const left = Math.max(
+          tooltipPadding,
+          Math.min(viewportWidth - tooltipWidth - tooltipPadding, clampedX - tooltipWidth / 2)
+        );
+        tooltipStyle = { top, left };
+        break;
+      }
+      case 'left': {
+        const left = Math.max(tooltipPadding, targetRect.left - tooltipPadding - tooltipWidth);
+        const top = Math.max(
+          tooltipPadding,
+          Math.min(viewportHeight - tooltipHeight - tooltipPadding, centerY - tooltipHeight / 2)
+        );
+        tooltipStyle = { top, left };
+        break;
+      }
+      case 'right': {
+        const left = Math.min(
+          viewportWidth - tooltipWidth - tooltipPadding,
+          targetRect.right + tooltipPadding
+        );
+        const top = Math.max(
+          tooltipPadding,
+          Math.min(viewportHeight - tooltipHeight - tooltipPadding, centerY - tooltipHeight / 2)
+        );
+        tooltipStyle = { top, left };
+        break;
+      }
+      default:
+        break;
+    }
   } else {
-      isCentered = true;
+    isCentered = true;
   }
 
   // Adjust for screen edges (basic)
@@ -103,12 +175,13 @@ export default function TourOverlay() {
                  
                  {/* Highlight Border/Glow */}
                  <div 
-                   className="absolute border-2 border-accent-primary shadow-[0_0_30px_rgba(0,255,255,0.3)] rounded-lg transition-all duration-300 ease-out pointer-events-none"
+                   className="absolute border-2 border-accent-primary shadow-[0_0_28px_rgba(0,255,255,0.35)] transition-all duration-300 ease-out pointer-events-none"
                    style={{
-                     top: targetRect.top - 4,
-                     left: targetRect.left - 4,
-                     width: targetRect.width + 8,
-                     height: targetRect.height + 8,
+                     top: targetRect.top - 6,
+                     left: targetRect.left - 6,
+                     width: targetRect.width + 12,
+                     height: targetRect.height + 12,
+                     borderRadius: targetRadius + 4,
                    }}
                  />
              </>
@@ -120,14 +193,10 @@ export default function TourOverlay() {
       {/* Tooltip */}
       <div 
         className={`absolute pointer-events-auto flex flex-col items-start transition-all duration-300 ease-out ${isCentered ? 'inset-0 items-center justify-center' : ''}`}
-        style={!isCentered ? {
-          top: currentStep.position === 'top' ? 'auto' : tooltipY,
-          bottom: currentStep.position === 'top' ? window.innerHeight - tooltipY : 'auto',
-          left: currentStep.position === 'left' ? 'auto' : (currentStep.position === 'right' ? tooltipX : Math.max(16, Math.min(window.innerWidth - 320, tooltipX - 160))),
-          right: currentStep.position === 'left' ? window.innerWidth - tooltipX : 'auto',
-        } : undefined}
+        style={!isCentered ? tooltipStyle : undefined}
       >
         <motion.div
+          ref={tooltipRef}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           key={currentStepIndex}
@@ -179,4 +248,3 @@ export default function TourOverlay() {
     </div>
   );
 }
-

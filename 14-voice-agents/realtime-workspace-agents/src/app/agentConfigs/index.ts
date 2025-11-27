@@ -24,6 +24,7 @@ import flowSprintsSuite from './suites/flow-sprints';
 import writingCompanionSuite from './suites/writing-companion';
 import videoProductionSuite from './suites/video-production';
 import deepWorkForgeSuite from './suites/deep-work-forge';
+import emotionalRegulationSuite from './suites/emotional-regulation';
 
 // For now, manually register suites
 // In Phase 4, this will be populated with actual suites
@@ -41,6 +42,7 @@ registerSuiteManually(suiteRegistry, flowSprintsSuite);
 registerSuiteManually(suiteRegistry, writingCompanionSuite);
 registerSuiteManually(suiteRegistry, videoProductionSuite);
 registerSuiteManually(suiteRegistry, deepWorkForgeSuite);
+registerSuiteManually(suiteRegistry, emotionalRegulationSuite);
 
 console.log('📦 Registered suites:', Object.keys(suiteRegistry));
 

@@ -141,7 +141,7 @@ export function FeedbackButton({ currentSuiteId, currentSessionId, id }: Feedbac
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">💭</span>
                   <h2 id="feedback-modal-title" className="text-xl font-mono font-bold text-white">
-                    What's on your mind?
+                    What&apos;s on your mind?
                   </h2>
                 </div>
                 <motion.button
@@ -206,7 +206,7 @@ export function FeedbackButton({ currentSuiteId, currentSessionId, id }: Feedbac
 
                 {/* Footer Info */}
                 <p className="text-xs font-mono text-text-secondary">
-                  📍 We'll automatically capture your current session context to help us understand your feedback better.
+                  📍 We&apos;ll automatically capture your current session context to help us understand your feedback better.
                 </p>
 
                 {/* Actions */}

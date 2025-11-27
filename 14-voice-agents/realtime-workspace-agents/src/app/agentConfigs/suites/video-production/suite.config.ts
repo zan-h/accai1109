@@ -5,7 +5,7 @@ export const videoProductionSuiteConfig: SuiteConfig = {
   name: 'Video Production Companion',
   description: 'Complete video production workflow from ideation to publishing with specialized agents for research, strategy, scripting, production, and launch optimization.',
   icon: '🎬',
-  category: 'creativity',
+  category: 'complex-work',
   disabled: true, // Temporarily disabled
   tags: [
     'video-production',

@@ -6,7 +6,7 @@ export const gtdSuiteConfig: SuiteConfig = {
   description: 'Get everything out of your head and into a trusted system. Voice-optimized for rapid capture of tasks, ideas, and commitments with automatic organization.',
   icon: '📥',
   category: 'productivity',
-  disabled: true, // Temporarily disabled
+  disabled: false,
   tags: ['gtd', 'capture', 'organize', 'inbox-zero', 'task-management', 'clarity', 'focus'],
   
   suggestedUseCases: [

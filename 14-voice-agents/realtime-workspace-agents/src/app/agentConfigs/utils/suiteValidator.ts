@@ -10,11 +10,8 @@ const SuiteConfigSchema = z.object({
   icon: z.string().min(1, 'Suite icon is required'),
   category: z.enum([
     'productivity',
-    'mental-health',
-    'planning',
-    'coaching',
-    'learning',
-    'creativity'
+    'complex-work',
+    'emotional-regulation'
   ]),
   tags: z.array(z.string()).min(1, 'At least one tag is required'),
   agents: z.array(z.any()).min(1, 'At least one agent is required'),

@@ -1,145 +1,125 @@
 # Production UI/UX Transformation
 
 ## Background and Motivation
-The goal is to transform the current functional voice-agent application into a visually striking, enterprise-grade web experience using cutting-edge web technologies (WebGL shaders, glassmorphism, smooth scroll, advanced animations) while maintaining 60fps performance, WCAG 2.1 AAA accessibility, and production-ready code quality. The current app is functional but lacks the visual polish and immersive experience required for a high-end product.
+The goal is to transform the current functional voice-agent application into a visually striking, enterprise-grade web experience.
 
-The user now requires a comprehensive onboarding experience (Product Tour) to walk users through the UI, ensuring they fully understand the system. This should be available during initial onboarding and accessible later via settings.
-
-**New Request:** Implement "Experiment 1" flow to gather HCI data. This involves a consent screen, a session with a timer, and a post-session questionnaire triggered automatically when the timer ends.
-
-## Key Challenges and Analysis
-- **Performance vs. Visuals**: Implementing heavy visual effects (particles, blurs, animations) without compromising the 60fps target, especially on mobile devices.
-- **Accessibility**: Achieving WCAG 2.1 AAA compliance while using complex visual effects. This requires careful color contrast management, reduced motion support, and full keyboard navigation.
-- **Integration**: Integrating new visual systems without breaking existing functionality (voice agents, transcripts, timers).
-- **Scope Management**: The project is divided into 11 phases. Keeping strict adherence to the phase order and success criteria is crucial to avoid regressions.
-- **Tour Implementation**: Creating a tour that feels native to the high-end UI (glassmorphism, animations) rather than using a generic library. Needs to handle dynamic elements (mobile drawer, modals).
-- **Experiment Flow**: Need to manage state across the session (Consent -> Active -> Finished). The trigger is the timer completion. Needs to be unobtrusive but mandatory for the experiment flow.
-- **Data Storage**: Current `feedback` table is too rigid. Need a flexible way to store experiment results (Likert scales, etc.).
-
-## High-level Task Breakdown
-1.  **Phase 1: Foundation & Setup** - Establish design tokens, install dependencies, and set up the base styling. (Completed)
-2.  **Phase 2: Background Ambient System** - Implement WebGL particle field and animated gradient mesh. (Completed)
-3.  **Phase 3: Core Component Redesign** - Redesign Header, Workspace, and Transcript with the new visual system. (Completed)
-4.  **Phase 4: Push-to-Talk Button Enhancement** - Transform the PTT button into a hero interaction element. (Completed)
-5.  **Phase 5: Timer Component Cinematic** - Redesign timer as a circular progress ring with celebration effects. (Completed)
-6.  **Phase 6: Settings Panel & Developer Mode** - Hide technical features behind a settings modal. (Completed)
-7.  **Phase 7: Mobile Responsiveness** - Create dedicated mobile layout, touch gestures, and optimize performance. (Completed)
-8.  **Phase 8: Scroll Animations & Parallax** - Add smooth scroll and depth-layered parallax. (Completed)
-9.  **Phase 9: Micro-Interactions** - Polish interactive elements with delightful effects. (Completed)
-10. **Phase 10: Performance Optimization** - Ensure 60fps, fast load times, and accessibility. (Completed)
-11. **Phase 11: Accessibility & Testing** - Achieve WCAG 2.1 AAA compliance and cross-browser compatibility. (Completed)
-12. **Phase 12: Launch Preparation** - Final QA, user testing, and production deployment. (Completed)
-13. **Phase 13: Product Tour & Onboarding** - Implement an interactive walkthrough of the UI. (Completed)
-14. **Phase 14: Experiment Framework** - Implement Experiment 1 flow (Consent, Session tracking, Post-timer Questionnaire) and data storage.
+**Final Configuration:** 
+- 3 categories with active suites: Productivity, Complex Work, Emotional Regulation
+- All productivity suites enabled
+- Writing Companion enabled
+- New Emotional Regulation suite enabled
 
 ## Project Status Board
 
-**Current Phase: Completed**
+**Current Phase: Phase 15 - COMPLETED**
 
-**Phase 14: Experiment Framework**
-- [x] Create `experiments` table migration for storing structured result data.
-- [x] Create `useExperimentStore` to manage experiment state (`idle`, `selection`, `instructions`, `running`, `completed`).
-- [x] Create `ExperimentSelectionModal` (Splash screen) to choose between Exp 1 and Exp 2.
-- [x] Create `ExperimentConsentModal` with specific details for the chosen experiment.
-- [x] Create `ExperimentQuestionnaireModal` with Likert scales (Control, Workload, Safety) and comments.
-- [x] Create `ExperimentOrchestrator` to listen for `timer.complete` events and trigger the questionnaire.
-- [x] Add "Experiments" section to `SettingsModal` as the entry point.
-- [x] Create API route `/api/experiments` for submitting results.
+### Final Implementation
 
-**Completed Phases:**
+**Active Suites (9 total):**
 
-**Phase 13: Product Tour & Onboarding**
-- [x] Design `TourContext` to manage tour state (active, current step, completed) and refs.
-- [x] Create `TourOverlay` component using `framer-motion` for spotlight/highlight effects.
-- [x] Create `TourTooltip` component (integrated into Overlay) for the explanatory text.
-- [x] Define Tour Steps configuration (Project, PTT, Transcript, Settings, Feedback, Work Journal).
-- [x] Integrate Tour into `App.tsx` and trigger after `OnboardingWelcome` & Suite Selection.
-- [x] Add "Restart Tour" button to Settings.
-- [x] Ensure mobile compatibility (fallback to centered modal if target hidden).
-- [x] Add Work Journal step to tour.
+**PRODUCTIVITY** (7 suites):
+1. ✅ Energy & Focus
+2. ✅ Satisfying Work
+3. ✅ Flow Sprints
+4. ✅ Deep Work Forge
+5. ✅ GTD (Getting Things Done)
+6. ✅ 12-Week Month Coach
+7. ✅ Joe Hudson Work Flow
 
-**Phase 12: Launch Preparation**
-- [x] Final QA (Passed production build).
-- [x] Production Build (Verified).
-- [x] Cleanup.
+**COMPLEX WORK** (1 suite):
+1. ✅ Writing Companion
 
-**Phase 11: Accessibility & Testing**
-- [x] Add "Skip to content" link.
-- [x] Ensure ARIA labels and roles for modals (`SettingsModal`).
-- [x] Verify `prefers-reduced-motion` in `ParticleField`.
-- [x] Check color contrast and focus states.
+**EMOTIONAL REGULATION** (1 suite):
+1. ✅ Emotional Regulation - Parts Work (NEW)
 
-**Phase 10: Performance Optimization**
-- [x] Bundle analysis & Code splitting (Lazy loaded heavy components).
-- [x] Image optimization with `ImageOptimized` wrapper.
-- [x] Rendering optimization (memoization, lazy loading).
+**Disabled Suites (3):**
+- Video Production
+- Baby Care
+- IFS Therapy
 
-**Phase 9: Micro-Interactions**
-- [x] Create `MagneticButton` component for enhanced hover effects.
-- [x] Create `ToastContext` for global notifications.
-- [x] Integrate Toast system into App.
-- [x] Apply `MagneticButton` to `SuiteCard` actions.
+## Implementation Summary
 
-**Phase 8: Scroll Animations & Parallax**
-- [x] Implement Smooth Scroll (Locomotive Scroll wrapper).
-- [x] Enhance Parallax (3D tilt on SuiteCards).
-- [x] Scroll Reveal Animations (Transcript messages, Suite list).
+### 1. Re-enabled All Productivity Suites
+- Energy & Focus
+- Satisfying Work
+- Flow Sprints
+- Deep Work Forge
+- GTD
+- 12-Week Month
+- Joe Hudson
 
-**Phase 7: Mobile Responsiveness**
-- [x] Create Mobile Layout with Edge Swipe.
-- [x] Implement Mobile Drawer (Navigation & Settings).
-- [x] Optimize Touch Targets (>44px).
-- [x] Add PWA Manifest and Viewport settings.
+### 2. Updated Category Filter UI
+- **File**: `components/SuiteSelector.tsx`
+- **Removed**: Old 6 categories (coaching, planning, mental-health, learning, creativity)
+- **Added**: New 3 categories matching active suites
+- **Categories Now**: ALL | PRODUCTIVITY | COMPLEX WORK | EMOTIONAL REGULATION
 
-**Phase 6: Settings Panel & Developer Mode**
-- [x] Create Settings Modal with 3 tabs.
-- [x] Implement Settings State and persistence.
-- [x] Move Developer Features (Logs, Codec, Recording) to Settings.
-- [x] Clean up App and BottomToolbar.
+### 3. Category System
+**Type System:**
+- `agentConfigs/types.ts` - 3 categories: `productivity`, `complex-work`, `emotional-regulation`
 
-**Phase 5: Timer Component Cinematic**
-- [x] Redesign Timer with circular progress ring.
-- [x] Add confetti celebration.
-- [x] Ensure smooth animations.
+**Validator:**
+- `agentConfigs/utils/suiteValidator.ts` - Updated to validate 3 categories
 
-**Phase 4: Push-to-Talk Button Enhancement**
-- [x] Implement ripple effects.
-- [x] Add voice waveform visualization.
-- [x] Enhance scale/haptic feedback.
+**UI:**
+- `components/SuiteSelector.tsx` - Shows only 3 active categories
 
-**Phase 3: Core Component Redesign**
-- [x] Redesign Header (glassmorphism, scroll effects).
-- [x] Redesign Workspace (mouse-follow glow, animations).
-- [x] Redesign Transcript (staggered messages, glass bubbles).
+### 4. Suite Status Summary
 
-**Phase 2: Background Ambient System**
-- [x] Create ParticleField Component.
-- [x] Create GradientMesh Component.
-- [x] Integrate into App.
+| Suite | Category | Status |
+|-------|----------|--------|
+| Energy & Focus | productivity | ✅ Active |
+| Satisfying Work | productivity | ✅ Active |
+| Flow Sprints | productivity | ✅ Active |
+| Deep Work Forge | productivity | ✅ Active |
+| GTD | productivity | ✅ Active |
+| 12-Week Month | productivity | ✅ Active |
+| Joe Hudson | productivity | ✅ Active |
+| Writing Companion | complex-work | ✅ Active |
+| Emotional Regulation | emotional-regulation | ✅ Active |
+| Video Production | complex-work | ❌ Disabled |
+| Baby Care | emotional-regulation | ❌ Disabled |
+| IFS Therapy | emotional-regulation | ❌ Disabled |
 
-**Phase 1: Foundation & Setup**
-- [x] Install Dependencies.
-- [x] Create Design Tokens.
-- [x] Update Tailwind Config.
+## Build Status
+- ✅ All productivity suites enabled
+- ✅ Category filter updated to show only active categories
+- ✅ No linter errors
+- ✅ Dev server running on http://localhost:3001
 
-## Current Task: Completed
+## Files Modified
+
+**Suite Configs (Re-enabled):**
+- `energy-focus/suite.config.ts` - Set `disabled: false`
+- `satisfying-work/suite.config.ts` - Set `disabled: false`
+- `flow-sprints/suite.config.ts` - Set `disabled: false`
+- `deep-work-forge/suite.config.ts` - Set `disabled: false`
+- `gtd/suite.config.ts` - Set `disabled: false`
+- `12-week-month/suite.config.ts` - Set `disabled: false`
+- `joe-hudson/suite.config.ts` - Set `disabled: false`
+
+**UI Updated:**
+- `components/SuiteSelector.tsx` - Updated CATEGORIES and CATEGORY_LABELS to show only 3 active categories
+
+**Type System:**
+- `agentConfigs/types.ts` - SuiteCategory type with 3 categories
+- `agentConfigs/utils/suiteValidator.ts` - Category validation for 3 categories
+
+## Current Task: COMPLETED ✅
 
 **Summary**:
-Implemented the "Experiment 1" framework.
-- **Entry**: Added "Experiments" tab in `SettingsModal`.
-- **Flow**: Selection -> Consent -> Session (Wait for Timer) -> Questionnaire.
-- **Storage**: Created `experiments` table and API route.
-- **Logic**: `ExperimentOrchestrator` handles the state and event listeners.
+1. ✅ Re-enabled all 7 productivity suites
+2. ✅ Kept Writing Companion enabled (complex-work)
+3. ✅ Kept Emotional Regulation enabled (emotional-regulation)
+4. ✅ Updated UI category filter to show only categories with active suites
+5. ✅ Removed empty categories from UI
 
-## Lessons
-
-### Feedback Feature Implementation
-- **ProjectContext Hook**: The correct hook is `useProjectContext()`, not `useProject()`. The hook returns a context object with methods like `getCurrentProject()` rather than returning the current project directly.
-- **Always verify context hook names**: When integrating with existing contexts, check the actual exported hook name in the context file before using it.
-- **RLS with Clerk vs Supabase Auth**: When using Clerk for authentication instead of Supabase Auth, the default RLS policies that check `auth.uid()` will fail. Solution: Use `createServiceClient()` in API routes (which already handle Clerk auth) to bypass RLS. The API route is the security boundary, not the database RLS.
-- **Service Role Client Pattern**: For API routes that use Clerk authentication, use `createServiceClient()` from `@/app/lib/supabase/service` instead of `createClient()` to bypass RLS policies designed for Supabase Auth.
-- **Tour Implementation**: Use IDs for targeting to decouple the Tour configuration from the component hierarchy. Handle missing targets (e.g. responsive differences) by falling back to a centered modal to avoid breaking the flow.
-- **Experiment Store**: Separate store for experiment state (`zustand`) keeps `App.tsx` clean and allows easy access from any component (Settings, Modals).
+**Active Configuration:**
+- **9 suites enabled** across 3 categories
+- **Category tabs**: ALL | PRODUCTIVITY | COMPLEX WORK | EMOTIONAL REGULATION
+- Clean, focused user experience
 
 ## Executor's Feedback or Assistance Requests
-- **Status**: ✅ FEATURE COMPLETE
+- **Status**: ✅ ALL TASKS COMPLETE
+- **Result**: 9 active suites, 3 categories with suites in UI
+- **Ready**: http://localhost:3001

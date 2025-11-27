@@ -1,8 +1,8 @@
 // ExperimentSelectionModal.tsx
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { useExperimentStore, ExperimentType } from '@/app/hooks/useExperimentStore';
+import { motion } from 'framer-motion';
+import { useExperimentStore } from '@/app/hooks/useExperimentStore';
 
 export function ExperimentSelectionModal() {
   const { stage, selectExperiment, closeExperiment } = useExperimentStore();

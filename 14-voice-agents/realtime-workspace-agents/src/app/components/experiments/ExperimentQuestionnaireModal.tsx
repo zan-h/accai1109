@@ -1,13 +1,13 @@
 // ExperimentQuestionnaireModal.tsx
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useExperimentStore } from '@/app/hooks/useExperimentStore';
 import { useToast } from '@/app/contexts/ToastContext';
 
 export function ExperimentQuestionnaireModal() {
-  const { stage, type, completeExperiment, closeExperiment } = useExperimentStore();
+  const { stage, type, closeExperiment } = useExperimentStore();
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   

@@ -6,6 +6,7 @@ export const flowSprintsSuiteConfig: SuiteConfig = {
   description: 'Race the clock to complete as many tasks as possible. Close open loops, tackle avoidance, get scored at the end.',
   icon: '🏃',
   category: 'productivity',
+  disabled: false,
   tags: ['sprints', 'gamification', 'tasks', 'scoring', 'speed', 'completion'],
   
   suggestedUseCases: [
