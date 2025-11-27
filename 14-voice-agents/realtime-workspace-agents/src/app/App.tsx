@@ -24,6 +24,7 @@ import { useResponsive } from "./components/layouts/ResponsiveLayout";
 import { ToastProvider } from "@/app/contexts/ToastContext";
 import { TourProvider, useTour } from "@/app/contexts/TourContext";
 import TourOverlay from "@/app/components/tour/TourOverlay";
+import { ExperimentOrchestrator } from "@/app/components/experiments/ExperimentOrchestrator";
 
     // Ambient Background
     import { GradientMesh } from "./components/ambient/GradientMesh";
@@ -1540,6 +1541,9 @@ function AppContent() {
 
       {/* Timer - floating overlay */}
       <Timer />
+
+      {/* Experiment Orchestrator */}
+      <ExperimentOrchestrator />
       
       {/* Feedback Button - floating */}
       <FeedbackButton 

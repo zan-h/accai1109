@@ -3,6 +3,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useExperimentStore } from '@/app/hooks/useExperimentStore';
 
 // Add interface export
 export interface SettingsModalProps {
@@ -26,7 +27,8 @@ export interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting, onRestartTour }: SettingsModalProps) {
-  const [activeSection, setActiveSection] = useState<'general' | 'developer' | 'voice'>('general');
+  const [activeSection, setActiveSection] = useState<'general' | 'voice' | 'experiments' | 'developer'>('general');
+  const { openSelection } = useExperimentStore();
   
   // Close on Escape
   useEffect(() => {
@@ -87,6 +89,7 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting, onRe
                   {[
                     { id: 'general', label: 'General', icon: '⚙️' },
                     { id: 'voice', label: 'Voice', icon: '🎤' },
+                    { id: 'experiments', label: 'Experiments', icon: '🧪' },
                     { id: 'developer', label: 'Developer', icon: '🔧' },
                   ].map((section) => (
                     <button
@@ -118,6 +121,7 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting, onRe
                   {[
                     { id: 'general', label: 'General', icon: '⚙️' },
                     { id: 'voice', label: 'Voice', icon: '🎤' },
+                    { id: 'experiments', label: 'Experiments', icon: '🧪' },
                     { id: 'developer', label: 'Developer', icon: '🔧' },
                   ].map((section) => (
                     <button
@@ -217,6 +221,58 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting, onRe
                         value={settings.speechSpeed}
                         onChange={(v) => onUpdateSetting('speechSpeed', v)}
                       />
+                    </motion.div>
+                  )}
+
+                  {activeSection === 'experiments' && (
+                    <motion.div
+                      key="experiments"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-6"
+                    >
+                       <div className="p-6 rounded-xl bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-white/10">
+                        <div className="flex items-start gap-4 mb-6">
+                          <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center text-2xl">
+                            🧪
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-white mb-1">Research Experiments</h3>
+                            <p className="text-sm text-white/70">
+                              Participate in our HCI research studies to help us improve voice agent interactions for focus and flow.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="bg-black/40 rounded-lg p-4 mb-6 border border-white/5">
+                          <h4 className="font-semibold text-white text-sm mb-3">Available Studies:</h4>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3 text-sm text-white/80">
+                              <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                              <span>Experiment 1: In-the-Moment Session (15-20 min)</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm text-white/80">
+                              <span className="w-2 h-2 rounded-full bg-purple-400"></span>
+                              <span>Experiment 2: Retrospective Analysis (10-15 min)</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            openSelection();
+                            onClose();
+                          }}
+                          className="w-full py-3 px-4 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-colors shadow-lg shadow-white/10"
+                        >
+                          View Experiments
+                        </button>
+                      </div>
+
+                      <div className="text-xs text-white/40 text-center">
+                        All data is anonymized and used strictly for research purposes.
+                      </div>
                     </motion.div>
                   )}
                   

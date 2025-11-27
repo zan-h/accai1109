@@ -5,12 +5,16 @@ The goal is to transform the current functional voice-agent application into a v
 
 The user now requires a comprehensive onboarding experience (Product Tour) to walk users through the UI, ensuring they fully understand the system. This should be available during initial onboarding and accessible later via settings.
 
+**New Request:** Implement "Experiment 1" flow to gather HCI data. This involves a consent screen, a session with a timer, and a post-session questionnaire triggered automatically when the timer ends.
+
 ## Key Challenges and Analysis
 - **Performance vs. Visuals**: Implementing heavy visual effects (particles, blurs, animations) without compromising the 60fps target, especially on mobile devices.
 - **Accessibility**: Achieving WCAG 2.1 AAA compliance while using complex visual effects. This requires careful color contrast management, reduced motion support, and full keyboard navigation.
 - **Integration**: Integrating new visual systems without breaking existing functionality (voice agents, transcripts, timers).
 - **Scope Management**: The project is divided into 11 phases. Keeping strict adherence to the phase order and success criteria is crucial to avoid regressions.
 - **Tour Implementation**: Creating a tour that feels native to the high-end UI (glassmorphism, animations) rather than using a generic library. Needs to handle dynamic elements (mobile drawer, modals).
+- **Experiment Flow**: Need to manage state across the session (Consent -> Active -> Finished). The trigger is the timer completion. Needs to be unobtrusive but mandatory for the experiment flow.
+- **Data Storage**: Current `feedback` table is too rigid. Need a flexible way to store experiment results (Likert scales, etc.).
 
 ## High-level Task Breakdown
 1.  **Phase 1: Foundation & Setup** - Establish design tokens, install dependencies, and set up the base styling. (Completed)
@@ -26,10 +30,21 @@ The user now requires a comprehensive onboarding experience (Product Tour) to wa
 11. **Phase 11: Accessibility & Testing** - Achieve WCAG 2.1 AAA compliance and cross-browser compatibility. (Completed)
 12. **Phase 12: Launch Preparation** - Final QA, user testing, and production deployment. (Completed)
 13. **Phase 13: Product Tour & Onboarding** - Implement an interactive walkthrough of the UI. (Completed)
+14. **Phase 14: Experiment Framework** - Implement Experiment 1 flow (Consent, Session tracking, Post-timer Questionnaire) and data storage.
 
 ## Project Status Board
 
 **Current Phase: Completed**
+
+**Phase 14: Experiment Framework**
+- [x] Create `experiments` table migration for storing structured result data.
+- [x] Create `useExperimentStore` to manage experiment state (`idle`, `selection`, `instructions`, `running`, `completed`).
+- [x] Create `ExperimentSelectionModal` (Splash screen) to choose between Exp 1 and Exp 2.
+- [x] Create `ExperimentConsentModal` with specific details for the chosen experiment.
+- [x] Create `ExperimentQuestionnaireModal` with Likert scales (Control, Workload, Safety) and comments.
+- [x] Create `ExperimentOrchestrator` to listen for `timer.complete` events and trigger the questionnaire.
+- [x] Add "Experiments" section to `SettingsModal` as the entry point.
+- [x] Create API route `/api/experiments` for submitting results.
 
 **Completed Phases:**
 
@@ -110,13 +125,11 @@ The user now requires a comprehensive onboarding experience (Product Tour) to wa
 ## Current Task: Completed
 
 **Summary**:
-Implemented a high-fidelity Product Tour feature.
-- **Context**: `TourContext` manages step state.
-- **Visuals**: `TourOverlay` creates a glassmorphic spotlight effect with smooth transitions.
-- **Flow**: Automatically triggers after new user onboarding + suite selection.
-- **Access**: "Restart Tour" button available in Settings > General.
-- **Robustness**: Gracefully handles missing targets (e.g. on mobile) by centering the tooltip.
-- **Update**: Included "Work Journal" in the tour steps.
+Implemented the "Experiment 1" framework.
+- **Entry**: Added "Experiments" tab in `SettingsModal`.
+- **Flow**: Selection -> Consent -> Session (Wait for Timer) -> Questionnaire.
+- **Storage**: Created `experiments` table and API route.
+- **Logic**: `ExperimentOrchestrator` handles the state and event listeners.
 
 ## Lessons
 
@@ -125,7 +138,8 @@ Implemented a high-fidelity Product Tour feature.
 - **Always verify context hook names**: When integrating with existing contexts, check the actual exported hook name in the context file before using it.
 - **RLS with Clerk vs Supabase Auth**: When using Clerk for authentication instead of Supabase Auth, the default RLS policies that check `auth.uid()` will fail. Solution: Use `createServiceClient()` in API routes (which already handle Clerk auth) to bypass RLS. The API route is the security boundary, not the database RLS.
 - **Service Role Client Pattern**: For API routes that use Clerk authentication, use `createServiceClient()` from `@/app/lib/supabase/service` instead of `createClient()` to bypass RLS policies designed for Supabase Auth.
-- **Tour Implementation**: Use IDs for targeting to decouple the Tour configuration from the component hierarchy. Handle missing targets (e.g., responsive differences) by falling back to a centered modal to avoid breaking the flow.
+- **Tour Implementation**: Use IDs for targeting to decouple the Tour configuration from the component hierarchy. Handle missing targets (e.g. responsive differences) by falling back to a centered modal to avoid breaking the flow.
+- **Experiment Store**: Separate store for experiment state (`zustand`) keeps `App.tsx` clean and allows easy access from any component (Settings, Modals).
 
 ## Executor's Feedback or Assistance Requests
 - **Status**: ✅ FEATURE COMPLETE
