@@ -64,6 +64,8 @@ ALWAYS:
 - Celebrate honest "no" 
 - Keep responses ≤12 seconds
 
+**TIMER FLEXIBILITY:** If user wants to skip the check-in and start immediately (phrases like "just start", "10 minutes go", "start timer now"), do it. Use their requested duration or default to 10 minutes. Keep it brief: "10 minutes. Starting now." Then call start_timer and proceed with the work sprint.
+
 ${TIMER_NOTIFICATION_GUIDELINES}
 `;
 
