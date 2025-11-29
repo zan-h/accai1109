@@ -1,261 +1,419 @@
-# Vercel Deployment for ACCAI Voice Agents App
+# Study Suite: Evidence-Based Learning Agent System
 
 ## Background and Motivation
 
 **User Request:** 
-> "How can I host this on a website? I do have a domain: accai.io"
+> "make a study 3 agent study suite that uses the latest science around learning to help people learn. also include it in the 'complex task' category"
 
 **Goal:**
-Deploy the Next.js voice agent application to production on Vercel with custom domain accai.io. The app is a sophisticated real-time voice AI workspace with:
-- OpenAI Realtime API integration
-- Clerk authentication
-- Supabase database
-- Multiple API routes and webhooks
-- Real-time WebSocket connections
+Create a comprehensive study agent suite that incorporates evidence-based learning science to help people learn more effectively. The suite will be in the 'complex-work' category (not just 3 agents, but optimally designed for learning workflows).
 
-**Why Vercel:**
-- Zero-config Next.js deployment
-- Automatic HTTPS and global CDN
-- Serverless functions work out of the box
-- Easy environment variable management
-- Seamless custom domain setup
-- Built by Next.js creators
+**Status:**
+PLANNER MODE - Designing the suite architecture and implementation plan.
 
 ## Key Challenges and Analysis
 
-### Application Architecture
-This is a **full-stack Next.js 15 app** with:
-- **Frontend**: React 19, TypeScript, TailwindCSS
-- **Backend**: API routes, Server Actions, Middleware
-- **Real-time**: OpenAI Realtime API with WebSocket connections
-- **Auth**: Clerk (OAuth + webhooks)
-- **Database**: Supabase (PostgreSQL)
-- **Assets**: 3D graphics (Three.js), animations (GSAP, Framer Motion)
+### Learning Science Principles to Incorporate
 
-### Critical Dependencies
-1. **OpenAI Realtime API** - Needs valid API key, uses gpt-4o-realtime-preview model
-2. **Clerk** - Requires webhook endpoint for user sync
-3. **Supabase** - Production database with migrations
-4. **Environment Variables** - 10+ secrets needed
+Based on the latest cognitive psychology and education research, the suite will incorporate:
 
-### Deployment Considerations
-1. **Serverless Functions**: All API routes need to work as Vercel Functions
-2. **WebSocket Support**: Real-time connections via OpenAI's API (client → OpenAI, not self-hosted)
-3. **Build Size**: Large dependencies (Three.js, GSAP, etc.) - may need optimization
-4. **Database Migrations**: Need to run Supabase migrations in production
-5. **Webhook Endpoints**: Clerk webhook must be publicly accessible
-6. **Domain DNS**: Need to configure accai.io DNS records
+**1. Spaced Repetition (Ebbinghaus Forgetting Curve)**
+- Review material at increasing intervals (1 day, 3 days, 1 week, 2 weeks, 1 month)
+- Combat forgetting through strategic timing
+- Build long-term retention
+
+**2. Active Recall / Retrieval Practice**
+- Test yourself BEFORE reviewing notes (pre-testing effect)
+- Generate answers from memory rather than passive re-reading
+- Significantly more effective than highlighting or re-reading
+
+**3. Interleaving**
+- Mix topics and problem types rather than blocking (same topic repeatedly)
+- Improves discrimination and flexible application
+- More challenging but leads to deeper learning
+
+**4. Elaborative Interrogation**
+- Ask "why" and "how" questions
+- Connect new information to existing knowledge
+- Create meaningful associations
+
+**5. Concrete Examples & Analogies**
+- Link abstract concepts to concrete, relatable examples
+- Use metaphors and analogies
+- Dual coding: combine visual and verbal information
+
+**6. Metacognition (Think About Thinking)**
+- Reflect on what you know vs. don't know
+- Identify confusion and knowledge gaps
+- Plan learning strategies consciously
+
+**7. Generation Effect**
+- Produce answers/content rather than passively consuming
+- Explain concepts in your own words
+- Create summaries, diagrams, or teach others
+
+**8. Testing Effect**
+- Frequent low-stakes testing enhances retention
+- Practice questions > passive review
+- Feedback is crucial
+
+**9. Desirable Difficulties**
+- Some struggle during learning improves long-term retention
+- Challenges that force deeper processing
+- Balance between too easy and overwhelming
+
+### Suite Architecture Considerations
+
+**Agent Design:**
+- Each agent specializes in a specific learning phase
+- Agents use timers for focused study sessions (Pomodoro-style)
+- Handoffs between study modes
+- Workspace templates track progress and schedule reviews
+
+**Workspace Templates:**
+- Knowledge tracking (what to learn, what's learned)
+- Spaced repetition schedule
+- Active recall question bank
+- Study session logs
+- Confusion/question capture
+- Concept maps and connections
+
+**User Experience:**
+- Beginner-friendly (anyone can use it)
+- Voice-optimized for hands-free studying
+- Encourages evidence-based techniques naturally
+- Reduces cognitive load through guided sessions
+
+## Suite Design: Evidence-Based Study Companion
+
+### Suite Metadata
+- **ID**: `evidence-based-study`
+- **Name**: Evidence-Based Study Companion
+- **Description**: Learn smarter, not harder. Voice-guided study system using spaced repetition, active recall, and proven learning science.
+- **Icon**: 🎓
+- **Category**: `complex-work`
+- **Tags**: `study`, `learning`, `active-recall`, `spaced-repetition`, `memory`, `education`, `exam-prep`, `retention`
+- **User Level**: `beginner`
+- **Estimated Session**: 25-50 minutes (Pomodoro-style)
+
+### Agents (3)
+
+**1. Study Strategist** 🎯 (Root Agent)
+- Helps plan what to learn and when
+- Schedules study sessions using spaced repetition principles
+- Breaks down topics into manageable chunks
+- Identifies knowledge gaps through pre-testing
+- Sets up study sessions with clear goals
+- Manages spaced repetition schedule and interleaving
+- Tracks what's been learned vs. needs review
+
+**2. Deep Processor** 🔍
+- Facilitates elaborative interrogation (asking why/how)
+- Helps create concrete examples and analogies
+- Builds connections between concepts
+- Guides concept mapping
+- Encourages explaining in own words
+- Uses dual coding (visual + verbal)
+- Helps understand the "why" behind concepts
+
+**3. Active Recall & Metacognition Coach** 🧠
+- Guides retrieval practice (testing yourself)
+- Asks questions to generate answers from memory
+- Uses "generation effect" and "testing effect"
+- Creates practice questions from material
+- Provides immediate feedback
+- Timed study sessions with check-ins
+- Helps reflect on learning process
+- Identifies what you know vs. don't know
+- Clarifies confusion points
+- Guides self-assessment and confidence tracking
+- Teaches learning strategies through practice
+
+### Workspace Templates (2)
+
+**1. Knowledge Tracker** (CSV)
+- Topic | Status (New/Learning/Review/Mastered) | Confidence (1-5) | Last Studied | Next Review | Notes
+- Tracks what you're learning with spaced repetition schedule
+- Shows when to review each topic
+- Records confidence levels for metacognition
+- Enables evidence-based spaced repetition
+
+**2. Active Recall Questions** (CSV)
+- Question | Answer | Topic | Difficulty | Last Tested | Result | Next Test Date
+- Question bank for self-testing (retrieval practice)
+- Tracks testing history and performance
+- Agent can quiz you from this bank
+- Enables evidence-based active recall practice
+
+**Why these 2?**
+These directly support the two most effective learning techniques from research:
+1. **Spaced Repetition** → Knowledge Tracker schedules reviews
+2. **Active Recall/Testing Effect** → Question bank enables retrieval practice
+
+Everything else (planning, concept maps, reflection) can be done through voice conversation with the agents.
+
+---
 
 ## High-level Task Breakdown
 
-### **Phase 1: Pre-Deployment Prerequisites** (User Action Required)
-These steps require the user to set up accounts and gather credentials.
+### **Phase 1: Suite Structure Setup** (Executor: 10 minutes)
 
-#### Task 1.1: Verify GitHub Repository Setup
-- **Action**: Confirm code is pushed to GitHub repository
+#### Task 1.1: Create Directory Structure
+- **Action**: Create folder structure for the suite
 - **Success Criteria**: 
-  - Repository exists on GitHub
-  - Latest code is committed and pushed
-  - `.env.local` is NOT committed (in .gitignore)
-- **Owner**: User
-- **Estimated Time**: 5 minutes
-
-#### Task 1.2: Gather Environment Variables
-- **Action**: Collect all required secrets from existing `.env.local` file
-- **Required Variables**:
-  ```
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-  CLERK_SECRET_KEY=
-  CLERK_WEBHOOK_SECRET=
-  NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-  NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-  NEXT_PUBLIC_SUPABASE_URL=
-  NEXT_PUBLIC_SUPABASE_ANON_KEY=
-  SUPABASE_SERVICE_ROLE_KEY=
-  OPENAI_API_KEY=
-  ```
-- **Success Criteria**: All values documented and ready to paste
-- **Owner**: User
-- **Estimated Time**: 5 minutes
-
-#### Task 1.3: Create Vercel Account
-- **Action**: Sign up at vercel.com (can use GitHub OAuth)
-- **Success Criteria**: Account created, logged in
-- **Owner**: User
-- **Estimated Time**: 2 minutes
-
----
-
-### **Phase 2: Vercel Project Setup** (Guided Execution)
-
-#### Task 2.1: Import Project to Vercel
-- **Action**: Connect GitHub repository to Vercel
-- **Steps**:
-  1. Click "Add New Project" in Vercel dashboard
-  2. Select GitHub repository
-  3. Configure build settings (auto-detected for Next.js)
-  4. Set root directory: `14-voice-agents/realtime-workspace-agents`
-- **Success Criteria**: Project imported, not yet deployed
-- **Estimated Time**: 5 minutes
-
-#### Task 2.2: Configure Environment Variables
-- **Action**: Add all environment variables in Vercel dashboard
-- **Steps**:
-  1. Go to Project Settings → Environment Variables
-  2. Add each variable (Production, Preview, Development)
-  3. Verify no typos
-- **Success Criteria**: All 9 environment variables added
-- **Estimated Time**: 10 minutes
-
-#### Task 2.3: Initial Deployment
-- **Action**: Deploy the application
-- **Success Criteria**: 
-  - Build succeeds
-  - No build errors
-  - App accessible at Vercel-provided URL (*.vercel.app)
-- **Estimated Time**: 5 minutes (build time)
-
----
-
-### **Phase 3: External Services Configuration** (Critical for functionality)
-
-#### Task 3.1: Update Clerk Production URLs
-- **Action**: Add Vercel deployment URL to Clerk allowed domains
-- **Steps**:
-  1. Go to Clerk Dashboard
-  2. Navigate to "Domains"
-  3. Add production URL (both .vercel.app and accai.io)
-  4. Update webhook endpoint to `https://[your-domain]/api/webhooks/clerk`
-- **Success Criteria**: 
-  - Sign-in works on production URL
-  - Webhook endpoint configured
-- **Estimated Time**: 10 minutes
-
-#### Task 3.2: Update Supabase Configuration
-- **Action**: Add production URL to Supabase allowed redirect URLs
-- **Steps**:
-  1. Go to Supabase Dashboard → Authentication → URL Configuration
-  2. Add production URLs to "Redirect URLs"
-  3. Verify database is accessible (not localhost)
-- **Success Criteria**: Database connections work from Vercel
-- **Estimated Time**: 5 minutes
-
-#### Task 3.3: Verify OpenAI API Access
-- **Action**: Confirm OpenAI API key works and has sufficient credits
-- **Steps**:
-  1. Test API endpoint: `/api/session`
-  2. Verify realtime model access (gpt-4o-realtime-preview-2025-06-03)
-- **Success Criteria**: Can create OpenAI realtime sessions
-- **Estimated Time**: 3 minutes
-
----
-
-### **Phase 4: Custom Domain Setup** (accai.io)
-
-#### Task 4.1: Configure DNS Records
-- **Action**: Point accai.io to Vercel
-- **Steps**:
-  1. In Vercel: Project Settings → Domains → Add accai.io
-  2. Vercel provides DNS records (A or CNAME)
-  3. In domain registrar (where you bought accai.io):
-     - Add A record or CNAME as instructed
-     - Wait for DNS propagation (5-60 minutes)
-- **Success Criteria**: accai.io resolves to Vercel app
-- **Owner**: User (domain access required)
-- **Estimated Time**: 15 minutes + DNS propagation wait
-
-#### Task 4.2: SSL Certificate
-- **Action**: Wait for Vercel to provision SSL certificate
-- **Success Criteria**: https://accai.io works with valid SSL
-- **Estimated Time**: Automatic (5-10 minutes after DNS)
-
-#### Task 4.3: Update Services with Final Domain
-- **Action**: Update Clerk and Supabase with accai.io
-- **Success Criteria**: All auth flows work on accai.io
+  - Folder created at `src/app/agentConfigs/suites/evidence-based-study/`
+  - `agents/` subfolder created
+  - Files created: `suite.config.ts`, `prompts.ts`, `index.ts`
+- **Verification**: Files exist with correct names
 - **Estimated Time**: 5 minutes
 
 ---
 
-### **Phase 5: Testing & Validation**
+### **Phase 2: Suite Configuration** (Executor: 20 minutes)
 
-#### Task 5.1: Functional Testing
-- **Action**: Test all major features on production
-- **Test Cases**:
-  - [ ] User sign-up/sign-in
-  - [ ] Create project
-  - [ ] Start voice session
-  - [ ] Timer functionality
-  - [ ] Save session
-  - [ ] Work journal
-  - [ ] Feedback submission
-- **Success Criteria**: All features work as expected
-- **Estimated Time**: 20 minutes
-
-#### Task 5.2: Performance Check
-- **Action**: Verify performance and loading times
-- **Checks**:
-  - Lighthouse score
-  - Initial page load < 3s
-  - Voice connection latency acceptable
-- **Success Criteria**: Performance acceptable
-- **Estimated Time**: 10 minutes
-
-#### Task 5.3: Error Monitoring Setup
-- **Action**: Check Vercel logs for any runtime errors
-- **Success Criteria**: No critical errors in production logs
-- **Estimated Time**: 5 minutes
-
----
-
-### **Phase 6: Documentation & Handoff**
-
-#### Task 6.1: Document Deployment
-- **Action**: Create deployment documentation
-- **Contents**:
-  - Environment variables reference
-  - Deployment process
-  - Troubleshooting guide
-  - Rollback procedures
-- **Success Criteria**: Documentation exists for future deployments
+#### Task 2.1: Write Suite Configuration
+- **Action**: Create `suite.config.ts` with metadata and workspace templates
+- **Success Criteria**:
+  - 2 essential workspace templates defined with sample content
+  - Metadata complete (id, name, description, icon, category, tags)
+  - Templates include helpful examples and structure
+  - Uses dynamic dates where appropriate
+  - Knowledge Tracker enables spaced repetition
+  - Active Recall Questions enables testing practice
+- **Verification**: File compiles without errors, templates are useful
 - **Estimated Time**: 15 minutes
 
 ---
 
-## **Total Estimated Time**: 2-3 hours (excluding DNS propagation wait time)
+### **Phase 3: Agent Prompts** (Executor: 40 minutes)
+
+#### Task 3.1: Write Agent System Prompts
+- **Action**: Create `prompts.ts` with all 3 agent prompts
+- **Content for each prompt**:
+  - Role and expertise
+  - Learning science principles to apply
+  - Conversation flow
+  - Tool usage guidelines
+  - Handoff triggers
+  - Voice and tone
+  - Include TIMER_NOTIFICATION_GUIDELINES for Active Recall & Metacognition Coach
+- **Success Criteria**:
+  - All 3 prompts written (Study Strategist, Deep Processor, Active Recall & Metacognition Coach)
+  - Each prompt 400-600 words (longer for merged agent)
+  - Clear handoff logic
+  - Incorporates learning science principles
+  - Timer guidelines included for Active Recall & Metacognition Coach
+  - Merged agent combines retrieval practice + self-reflection naturally
+- **Verification**: Prompts are clear, actionable, and evidence-based
+- **Estimated Time**: 30 minutes
+
+---
+
+### **Phase 4: Agent Files** (Executor: 15 minutes)
+
+#### Task 4.1: Create Individual Agent Files
+- **Action**: Create 3 agent files in `agents/` folder
+- **Files to create**:
+  - `studyStrategist.ts`
+  - `deepProcessor.ts`
+  - `activeRecallMetacognition.ts`
+- **Success Criteria**:
+  - Each agent imports correct prompt
+  - Appropriate voice selected for each agent
+  - Timer tools added to Active Recall & Metacognition Coach
+  - Basic workspace tools added to all agents
+  - Handoffs array initialized (empty, wired in index.ts)
+- **Verification**: All files compile, agents properly configured
+- **Estimated Time**: 10 minutes
+
+---
+
+### **Phase 5: Wire Suite Together** (Executor: 10 minutes)
+
+#### Task 5.1: Create Suite Index with Handoffs
+- **Action**: Create `index.ts` to wire agents together
+- **Success Criteria**: 
+  - Import all agents
+  - Wire handoffs between agents (logical study workflow)
+  - Export complete AgentSuite
+  - Set Study Strategist as root agent
+  - Include moderation guardrail
+- **Verification**: No circular dependencies, handoffs make sense
+- **Estimated Time**: 10 minutes
+
+---
+
+### **Phase 6: Register Suite** (Executor: 5 minutes)
+
+#### Task 6.1: Register in Main Config
+- **Action**: Add suite to `src/app/agentConfigs/index.ts`
+- **Success Criteria**:
+  - Import statement added
+  - Suite registered in registry
+  - No duplicate IDs
+- **Verification**: Build succeeds, no errors
+- **Estimated Time**: 5 minutes
+
+---
+
+### **Phase 7: Build & Test** (Executor: 10 minutes)
+
+#### Task 7.1: Verify Build
+- **Action**: Run build and check for errors
+- **Success Criteria**:
+  - `npm run build` succeeds
+  - No TypeScript errors
+  - No linting errors
+- **Verification**: Clean build output
+- **Estimated Time**: 5 minutes
+
+#### Task 7.2: Manual UI Test
+- **Action**: Start dev server and verify suite appears
+- **Success Criteria**:
+  - Suite appears in suite selector
+  - Icon, name, description correct
+  - All 3 agents listed
+  - Category shows "complex-work"
+- **Verification**: Suite visible and configured correctly
+- **Estimated Time**: 5 minutes
+
+---
+
+### **Phase 8: Functional Testing** (Executor: 20 minutes)
+
+#### Task 8.1: Test Workspace Initialization
+- **Action**: Select suite and start new session
+- **Success Criteria**:
+  - 2 workspace tabs created (Knowledge Tracker, Active Recall Questions)
+  - Templates load with correct content
+  - Dynamic dates populated
+  - CSV tabs render correctly
+- **Verification**: Workspace initializes properly
+- **Estimated Time**: 5 minutes
+
+#### Task 8.2: Test Agent Connection
+- **Action**: Connect to Study Strategist
+- **Success Criteria**:
+  - Voice connection establishes
+  - Agent responds appropriately
+  - Can speak and receive responses
+  - Agent personality matches prompt
+- **Verification**: Voice agent works correctly
+- **Estimated Time**: 5 minutes
+
+#### Task 8.3: Test Agent Handoffs
+- **Action**: Trigger handoffs between agents
+- **Success Criteria**:
+  - Request transition to Active Recall & Metacognition Coach → handoff occurs
+  - Request transition to Deep Processor → handoff occurs
+  - Request transition back to Study Strategist → handoff occurs
+  - Transcript shows handoff messages
+  - All handoff paths work (3 agents can reach each other)
+- **Verification**: Handoffs function smoothly
+- **Estimated Time**: 10 minutes
+
+---
+
+### **Phase 9: Timer Integration Testing** (Executor: 10 minutes)
+
+#### Task 9.1: Test Timer Functionality with Active Recall & Metacognition Coach
+- **Action**: Ask Active Recall & Metacognition Coach to start a study timer
+- **Success Criteria**:
+  - Timer starts and displays correctly
+  - Agent checks in at intervals (if enabled)
+  - Timer notifications work
+  - Can pause/resume/stop timer
+  - Agent combines retrieval practice with metacognitive reflection
+- **Verification**: Timer integration works with agent
+- **Estimated Time**: 10 minutes
+
+---
+
+### **Phase 10: User Experience Testing** (Executor: 15 minutes)
+
+#### Task 10.1: Test Complete Study Workflow
+- **Action**: Run through realistic study scenario
+- **Scenario**:
+  1. Start with Study Strategist - plan learning "React Hooks"
+  2. Study Strategist adds "React Hooks" to Knowledge Tracker
+  3. Hand off to Deep Processor - understand useState deeply with "why" questions
+  4. Hand off to Active Recall & Metacognition Coach - test knowledge and reflect
+  5. Coach adds questions to Active Recall Questions bank
+  6. Back to Study Strategist - schedule next review in Knowledge Tracker
+  7. Verify both workspace tabs updated correctly
+- **Success Criteria**:
+  - Workflow feels natural and helpful
+  - Agents guide toward evidence-based techniques
+  - Knowledge Tracker shows topics with review dates
+  - Active Recall Questions populated with test questions
+  - Learning science principles are evident in practice
+  - The merged Active Recall & Metacognition agent flows naturally
+- **Verification**: Suite provides genuine value for learning
+- **Estimated Time**: 15 minutes
+
+---
+
+### **Phase 11: Documentation** (Executor: 15 minutes)
+
+#### Task 11.1: Document Suite Features
+- **Action**: Create README for suite (optional, if needed for team)
+- **Contents**:
+  - Learning science principles used
+  - Agent descriptions
+  - How to use the suite effectively
+  - Example workflows
+  - Tips for maximizing retention
+- **Success Criteria**: Clear documentation exists
+- **Verification**: Readable and helpful
+- **Estimated Time**: 15 minutes (optional)
+
+---
+
+## **Total Estimated Time**: 2-2.5 hours
+
+---
 
 ## Project Status Board
 
-**Current Phase: PLANNER MODE - Deployment Plan Created**
+**Current Phase: PLANNER MODE - Design Complete**
 
 ### Quick Reference Checklist
 
-**Phase 1: Pre-Deployment Prerequisites (USER ACTION REQUIRED)**
-- [ ] 1.1: GitHub repository verified and up-to-date
-- [ ] 1.2: Environment variables documented
-- [ ] 1.3: Vercel account created
+**Phase 1: Suite Structure Setup**
+- [x] 1.1: Create directory structure
 
-**Phase 2: Vercel Project Setup**
-- [ ] 2.1: Project imported to Vercel
-- [ ] 2.2: Environment variables configured
-- [ ] 2.3: Initial deployment successful
+**Phase 2: Suite Configuration**
+- [x] 2.1: Write suite.config.ts with 2 essential workspace templates
 
-**Phase 3: External Services Configuration**
-- [ ] 3.1: Clerk production URLs updated
-- [ ] 3.2: Supabase configuration updated  
-- [ ] 3.3: OpenAI API access verified
+**Phase 3: Agent Prompts**
+- [x] 3.1: Write all 3 agent system prompts
 
-**Phase 4: Custom Domain Setup**
-- [ ] 4.1: DNS records configured
-- [ ] 4.2: SSL certificate provisioned
-- [ ] 4.3: Services updated with final domain
+**Phase 4: Agent Files**
+- [x] 4.1: Create 3 individual agent files
 
-**Phase 5: Testing & Validation**
-- [ ] 5.1: Functional testing complete
-- [ ] 5.2: Performance check passed
-- [ ] 5.3: Error monitoring reviewed
+**Phase 5: Wire Suite Together**
+- [x] 5.1: Create index.ts with handoffs
 
-**Phase 6: Documentation**
-- [ ] 6.1: Deployment documentation created
+**Phase 6: Register Suite**
+- [x] 6.1: Register in main config
+
+**Phase 7: Build & Test**
+- [x] 7.1: Verify build succeeds ✅ Build successful!
+- [ ] 7.2: Manual UI test - IN PROGRESS
+
+**Phase 8: Functional Testing**
+- [ ] 8.1: Test workspace initialization
+- [ ] 8.2: Test agent connection
+- [ ] 8.3: Test agent handoffs
+
+**Phase 9: Timer Integration Testing**
+- [ ] 9.1: Test timer functionality with Active Recall Coach
+
+**Phase 10: User Experience Testing**
+- [ ] 10.1: Test complete study workflow
+
+**Phase 11: Documentation (Optional)**
+- [ ] 11.1: Document suite features
 
 ---
 
@@ -263,90 +421,146 @@ These steps require the user to set up accounts and gather credentials.
 
 ### Repository Details
 - **Root**: `/Users/mizan/100MRR/accai adhd/14-voice-agents/realtime-workspace-agents/`
-- **Framework**: Next.js 15.3.1
-- **Node Version**: Check package.json engines field (if exists)
+- **Suite Location**: `src/app/agentConfigs/suites/evidence-based-study/`
+- **Framework**: Next.js 15.3.1 with OpenAI Agents SDK
 
-### API Endpoints to Verify Post-Deployment
-- `/api/session` - OpenAI realtime session creation
-- `/api/webhooks/clerk` - Clerk user sync webhook
-- `/api/projects` - Project CRUD operations
-- `/api/sessions` - Voice session management
-- `/api/work-journal` - Work journal entries
-- `/api/feedback` - User feedback
-- `/api/experiments` - A/B testing data
-- `/api/user/voice-preferences` - Voice settings
+### Key Files to Reference
+- **Suite Template**: `src/app/agentConfigs/suites/_suite-template/` (starter template)
+- **Example Suites**: 
+  - `writing-companion/` (7 agents, complex workflow)
+  - `gtd/` (5 agents, productivity focus)
+  - `baby-care/` (5 agents, caregiving)
+- **Types**: `src/app/agentConfigs/types.ts` (SuiteConfig, AgentSuite interfaces)
+- **Timer Tools**: `src/app/agentConfigs/shared/tools/workspace/timerTools.ts`
+- **Timer Guidelines**: `src/app/agentConfigs/shared/prompts/timerNotifications.ts`
+- **Workspace Tools**: `src/app/agentConfigs/shared/tools/workspace/workspaceTools.ts`
+- **Guide**: `CREATING_NEW_SUITES.md` (complete implementation guide)
 
-### External Service URLs
-- **Clerk Dashboard**: https://dashboard.clerk.com
-- **Supabase Dashboard**: https://app.supabase.com
-- **OpenAI Platform**: https://platform.openai.com
-- **Vercel Dashboard**: https://vercel.com/dashboard
+### Learning Science Principles to Implement
+
+**Core Techniques:**
+1. **Spaced Repetition** - Review Scheduler manages timing
+2. **Active Recall** - Active Recall Coach tests memory
+3. **Elaborative Interrogation** - Deep Processor asks why/how
+4. **Interleaving** - Review Scheduler mixes topics
+5. **Metacognition** - Metacognition Guide tracks awareness
+6. **Generation Effect** - Produce answers from memory
+7. **Testing Effect** - Frequent low-stakes practice
+8. **Concrete Examples** - Deep Processor creates analogies
+
+**Research Citations** (for prompt design):
+- Ebbinghaus Forgetting Curve (spaced repetition)
+- Roediger & Karpicke (retrieval practice)
+- Kornell & Bjork (interleaving)
+- Dunlosky et al. (learning techniques effectiveness)
+
+### Voice Selection Guidelines
+- **Study Strategist**: `shimmer` (encouraging, organized, systematic)
+- **Deep Processor**: `alloy` (thoughtful, patient, philosophical)
+- **Active Recall & Metacognition Coach**: `echo` (clear, focused, reflective)
+
+### Timer Integration
+- Active Recall & Metacognition Coach should include timer tools for study sessions
+- Import: `import { timerTools } from '@/app/agentConfigs/shared/tools/workspace/timerTools';`
+- Add to tools array: `tools: [...basicWorkspaceTools, ...timerTools]`
+- Include in prompt: `import { TIMER_NOTIFICATION_GUIDELINES } from '../../shared/prompts/timerNotifications';`
 
 ---
 
 ## Executor's Feedback or Assistance Requests
 
-**Status**: ⏳ **AWAITING USER ACTION**
+**Status**: ✅ **EXECUTOR MODE - AGENT SUITES DISABLED**
 
-**Planner Summary:**
-Comprehensive deployment plan created for hosting the Next.js voice agent application on Vercel with custom domain accai.io. The plan is broken into 6 phases with clear success criteria for each task.
+**Task Completed:** Disabled three agent suites per user request
 
-**User Must Complete Phase 1 Before Executor Can Begin:**
-1. **Verify GitHub Repository**: Ensure latest code is pushed to GitHub
-2. **Document Environment Variables**: Have all secrets from `.env.local` ready to copy
-3. **Create Vercel Account**: Sign up at vercel.com
+**What Was Done:**
+- Disabled **Joe Hudson Work Flow** suite
+- Disabled **12-Week Month Coach** suite  
+- Disabled **GTD Capture & Organize** suite
 
-**Questions for User Before Proceeding:**
-1. ❓ Do you have access to your GitHub repository with this project?
-2. ❓ Do you have access to your `.env.local` file with all the API keys?
-3. ❓ Do you have access to your domain registrar for accai.io (to configure DNS)?
-4. ❓ Which email/account manages your Clerk, Supabase, and OpenAI services?
-5. ❓ Have you run any Supabase migrations locally that need to be applied to production?
+**Changes Made:**
+- File: `/Users/mizan/100MRR/accai adhd/14-voice-agents/realtime-workspace-agents/src/app/agentConfigs/index.ts`
+- Commented out import statements for the three suites (lines 20-22)
+- Commented out registration calls for the three suites (lines 38-40)
+- All changes marked with `// DISABLED` comments for easy re-enabling if needed
 
-**Once User Confirms Prerequisites:**
-Switch to **EXECUTOR MODE** to begin Phase 2 (Vercel Project Setup). The Executor will guide through each step with screenshots and verification.
+**Verification:**
+- ✅ No linting errors
+- ✅ Changes properly applied
+- ✅ Code commented (not deleted) for easy restoration
+
+**Next Steps:**
+- User should test the application to verify the three suites no longer appear in the suite selector
+- If the user wants to re-enable any suite, simply uncomment the relevant lines
+
+**Note:** The Evidence-Based Study Companion suite design from the previous work is still in the planning stage and has not been implemented yet.
 
 ---
 
 ## Lessons
 
-### Deployment-Specific Lessons
+### Study Suite Design Lessons
 
-**Lesson 1: Vercel monorepo structure**
-The app is located at `14-voice-agents/realtime-workspace-agents/` subdirectory. When importing to Vercel, must specify root directory correctly to avoid build failures.
+**Lesson 1: Evidence-based learning techniques**
+The most effective learning techniques backed by research are:
+1. Spaced repetition (Ebbinghaus)
+2. Active recall / retrieval practice
+3. Interleaving (mixing topics)
+4. Elaborative interrogation (asking why)
+5. Concrete examples and analogies
+6. Metacognition (self-awareness)
+7. Testing effect (practice testing)
+8. Generation effect (producing answers)
 
-**Lesson 2: Environment variable naming**
-Vercel requires exact environment variable names. `NEXT_PUBLIC_` prefix is critical for client-side access. Server-only secrets should NOT have this prefix.
+**Lesson 2: Suite structure best practices**
+- 3-5 agents is optimal (not too many to overwhelm)
+- Each agent should have clear scope and handoff triggers
+- Root agent should be the natural entry point
+- Category: `complex-work` for sophisticated workflows
+- Include timer tools for time-bounded activities
 
-**Lesson 3: Webhook endpoints must be public**
-The Clerk webhook at `/api/webhooks/clerk` must be excluded from authentication middleware. Confirmed in `middleware.ts` that `/api/webhooks(.*)` is in public routes.
+**Lesson 3: Workspace templates should be minimal and focused**
+- Include sample data to show format
+- Use dynamic dates where appropriate
+- **Less is more** - 2 essential templates better than 7 optional ones
+- Focus on templates that enable core learning science:
+  - Knowledge Tracker for spaced repetition
+  - Active Recall Questions for testing effect
+- Everything else (planning, reflection, concept maps) can be voice conversation
+- Templates should directly support the most effective techniques
 
-**Lesson 4: Database migrations in production**
-Supabase migrations in `supabase/migrations/` need to be applied to production database before deployment. Can use Supabase CLI or dashboard.
+**Lesson 4: Learning science in practice**
+- Don't just mention techniques - guide users to apply them
+- Use timers for focused study sessions (Pomodoro)
+- Track progress to enable spaced repetition
+- Pre-testing reveals knowledge gaps
+- Explain concepts in own words (generation effect)
 
-**Lesson 5: OpenAI Realtime API model**
-Uses `gpt-4o-realtime-preview-2025-06-03` model. Verify API key has access to this specific model in production.
-
-**Lesson 6: DNS propagation timing**
-DNS changes for custom domains can take 5-60 minutes. Plan deployment timing accordingly. Can use temporary .vercel.app URL for testing while waiting.
+**Lesson 5: Agent voices should match personality**
+- Study Strategist: `shimmer` (encouraging, organized, systematic)
+- Deep Processor: `alloy` (thoughtful, patient, philosophical)
+- Active Recall & Metacognition Coach: `echo` (clear, focused, reflective)
 
 ---
 
-### Previous Project Lessons (Retained)
+### General Project Lessons (Retained)
 
-**Lesson 7: Simple is better**
+**Lesson 6: Simple is better**
 Initial plan was overly complex with shared guidelines, multi-phase rollout, etc. User correctly identified that we just needed to update the system prompts directly. This saved significant time and complexity.
 
-**Lesson 8: Agent prompts are powerful**
+**Lesson 7: Agent prompts are powerful**
 Each agent can handle multiple modes (thoughtful setup vs quick start) based on simple natural language instructions. No code changes needed - just clear prompt instructions.
 
-**Lesson 9: Include info useful for debugging in the program output**
+**Lesson 8: Include info useful for debugging in the program output**
 Always add helpful logging and error messages in production.
 
-**Lesson 10: Read the file before you try to edit it**
+**Lesson 9: Read the file before you try to edit it**
 Always verify file contents before making changes to avoid errors.
 
-**Lesson 11: Security practices**
+**Lesson 10: Security practices**
 - Run `npm audit` if vulnerabilities appear in terminal
 - Always ask before using `-force` git commands
 - Never commit `.env.local` or secrets to repository
+
+**Lesson 11: Supabase Generated Types**
+When Supabase types (`src/app/lib/supabase/types.ts`) are out of sync with the database schema (missing tables), the build will fail with type errors. **Temporary fix:** cast to `any`. **Permanent fix:** Regenerate types using `supabase gen types`.

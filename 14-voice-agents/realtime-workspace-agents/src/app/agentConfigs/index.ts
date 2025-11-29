@@ -17,14 +17,15 @@ import energyFocusSuite from './suites/energy-focus';
 import satisfyingWorkSuite from './suites/satisfying-work';
 import babyCareSuite from './suites/baby-care';
 import ifsTherapySuite from './suites/ifs-therapy';
-import joeHudsonSuite from './suites/joe-hudson';
-import twelveWeekMonthSuite from './suites/12-week-month';
-import gtdSuite from './suites/gtd';
+// import joeHudsonSuite from './suites/joe-hudson'; // DISABLED
+// import twelveWeekMonthSuite from './suites/12-week-month'; // DISABLED
+// import gtdSuite from './suites/gtd'; // DISABLED
 import flowSprintsSuite from './suites/flow-sprints';
 import writingCompanionSuite from './suites/writing-companion';
 import videoProductionSuite from './suites/video-production';
 import deepWorkForgeSuite from './suites/deep-work-forge';
 import emotionalRegulationSuite from './suites/emotional-regulation';
+import evidenceBasedStudySuite from './suites/evidence-based-study';
 
 // For now, manually register suites
 // In Phase 4, this will be populated with actual suites
@@ -35,14 +36,15 @@ registerSuiteManually(suiteRegistry, energyFocusSuite);
 registerSuiteManually(suiteRegistry, satisfyingWorkSuite);
 registerSuiteManually(suiteRegistry, babyCareSuite);
 registerSuiteManually(suiteRegistry, ifsTherapySuite);
-registerSuiteManually(suiteRegistry, joeHudsonSuite);
-registerSuiteManually(suiteRegistry, twelveWeekMonthSuite);
-registerSuiteManually(suiteRegistry, gtdSuite);
+// registerSuiteManually(suiteRegistry, joeHudsonSuite); // DISABLED
+// registerSuiteManually(suiteRegistry, twelveWeekMonthSuite); // DISABLED
+// registerSuiteManually(suiteRegistry, gtdSuite); // DISABLED
 registerSuiteManually(suiteRegistry, flowSprintsSuite);
 registerSuiteManually(suiteRegistry, writingCompanionSuite);
 registerSuiteManually(suiteRegistry, videoProductionSuite);
 registerSuiteManually(suiteRegistry, deepWorkForgeSuite);
 registerSuiteManually(suiteRegistry, emotionalRegulationSuite);
+registerSuiteManually(suiteRegistry, evidenceBasedStudySuite);
 
 console.log('📦 Registered suites:', Object.keys(suiteRegistry));
 
