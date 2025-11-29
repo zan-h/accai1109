@@ -192,6 +192,50 @@ export type Database = {
           updated_at?: string;
         };
       };
+      experiments: {
+        Row: {
+          id: string;
+          user_id: string;
+          experiment_type: string;
+          status: string;
+          started_at: string;
+          completed_at: string | null;
+          session_id: string | null;
+          project_id: string | null;
+          timer_duration_ms: number | null;
+          results: Record<string, any> | null;
+          user_agent: string | null;
+          platform: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          experiment_type: string;
+          status?: string;
+          started_at?: string;
+          completed_at?: string | null;
+          session_id?: string | null;
+          project_id?: string | null;
+          timer_duration_ms?: number | null;
+          results?: Record<string, any> | null;
+          user_agent?: string | null;
+          platform?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          experiment_type?: string;
+          status?: string;
+          started_at?: string;
+          completed_at?: string | null;
+          session_id?: string | null;
+          project_id?: string | null;
+          timer_duration_ms?: number | null;
+          results?: Record<string, any> | null;
+          user_agent?: string | null;
+          platform?: string | null;
+        };
+      };
       transcript_items: {
         Row: {
           id: string;
