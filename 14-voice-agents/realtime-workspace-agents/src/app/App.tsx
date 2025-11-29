@@ -1563,7 +1563,7 @@ function AppContent() {
       <FeedbackButton 
         id="tour-feedback"
         currentSuiteId={currentSuite?.id}
-        currentSessionId={currentSessionId}
+        currentSessionId={currentSessionId ?? undefined}
       />
 
       {/* Project Switcher Modal */}
