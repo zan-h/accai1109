@@ -52,3 +52,4 @@ CREATE POLICY "Service role can view all experiments"
   FOR SELECT
   USING (auth.role() = 'service_role');
 
+

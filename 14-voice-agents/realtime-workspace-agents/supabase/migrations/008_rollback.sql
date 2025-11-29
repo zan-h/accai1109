@@ -14,3 +14,4 @@ DROP INDEX IF EXISTS idx_feedback_user_id;
 -- Drop table
 DROP TABLE IF EXISTS feedback;
 
+

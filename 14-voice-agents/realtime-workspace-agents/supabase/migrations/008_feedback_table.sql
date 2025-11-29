@@ -45,3 +45,4 @@ CREATE POLICY "Service role can view all feedback"
   FOR SELECT
   USING (auth.role() = 'service_role');
 
+

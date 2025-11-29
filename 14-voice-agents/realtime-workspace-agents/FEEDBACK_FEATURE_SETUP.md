@@ -193,3 +193,4 @@ If you encounter issues:
 4. Check that the migration was applied successfully
 5. Test with a different browser/device
 
+

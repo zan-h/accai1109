@@ -79,6 +79,7 @@ import { enableMemoryMonitoring } from './lib/memoryMonitor';
 // Versioning for workspace localStorage. If user has an older (e.g., interior remodel) workspaceState, reset when entering the investment research scenario.
 const WORKSPACE_VERSION_KEY = 'workspace_version';
 const MEDICAL_RESEARCH_VERSION = 'medical_research_v1';
+const EVENT_LOGS_PREF_KEY = 'eventLogsPreference';
 
 import { motion, useScroll, useTransform } from 'framer-motion';
 
@@ -194,7 +195,7 @@ function AppContent() {
     audioPlayback: true,
     reducedMotion: false,
     particlesEnabled: true,
-    showEventLogs: true,
+    showEventLogs: false,
     codec: 'opus',
     recordAudio: false,
     memoryMonitoring: false,
@@ -208,15 +209,18 @@ function AppContent() {
     if (typeof window !== 'undefined') {
       const savedSettings = localStorage.getItem('appSettings');
       if (savedSettings) {
-        setSettings(prev => ({ ...prev, ...JSON.parse(savedSettings) }));
+        const { showEventLogs: _legacyShowEventLogs, ...rest } = JSON.parse(savedSettings);
+        setSettings(prev => ({ ...prev, ...rest }));
       }
       
       // Sync individual legacy items if not in bulk settings
       const particles = localStorage.getItem('particlesEnabled');
       if (particles) setSettings(prev => ({ ...prev, particlesEnabled: particles !== 'false' }));
       
-      const logs = localStorage.getItem('logsExpanded');
-      if (logs) setSettings(prev => ({ ...prev, showEventLogs: logs === 'true' }));
+      const logsPreference = localStorage.getItem(EVENT_LOGS_PREF_KEY);
+      if (logsPreference !== null) {
+        setSettings(prev => ({ ...prev, showEventLogs: logsPreference === 'true' }));
+      }
       
       const playback = localStorage.getItem('audioPlaybackEnabled');
       if (playback) setSettings(prev => ({ ...prev, audioPlayback: playback === 'true' }));
@@ -229,7 +233,7 @@ function AppContent() {
       localStorage.setItem('appSettings', JSON.stringify(settings));
       // Sync back to individual keys for legacy compatibility
       localStorage.setItem('particlesEnabled', settings.particlesEnabled.toString());
-      localStorage.setItem('logsExpanded', settings.showEventLogs.toString());
+      localStorage.setItem(EVENT_LOGS_PREF_KEY, settings.showEventLogs.toString());
       localStorage.setItem('audioPlaybackEnabled', settings.audioPlayback.toString());
     }
     
@@ -319,8 +323,16 @@ function AppContent() {
     useState<SessionStatus>("DISCONNECTED");
 
   const [isEventsPaneExpanded, setIsEventsPaneExpanded] =
-    useState<boolean>(true);
-  const [isPTTActive, setIsPTTActive] = useState<boolean>(false);
+    useState<boolean>(() => {
+      if (typeof window === 'undefined') return false;
+      const storedPreference = localStorage.getItem(EVENT_LOGS_PREF_KEY);
+      return storedPreference ? storedPreference === 'true' : false;
+    });
+  const [isPTTActive, setIsPTTActive] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const stored = localStorage.getItem('pushToTalkUI');
+    return stored ? stored === 'true' : true;
+  });
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
   const [isAudioPlaybackEnabled, setIsAudioPlaybackEnabled] = useState<boolean>(
     () => {
@@ -730,9 +742,11 @@ function AppContent() {
     if (storedPushToTalkUI) {
       setIsPTTActive(storedPushToTalkUI === "true");
     }
-    const storedLogsExpanded = localStorage.getItem("logsExpanded");
-    if (storedLogsExpanded) {
+    const storedLogsExpanded = localStorage.getItem(EVENT_LOGS_PREF_KEY);
+    if (storedLogsExpanded !== null) {
       setIsEventsPaneExpanded(storedLogsExpanded === "true");
+    } else {
+      setIsEventsPaneExpanded(false);
     }
     const storedAudioPlaybackEnabled = localStorage.getItem(
       "audioPlaybackEnabled"
@@ -747,7 +761,7 @@ function AppContent() {
   }, [isPTTActive]);
 
   useEffect(() => {
-    localStorage.setItem("logsExpanded", isEventsPaneExpanded.toString());
+    localStorage.setItem(EVENT_LOGS_PREF_KEY, isEventsPaneExpanded.toString());
   }, [isEventsPaneExpanded]);
 
   useEffect(() => {
