@@ -209,8 +209,8 @@ function AppContent() {
     if (typeof window !== 'undefined') {
       const savedSettings = localStorage.getItem('appSettings');
       if (savedSettings) {
-        const { showEventLogs: _legacyShowEventLogs, ...rest } = JSON.parse(savedSettings);
-        setSettings(prev => ({ ...prev, ...rest }));
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings(prev => ({ ...prev, ...parsedSettings }));
       }
       
       // Sync individual legacy items if not in bulk settings

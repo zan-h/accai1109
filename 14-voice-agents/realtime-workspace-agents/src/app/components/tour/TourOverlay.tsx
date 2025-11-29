@@ -6,7 +6,7 @@ export default function TourOverlay() {
   const { isActive, steps, currentStepIndex, nextStep, prevStep, endTour } = useTour();
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [targetRadius, setTargetRadius] = useState<number>(10);
-  const [tooltipSize, setTooltipSize] = useState<{ width: number; height: number }>({ width: 320, height: 200 });
+  const [tooltipSize] = useState<{ width: number; height: number }>({ width: 320, height: 200 });
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const currentStep = steps[currentStepIndex];
   
