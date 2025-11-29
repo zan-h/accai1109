@@ -32,9 +32,9 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('experiments')
-      .insert({
+      .insert as any)({
         user_id: userId,
         experiment_type: experimentType,
         status: 'completed',

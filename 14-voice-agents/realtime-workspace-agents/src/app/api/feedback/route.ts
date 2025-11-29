@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
 
     // Insert feedback
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('feedback')
-      .insert({
+      .insert as any)({
         user_id: userId,
         project_id: projectId || null,
         session_id: sessionId || null,
