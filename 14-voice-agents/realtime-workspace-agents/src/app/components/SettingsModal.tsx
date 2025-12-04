@@ -13,7 +13,6 @@ export interface SettingsModalProps {
   settings: {
     audioPlayback: boolean;
     reducedMotion: boolean;
-    particlesEnabled: boolean;
     showEventLogs: boolean;
     codec: string;
     recordAudio: boolean;
@@ -164,13 +163,6 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSetting, onRe
                         type="toggle"
                         value={settings.reducedMotion}
                         onChange={(v) => onUpdateSetting('reducedMotion', v)}
-                      />
-                      <SettingRow
-                        label="Particle Effects"
-                        description="Show ambient background particles"
-                        type="toggle"
-                        value={settings.particlesEnabled}
-                        onChange={(v) => onUpdateSetting('particlesEnabled', v)}
                       />
                       
                       {onRestartTour && (

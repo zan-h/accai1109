@@ -26,9 +26,6 @@ import { TourProvider, useTour } from "@/app/contexts/TourContext";
 import TourOverlay from "@/app/components/tour/TourOverlay";
 import { ExperimentOrchestrator } from "@/app/components/experiments/ExperimentOrchestrator";
 
-    // Ambient Background
-    import { GradientMesh } from "./components/ambient/GradientMesh";
-    const ParticleField = React.lazy(() => import("./components/ambient/ParticleField"));
     const SettingsModal = React.lazy(() => import("./components/SettingsModal").then(module => ({ default: module.SettingsModal })));
     const SuiteSelector = React.lazy(() => import("./components/SuiteSelector"));
 
@@ -194,7 +191,6 @@ function AppContent() {
   const [settings, setSettings] = useState({
     audioPlayback: true,
     reducedMotion: false,
-    particlesEnabled: true,
     showEventLogs: false,
     codec: 'opus',
     recordAudio: false,
@@ -214,9 +210,6 @@ function AppContent() {
       }
       
       // Sync individual legacy items if not in bulk settings
-      const particles = localStorage.getItem('particlesEnabled');
-      if (particles) setSettings(prev => ({ ...prev, particlesEnabled: particles !== 'false' }));
-      
       const logsPreference = localStorage.getItem(EVENT_LOGS_PREF_KEY);
       if (logsPreference !== null) {
         setSettings(prev => ({ ...prev, showEventLogs: logsPreference === 'true' }));
@@ -232,7 +225,6 @@ function AppContent() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('appSettings', JSON.stringify(settings));
       // Sync back to individual keys for legacy compatibility
-      localStorage.setItem('particlesEnabled', settings.particlesEnabled.toString());
       localStorage.setItem(EVENT_LOGS_PREF_KEY, settings.showEventLogs.toString());
       localStorage.setItem('audioPlaybackEnabled', settings.audioPlayback.toString());
     }
@@ -240,7 +232,6 @@ function AppContent() {
     // Apply side effects
     setIsEventsPaneExpanded(settings.showEventLogs);
     setIsAudioPlaybackEnabled(settings.audioPlayback);
-    setParticlesEnabled(settings.particlesEnabled);
     
     // Handle codec change (reload if changed)
     if (settings.codec !== urlCodec) {
@@ -342,23 +333,10 @@ function AppContent() {
     },
   );
   
-  // Ambient background state
-  const [particlesEnabled, setParticlesEnabled] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    const stored = localStorage.getItem('particlesEnabled');
-    // Default to true unless explicitly disabled
-    return stored !== 'false';
-  });
-  
-  // Persist particle setting
-  useEffect(() => {
-    localStorage.setItem('particlesEnabled', particlesEnabled.toString());
-  }, [particlesEnabled]);
-
   // Expose setter to window for debugging/toggle until Settings UI is built
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).toggleParticles = () => setParticlesEnabled((prev: boolean) => !prev);
+      // Particles removed - this is a placeholder for future debugging hooks
     }
   }, []);
 
@@ -1298,14 +1276,6 @@ function AppContent() {
   return (
     <ToastProvider>
       <div className="text-base flex flex-col h-screen bg-bg-primary text-text-primary relative overflow-hidden">
-        {/* Background Ambient System */}
-      <GradientMesh />
-      {particlesEnabled && (
-        <React.Suspense fallback={null}>
-          <ParticleField />
-        </React.Suspense>
-      )}
-
       {/* Save Status Indicator */}
       <SaveStatusIndicator />
       
