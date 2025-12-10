@@ -13,9 +13,6 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     return config;
   },
-  // Explicitly disable Turbopack configuration to use Webpack
-  // since we have a custom webpack config
-  turbopack: false,
 };
 
 export default withBundleAnalyzer(nextConfig);
